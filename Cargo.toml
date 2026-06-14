@@ -1,0 +1,26 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/zero-edge-core",
+    "crates/zero-edge-codec",
+    "crates/xtask",
+]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2021"
+rust-version = "1.75"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tonywied17/zero-edge"
+authors = ["tonywied17"]
+
+[workspace.lints.rust]
+missing_docs = "deny"
+unsafe_code = "warn"
+
+[workspace.lints.clippy]
+all = "warn"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
