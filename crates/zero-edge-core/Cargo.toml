@@ -1,0 +1,12 @@
+[package]
+name = "zero-edge-core"
+description = "Core engine for the zero-edge device SDK: device model, transport, event bus, and error types."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
