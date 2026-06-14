@@ -8,10 +8,19 @@ use std::process::ExitCode;
 
 /// The tasks xtask knows about, each paired with a one-line description.
 const TASKS: &[(&str, &str)] = &[
-    ("codegen", "regenerate every language binding from the Rust core"),
+    (
+        "codegen",
+        "regenerate every language binding from the Rust core",
+    ),
     ("build-all", "build the core plus every language binding"),
-    ("test-all", "run Rust tests plus the cross-language conformance suite"),
-    ("package", "produce wheels, Node prebuilds, and the NuGet package"),
+    (
+        "test-all",
+        "run Rust tests plus the cross-language conformance suite",
+    ),
+    (
+        "package",
+        "produce wheels, Node prebuilds, and the NuGet package",
+    ),
     ("release", "publish to crates.io, PyPI, npm, and NuGet"),
 ];
 
