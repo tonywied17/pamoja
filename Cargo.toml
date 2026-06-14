@@ -5,12 +5,15 @@ members = [
     "crates/zero-edge-codec",
     "crates/xtask",
 ]
+# Language bindings are standalone crates with their own toolchains and lint
+# policy; they are built by their own pipelines, not the core workspace.
+exclude = ["bindings/node"]
 
 [workspace.package]
 version = "0.0.0"
 edition = "2021"
 rust-version = "1.75"
-license = "MIT OR Apache-2.0"
+license = "MIT"
 repository = "https://github.com/tonywied17/zero-edge"
 authors = ["tonywied17"]
 
