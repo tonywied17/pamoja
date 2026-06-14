@@ -1,0 +1,26 @@
+{
+  "name": "@zero-edge/core-linux-x64-gnu",
+  "version": "0.0.0",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "zero-edge-core.linux-x64-gnu.node",
+  "files": [
+    "zero-edge-core.linux-x64-gnu.node"
+  ],
+  "description": "Node.js bindings for the zero-edge device SDK core.",
+  "license": "MIT",
+  "engines": {
+    "node": ">= 16"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tonywied17/zero-edge.git"
+  },
+  "libc": [
+    "glibc"
+  ]
+}
