@@ -1,0 +1,23 @@
+{
+  "name": "@zero-edge/core-darwin-x64",
+  "version": "0.0.0",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "zero-edge-core.darwin-x64.node",
+  "files": [
+    "zero-edge-core.darwin-x64.node"
+  ],
+  "description": "Node.js bindings for the zero-edge device SDK core.",
+  "license": "MIT",
+  "engines": {
+    "node": ">= 16"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tonywied17/zero-edge.git"
+  }
+}

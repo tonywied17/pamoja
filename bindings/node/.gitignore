@@ -1,0 +1,8 @@
+# Native binaries are built per platform in CI, not committed.
+*.node
+
+# Downloaded build artifacts during release.
+artifacts/
+
+# Dependencies.
+node_modules/

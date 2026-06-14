@@ -1,0 +1,23 @@
+{
+  "name": "@zero-edge/core-win32-x64-msvc",
+  "version": "0.0.0",
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "zero-edge-core.win32-x64-msvc.node",
+  "files": [
+    "zero-edge-core.win32-x64-msvc.node"
+  ],
+  "description": "Node.js bindings for the zero-edge device SDK core.",
+  "license": "MIT",
+  "engines": {
+    "node": ">= 16"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tonywied17/zero-edge.git"
+  }
+}

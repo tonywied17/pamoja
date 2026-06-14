@@ -1,0 +1,21 @@
+[package]
+name = "zero-edge-node"
+version = "0.0.0"
+edition = "2021"
+# napi-rs sets the real minimum supported Rust version for this binding.
+rust-version = "1.88"
+license = "MIT"
+repository = "https://github.com/tonywied17/zero-edge"
+authors = ["tonywied17"]
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2", default-features = false, features = ["napi4"] }
+napi-derive = "2"
+zero-edge-core = { path = "../../crates/zero-edge-core" }
+
+[build-dependencies]
+napi-build = "2"
