@@ -1,18 +1,74 @@
-//! Pluggable encode/decode for zero-edge payloads.
+//! Pluggable serialization for zero-edge payloads.
 //!
-//! Concrete wire formats (CBOR for constrained devices, Protobuf, JSON, or raw
-//! framing) implement [`Codec`]. Hot paths are expected to favor zero-copy and
-//! delta encoding so the SDK stays usable on metered, low-bandwidth links.
+//! Concrete wire formats - CBOR for constrained devices, Protocol Buffers, JSON,
+//! or raw framing - implement the [`Codec`] trait. This crate defines the trait;
+//! the format implementations are provided by the capability crates.
 //!
-//! Phase 0 status: the trait is defined; concrete formats land in Phase 1.
+//! # Examples
+//!
+//! A little-endian codec for `u32` values:
+//!
+//! ```
+//! use zero_edge_codec::Codec;
+//! use zero_edge_core::{Error, Result};
+//!
+//! struct LeU32;
+//!
+//! impl Codec<u32> for LeU32 {
+//!     fn encode(&self, value: &u32) -> Result<Vec<u8>> {
+//!         Ok(value.to_le_bytes().to_vec())
+//!     }
+//!
+//!     fn decode(&self, bytes: &[u8]) -> Result<u32> {
+//!         let array = bytes
+//!             .try_into()
+//!             .map_err(|_| Error::Codec("expected 4 bytes".into()))?;
+//!         Ok(u32::from_le_bytes(array))
+//!     }
+//! }
+//!
+//! let codec = LeU32;
+//! let encoded = codec.encode(&42).unwrap();
+//! assert_eq!(codec.decode(&encoded).unwrap(), 42);
+//! ```
 
 use zero_edge_core::Result;
 
-/// Encodes and decodes values of type `T` to and from bytes.
+/// Encodes and decodes values of type `T` to and from byte buffers.
+///
+/// A codec is the bridge between in-memory values and the bytes carried by a
+/// [`Transport`](zero_edge_core::Transport) or persisted by a
+/// [`Store`](zero_edge_core::Store).
 pub trait Codec<T> {
-    /// Encode `value` into a byte buffer.
+    /// Encodes a value into a byte buffer.
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - the value to serialize.
+    ///
+    /// # Returns
+    ///
+    /// A byte buffer containing the encoded representation of `value`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Codec`](zero_edge_core::Error::Codec) if the value cannot
+    /// be encoded.
     fn encode(&self, value: &T) -> Result<Vec<u8>>;
 
-    /// Decode a value of type `T` from `bytes`.
+    /// Decodes a value from a byte buffer.
+    ///
+    /// # Arguments
+    ///
+    /// * `bytes` - the encoded representation to deserialize.
+    ///
+    /// # Returns
+    ///
+    /// The value decoded from `bytes`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Codec`](zero_edge_core::Error::Codec) if `bytes` is not a
+    /// valid encoding of `T`.
     fn decode(&self, bytes: &[u8]) -> Result<T>;
 }

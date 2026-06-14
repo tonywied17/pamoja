@@ -1,42 +1,110 @@
-//! The device model: the abstractions every capability crate implements.
+//! Device-model traits implemented by capability crates.
+//!
+//! These traits describe the roles a piece of hardware can play in an
+//! application: a connectable [`Device`], a [`Sensor`] that produces readings, an
+//! [`Actuator`] that accepts commands, and a [`Telemetry`] source that streams
+//! frames. A single type may implement more than one of them.
 
 use crate::error::Result;
 
-/// A physical or virtual device the SDK can talk to.
+/// A connectable physical or virtual device.
+///
+/// Implementors manage the lifecycle of an underlying resource such as a serial
+/// port, a network socket, or a vehicle link.
 pub trait Device {
-    /// A stable identifier for this device, such as a serial number or address.
+    /// Returns the stable identifier for this device.
+    ///
+    /// The identifier is expected to remain constant for the lifetime of the
+    /// device, for example a serial number, MAC address, or vehicle URI.
+    ///
+    /// # Returns
+    ///
+    /// A string slice borrowing the device's identifier.
     fn id(&self) -> &str;
 
-    /// Open the device and make it ready for use.
+    /// Opens the device and prepares it for use.
+    ///
+    /// # Returns
+    ///
+    /// `Ok(())` once the device is connected and ready.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Io`](crate::Error::Io) if the underlying resource cannot
+    /// be opened, or [`Error::Transport`](crate::Error::Transport) if a link to
+    /// the device cannot be established.
     async fn connect(&mut self) -> Result<()>;
 
-    /// Release the device and any underlying resources.
+    /// Releases the device and any resources it holds.
+    ///
+    /// # Returns
+    ///
+    /// `Ok(())` once the device has been disconnected and its resources freed.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Io`](crate::Error::Io) if the underlying resource cannot
+    /// be released cleanly.
     async fn disconnect(&mut self) -> Result<()>;
 }
 
-/// A source of readings, such as temperature, a GPS fix, or a lidar scan.
+/// A source of typed readings, such as a thermometer, GPS receiver, or lidar.
 pub trait Sensor {
-    /// The reading this sensor produces.
+    /// The value produced by a single read, for example a temperature or a fix.
     type Reading;
 
-    /// Take a single reading.
+    /// Takes a single reading from the sensor.
+    ///
+    /// # Returns
+    ///
+    /// The next [`Reading`](Self::Reading) sampled from the sensor.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Io`](crate::Error::Io) if the sensor cannot be read, or
+    /// [`Error::Closed`](crate::Error::Closed) if the sensor has been
+    /// disconnected.
     async fn read(&mut self) -> Result<Self::Reading>;
 }
 
-/// A sink that accepts commands, such as a motor setpoint or a valve state.
+/// A sink that accepts typed commands, such as a motor or a valve.
 pub trait Actuator {
-    /// The command this actuator accepts.
+    /// The command accepted by a single application, for example a setpoint.
     type Command;
 
-    /// Apply a command to the actuator.
+    /// Applies a command to the actuator.
+    ///
+    /// # Arguments
+    ///
+    /// * `command` - the command to apply, consumed by the call.
+    ///
+    /// # Returns
+    ///
+    /// `Ok(())` once the command has been accepted by the actuator.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Io`](crate::Error::Io) if the command cannot be
+    /// delivered, or [`Error::Closed`](crate::Error::Closed) if the actuator has
+    /// been disconnected.
     async fn apply(&mut self, command: Self::Command) -> Result<()>;
 }
 
-/// A device that emits a stream of telemetry frames.
+/// A device that emits a continuous stream of telemetry frames.
 pub trait Telemetry {
-    /// The telemetry frame type.
+    /// A single telemetry frame, for example a status or position report.
     type Frame;
 
-    /// Await the next telemetry frame, or `None` once the stream ends.
+    /// Awaits the next telemetry frame.
+    ///
+    /// # Returns
+    ///
+    /// `Some(frame)` when a frame is available, or `None` once the telemetry
+    /// stream has ended.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Transport`](crate::Error::Transport) if the telemetry
+    /// link fails while waiting.
     async fn next_frame(&mut self) -> Result<Option<Self::Frame>>;
 }

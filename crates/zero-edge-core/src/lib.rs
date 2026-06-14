@@ -1,16 +1,46 @@
-//! The zero-edge engine.
+//! Core abstractions for the zero-edge device SDK.
 //!
-//! This crate defines the abstractions that every capability crate (MQTT, serial,
-//! CAN, ROS2, ...) implements. The core deliberately knows nothing about any
-//! concrete protocol; it knows about [`Device`], [`Sensor`], [`Actuator`],
-//! [`Transport`], [`Store`], and the [`EventBus`]. Concrete crates provide the
-//! implementations, and applications depend only on the pieces they need.
+//! This crate defines the traits that every capability crate (for example
+//! `zero-edge-mqtt`, `zero-edge-io-serial`, or `zero-edge-ros2`) implements. The
+//! core is protocol-agnostic: it models devices, sensors, actuators, transports,
+//! durable storage, and an event bus, and leaves concrete protocol support to the
+//! capability crates so that an application depends only on what it uses.
 //!
-//! Phase 0 status: these are the trait skeletons. Method bodies arrive with the
-//! first concrete capability crates in Phase 1. The core is structured to become
-//! `no_std`-compatible (with `alloc`) so it can run on microcontrollers.
+//! The primary abstractions are:
+//!
+//! - [`Device`] - a connectable physical or virtual device.
+//! - [`Sensor`] - a source of typed readings.
+//! - [`Actuator`] - a sink for typed commands.
+//! - [`Telemetry`] - a stream of telemetry frames.
+//! - [`Transport`] - a bidirectional byte transport.
+//! - [`Store`] - a durable store-and-forward queue.
+//! - [`EventBus`] - a typed publish/subscribe channel.
+//! - [`Error`] and [`Result`] - the shared error model.
+//!
+//! # Examples
+//!
+//! Implementing [`Sensor`] for a temperature probe:
+//!
+//! ```
+//! use zero_edge_core::{Result, Sensor};
+//!
+//! struct Thermometer {
+//!     celsius: f32,
+//! }
+//!
+//! impl Sensor for Thermometer {
+//!     type Reading = f32;
+//!
+//!     async fn read(&mut self) -> Result<Self::Reading> {
+//!         Ok(self.celsius)
+//!     }
+//! }
+//!
+//! let _probe = Thermometer { celsius: 20.5 };
+//! ```
 
-// Public traits use `async fn`, which is intentional for this static-dispatch SDK.
+// The public traits use `async fn`, which is intentional for this statically
+// dispatched SDK; the associated lint is therefore allowed crate-wide.
 #![allow(async_fn_in_trait)]
 
 pub mod bus;

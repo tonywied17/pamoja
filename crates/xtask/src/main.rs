@@ -1,7 +1,8 @@
 //! Workspace task runner for zero-edge.
 //!
-//! Run with `cargo xtask <task>`. During Phase 0 the tasks are stubs that
-//! document the intended automation pipeline (see the `.docs/` battle plan).
+//! Run with `cargo xtask <task>`. The tasks are placeholders that document the
+//! intended build and release automation; their implementations are filled in as
+//! the bindings and packaging come online.
 
 use std::process::ExitCode;
 

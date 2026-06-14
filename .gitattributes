@@ -1,0 +1,9 @@
+# Normalize line endings: store everything as LF in the repository.
+* text=auto eol=lf
+
+# Binary types git should never touch.
+*.png binary
+*.jpg binary
+*.ico binary
+*.node binary
+*.wasm binary

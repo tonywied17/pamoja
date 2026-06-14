@@ -35,10 +35,10 @@ build:
 # run everything CI runs
 ci: fmt-check lint test
 
-# regenerate language bindings (stub during Phase 0)
+# regenerate language bindings (not yet implemented)
 bindings:
     cargo xtask codegen
 
-# publish all packages (stub during Phase 0)
+# publish all packages (not yet implemented)
 release:
     cargo xtask release
