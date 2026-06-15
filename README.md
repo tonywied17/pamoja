@@ -53,7 +53,7 @@ Early Development and Planning. The foundation and the first capability work end
 - `pamoja-codec` - the pluggable serialization trait with serde-based CBOR, JSON, and raw-bytes codecs behind feature flags.
 - `pamoja-mqtt` - an MQTT client implementing the core `Transport` trait, tested against an embedded broker.
 - `pamoja-sync` - offline-first store-and-forward queues implementing the core `Store` trait: an in-memory queue and a crash-safe on-disk queue that survives power loss.
-- `pamoja-loopback` - an in-process `Transport` with MQTT-style topic matching, so examples and tests exercise the full publish/subscribe path with no broker and no hardware.
+- `pamoja-loopback` - an in-process `Transport` with MQTT-style topic matching, plus a fault-injecting decorator, so examples and tests exercise the full publish/subscribe path and degraded-link behavior with no broker and no hardware.
 - `pamoja-ffi` - the curated C ABI over the core and MQTT, with a `cbindgen`-generated, drift-checked `pamoja.h`. This is the single auditable unsafe boundary and the seam C, C++, and .NET consume.
 - `@pamoja/core` - the Node binding, shipped in two tiers: a generated contract and a hand-written TypeScript facade.
 - `pamoja-core` (Python) - the Python binding, same two tiers: a generated, type-stubbed contract and a hand-written async facade, built with PyO3 and maturin.

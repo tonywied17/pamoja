@@ -1328,6 +1328,7 @@ name = "pamoja-sync"
 version = "0.1.5"
 dependencies = [
  "pamoja-core",
+ "pamoja-loopback",
  "tempfile",
  "tokio",
 ]

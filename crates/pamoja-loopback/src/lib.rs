@@ -9,9 +9,14 @@
 //!
 //! Clone one broker into every transport that should share a namespace: a publish
 //! on any transport is delivered to every transport whose subscriptions match.
+//!
+//! [`Faulty`] decorates any transport to inject send failures, so degraded-link
+//! behavior such as store-and-forward retry can be tested deterministically.
 
 mod broker;
+mod faulty;
 mod transport;
 
 pub use broker::LoopbackBroker;
+pub use faulty::Faulty;
 pub use transport::{LoopbackTransport, Message};
