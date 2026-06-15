@@ -105,8 +105,6 @@ Every domain capability is a separate crate behind a trait defined in the core. 
 
 ## Roadmap
 
-Done first, then breadth. Grouped by theme rather than dates.
-
 Messaging and radio. MQTT works today. Next: CoAP, LoRa and LoRaWAN, cheap local mesh (ESP-NOW, nRF24), a Meshtastic bridge for off-grid networks, and cellular uplink, unified by a cost-aware transport ladder that uses the cheapest link available and buffers when there is none.
 
 Hardware and sensors. Serial, CAN, GPIO/I2C/SPI, and RS485/Modbus for long field cabling. A catalog of drivers for cheap, common, salvageable parts, plus device profiles you instantiate by name (a vaccine-fridge monitor, an irrigation node, a well-level sensor) instead of wiring pins.
