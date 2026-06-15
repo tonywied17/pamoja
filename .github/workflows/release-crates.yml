@@ -31,37 +31,29 @@ jobs:
           key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.toml') }}
 
       # Publish in dependency order: core first, then the crates that depend on
-      # it. cargo waits for each crate to appear in the index before returning,
-      # so a dependent can resolve the crate just published ahead of it.
-      - name: Publish pamoja-core
-        run: cargo publish -p pamoja-core
-
-      - name: Publish pamoja-codec
-        run: cargo publish -p pamoja-codec
-
-      - name: Publish pamoja-mqtt
-        run: cargo publish -p pamoja-mqtt
-
-      - name: Publish pamoja-coap
-        run: cargo publish -p pamoja-coap
-
-      - name: Publish pamoja-ffi
-        run: cargo publish -p pamoja-ffi
-
-      - name: Publish pamoja-sync
-        run: cargo publish -p pamoja-sync
-
-      - name: Publish pamoja-loopback
-        run: cargo publish -p pamoja-loopback
-
-      - name: Publish pamoja-bus
-        run: cargo publish -p pamoja-bus
-
-      - name: Publish pamoja-ladder
-        run: cargo publish -p pamoja-ladder
-
-      - name: Publish pamoja-kit
-        run: cargo publish -p pamoja-kit
-
-      - name: Publish pamoja-power
-        run: cargo publish -p pamoja-power
+      # it. cargo waits for each crate to appear in the index before returning, so
+      # a dependent can resolve the crate just published ahead of it. Each publish
+      # is idempotent: a version already on crates.io is skipped rather than failed,
+      # so the job can be safely re-run after a partial publish (for example after
+      # the crates.io new-crate rate limit throttles a burst of new crates).
+      - name: Publish crates
+        run: |
+          set -uo pipefail
+          publish() {
+            local crate="$1" log
+            log="$(mktemp)"
+            if cargo publish -p "$crate" 2>&1 | tee "$log"; then
+              echo "::notice::published $crate"
+            elif grep -qiE "already (uploaded|exists)" "$log"; then
+              echo "::notice::skipping $crate; this version is already on crates.io"
+            else
+              echo "::error::failed to publish $crate"
+              return 1
+            fi
+          }
+          for crate in \
+            pamoja-core pamoja-codec pamoja-mqtt pamoja-coap pamoja-ffi \
+            pamoja-sync pamoja-loopback pamoja-bus \
+            pamoja-ladder pamoja-kit pamoja-power; do
+            publish "$crate" || exit 1
+          done
