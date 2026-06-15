@@ -1,8 +1,9 @@
 {
   "name": "@pamoja/core",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Node.js bindings for the pamoja device SDK core.",
   "license": "MIT",
+  "publishConfig": { "access": "public" },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tonywied17/pamoja.git"
