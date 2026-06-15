@@ -21,7 +21,9 @@ jobs:
           - host: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             zig: true
-          - host: macos-13
+          # Cross-compiled on Apple Silicon: scarce macos-13 Intel runners sit
+          # unallocated for minutes and stall the whole release.
+          - host: macos-latest
             target: x86_64-apple-darwin
           - host: macos-latest
             target: aarch64-apple-darwin
