@@ -1,4 +1,4 @@
-# zero-edge workflows. Run `just` to list available recipes.
+# pamoja workflows. Run `just` to list available recipes.
 
 # show all recipes
 default:

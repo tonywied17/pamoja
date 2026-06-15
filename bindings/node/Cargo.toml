@@ -1,11 +1,11 @@
 [package]
-name = "zero-edge-node"
-version = "0.0.0"
+name = "pamoja-node"
+version = "0.1.0"
 edition = "2021"
 # napi-rs sets the real minimum supported Rust version for this binding.
 rust-version = "1.88"
 license = "MIT"
-repository = "https://github.com/tonywied17/zero-edge"
+repository = "https://github.com/tonywied17/pamoja"
 authors = ["tonywied17"]
 publish = false
 
@@ -16,13 +16,13 @@ crate-type = ["cdylib"]
 default = ["mqtt"]
 # The MQTT transport capability. Kept behind a feature so the binding can later
 # be split into per-capability packages without reshaping the code.
-mqtt = ["dep:zero-edge-mqtt", "dep:tokio"]
+mqtt = ["dep:pamoja-mqtt", "dep:tokio"]
 
 [dependencies]
 napi = { version = "2", default-features = false, features = ["napi4", "tokio_rt"] }
 napi-derive = "2"
-zero-edge-core = { path = "../../crates/zero-edge-core" }
-zero-edge-mqtt = { path = "../../crates/zero-edge-mqtt", optional = true }
+pamoja-core = { path = "../../crates/pamoja-core" }
+pamoja-mqtt = { path = "../../crates/pamoja-mqtt", optional = true }
 tokio = { version = "1", default-features = false, features = ["sync"], optional = true }
 
 [build-dependencies]

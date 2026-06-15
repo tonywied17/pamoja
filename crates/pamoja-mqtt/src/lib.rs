@@ -1,6 +1,6 @@
-//! MQTT transport for the zero-edge SDK.
+//! MQTT transport for the pamoja SDK.
 //!
-//! [`MqttTransport`] implements the core [`Transport`](zero_edge_core::Transport)
+//! [`MqttTransport`] implements the core [`Transport`](pamoja_core::Transport)
 //! trait on top of the pure-Rust [`rumqttc`] client, so an application can publish
 //! to and subscribe from an MQTT broker through the same protocol-agnostic surface
 //! it uses for every other transport.
@@ -14,10 +14,10 @@
 //! # Examples
 //!
 //! ```no_run
-//! use zero_edge_core::Transport;
-//! use zero_edge_mqtt::{MqttConfig, MqttTransport};
+//! use pamoja_core::Transport;
+//! use pamoja_mqtt::{MqttConfig, MqttTransport};
 //!
-//! # async fn run() -> zero_edge_core::Result<()> {
+//! # async fn run() -> pamoja_core::Result<()> {
 //! let mut transport = MqttTransport::new(MqttConfig::new("sensor-1", "localhost", 1883));
 //! transport.connect().await?;
 //! transport.subscribe("sensors/+/temperature").await?;
@@ -35,7 +35,7 @@ use std::time::Duration;
 use rumqttc::{AsyncClient, ClientError, ConnectionError, Event, MqttOptions, Packet, QoS};
 use tokio::sync::{mpsc, oneshot};
 use tokio::task::JoinHandle;
-use zero_edge_core::{Error, Result, Transport};
+use pamoja_core::{Error, Result, Transport};
 
 /// The delivery guarantee applied to published and subscribed messages.
 ///
@@ -204,7 +204,7 @@ impl MqttTransport {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Closed`](zero_edge_core::Error::Closed) if the transport
+    /// Returns [`Error::Closed`](pamoja_core::Error::Closed) if the transport
     /// is not connected.
     pub async fn recv(&mut self) -> Result<Option<Message>> {
         let incoming = self.incoming.as_mut().ok_or(Error::Closed)?;
@@ -369,9 +369,8 @@ mod tests {
 
     #[tokio::test]
     async fn connect_to_unavailable_broker_fails() {
-        let config = MqttConfig::new("c", "127.0.0.1", unused_port())
-            .keep_alive(Duration::from_secs(1));
-        let mut transport = MqttTransport::new(config);
+        let config = MqttConfig::new("c", "127.0.0.1", unused_port());
+        let mut transport = MqttTransport::new(config.keep_alive(Duration::from_secs(1)));
         assert!(matches!(transport.connect().await, Err(Error::Transport(_))));
         assert!(!transport.is_connected());
     }

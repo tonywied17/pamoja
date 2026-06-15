@@ -1,6 +1,6 @@
-# @zero-edge/core
+# @pamoja/core
 
-Node.js bindings for the [zero-edge](https://github.com/tonywied17/zero-edge)
+Node.js bindings for the [pamoja](https://github.com/tonywied17/pamoja)
 device SDK core, built with [napi-rs](https://napi.rs).
 
 The generated surface is intentionally thin. A hand-written, idiomatic layer is

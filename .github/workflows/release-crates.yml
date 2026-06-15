@@ -1,0 +1,43 @@
+name: release-crates
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  publish:
+    name: publish to crates.io
+    runs-on: ubuntu-latest
+    env:
+      CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.toml') }}
+
+      # Publish in dependency order: core first, then the crates that depend on
+      # it. cargo waits for each crate to appear in the index before returning,
+      # so a dependent can resolve the crate just published ahead of it.
+      - name: Publish pamoja-core
+        run: cargo publish -p pamoja-core
+
+      - name: Publish pamoja-codec
+        run: cargo publish -p pamoja-codec
+
+      - name: Publish pamoja-mqtt
+        run: cargo publish -p pamoja-mqtt

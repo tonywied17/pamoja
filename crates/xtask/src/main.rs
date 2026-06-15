@@ -1,4 +1,4 @@
-//! Workspace task runner for zero-edge.
+//! Workspace task runner for pamoja.
 //!
 //! Run with `cargo xtask <task>`. The tasks are placeholders that document the
 //! intended build and release automation; their implementations are filled in as
@@ -44,7 +44,7 @@ fn main() -> ExitCode {
 }
 
 fn help() {
-    println!("zero-edge xtask");
+    println!("pamoja xtask");
     println!("usage: cargo xtask <task>\n");
     println!("tasks:");
     for (name, description) in TASKS {

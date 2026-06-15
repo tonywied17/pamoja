@@ -1,4 +1,4 @@
-//! Node.js bindings for the zero-edge SDK, generated with napi-rs.
+//! Node.js bindings for the pamoja SDK, generated with napi-rs.
 //!
 //! This crate is the generated low-level surface (the contract tier): it exposes
 //! the Rust core and capability crates to JavaScript and TypeScript one-to-one. A
@@ -7,7 +7,7 @@
 
 use napi_derive::napi;
 
-/// Returns the version of the native zero-edge module.
+/// Returns the version of the native pamoja module.
 #[napi]
 pub fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()

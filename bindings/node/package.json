@@ -1,16 +1,26 @@
 {
-  "name": "@zero-edge/core",
-  "version": "0.0.0",
-  "description": "Node.js bindings for the zero-edge device SDK core.",
+  "name": "@pamoja/core",
+  "version": "0.1.0",
+  "description": "Node.js bindings for the pamoja device SDK core.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tonywied17/zero-edge.git"
+    "url": "git+https://github.com/tonywied17/pamoja.git"
   },
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./raw": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
   "napi": {
-    "name": "zero-edge-core",
+    "name": "pamoja-core",
     "triples": {
       "defaults": true,
       "additional": [
@@ -21,18 +31,23 @@
   },
   "files": [
     "index.js",
-    "index.d.ts"
+    "index.d.ts",
+    "dist/"
   ],
   "engines": {
     "node": ">= 16"
   },
   "scripts": {
-    "build": "napi build --platform --release",
-    "build:debug": "napi build --platform",
+    "build": "napi build --platform --release && tsc -p tsconfig.json",
+    "build:debug": "napi build --platform && tsc -p tsconfig.json",
+    "build:facade": "tsc -p tsconfig.json",
     "test": "node test.js",
+    "prepack": "tsc -p tsconfig.json",
     "prepublishOnly": "napi prepublish -t npm"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^2.18.4"
+    "@napi-rs/cli": "^2.18.4",
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.5"
   }
 }

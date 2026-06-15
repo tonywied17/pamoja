@@ -1,3 +1,3 @@
-# `@zero-edge/core-darwin-x64`
+# `@pamoja/core-darwin-x64`
 
-This is the **x86_64-apple-darwin** binary for `@zero-edge/core`
+This is the **x86_64-apple-darwin** binary for `@pamoja/core`
