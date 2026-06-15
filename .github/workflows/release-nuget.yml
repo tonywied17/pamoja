@@ -105,7 +105,8 @@ jobs:
         uses: NuGet/login@v1
         id: login
         with:
-          user: pamoja
+          # The policy creator's account, not the package owner (pamoja).
+          user: tonywied17
 
       - name: Publish to NuGet
         run: >
