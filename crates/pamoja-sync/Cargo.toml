@@ -1,0 +1,19 @@
+[package]
+name = "pamoja-sync"
+description = "Offline-first store-and-forward buffering for pamoja: durable queues behind the core Store trait."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+pamoja-core = { workspace = true }
+
+[dev-dependencies]
+tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
+tempfile = "3"
+
+[lints]
+workspace = true

@@ -44,3 +44,6 @@ jobs:
 
       - name: Publish pamoja-ffi
         run: cargo publish -p pamoja-ffi
+
+      - name: Publish pamoja-sync
+        run: cargo publish -p pamoja-sync
