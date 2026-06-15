@@ -43,8 +43,5 @@ async fn store_and_forward_survives_a_flaky_link() {
         let message = gateway.recv().await.expect("recv").expect("a message");
         received.push(message.payload);
     }
-    assert_eq!(
-        received,
-        vec![vec![0], vec![1], vec![2], vec![3], vec![4]]
-    );
+    assert_eq!(received, vec![vec![0], vec![1], vec![2], vec![3], vec![4]]);
 }

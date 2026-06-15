@@ -26,8 +26,8 @@ fn main() {
     }
 
     let crate_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let config = cbindgen::Config::from_file(crate_dir.join("cbindgen.toml"))
-        .expect("read cbindgen.toml");
+    let config =
+        cbindgen::Config::from_file(crate_dir.join("cbindgen.toml")).expect("read cbindgen.toml");
 
     let bindings = match cbindgen::Builder::new()
         .with_crate(&crate_dir)

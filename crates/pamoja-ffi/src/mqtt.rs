@@ -147,9 +147,7 @@ pub unsafe extern "C" fn pamoja_mqtt_client_new(
 /// `client` must be a non-null handle returned by [`pamoja_mqtt_client_new`] and
 /// not yet freed.
 #[no_mangle]
-pub unsafe extern "C" fn pamoja_mqtt_client_connect(
-    client: *mut PamojaMqttClient,
-) -> PamojaStatus {
+pub unsafe extern "C" fn pamoja_mqtt_client_connect(client: *mut PamojaMqttClient) -> PamojaStatus {
     let Some(client) = client_handle(client) else {
         return PamojaStatus::InvalidArgument;
     };

@@ -94,7 +94,9 @@ mod tests {
 
         assert!(node.send("t", b"1").await.is_err());
         assert!(node.send("t", b"2").await.is_err());
-        node.send("t", b"3").await.expect("third send passes through");
+        node.send("t", b"3")
+            .await
+            .expect("third send passes through");
 
         // Only the delivered payload reaches the gateway.
         let message = gateway.recv().await.expect("recv").expect("a message");

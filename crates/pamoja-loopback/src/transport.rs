@@ -146,7 +146,10 @@ mod tests {
         subscriber.connect().await.expect("connect");
         publisher.connect().await.expect("connect");
 
-        subscriber.subscribe("sensors/+/temperature").await.expect("subscribe");
+        subscriber
+            .subscribe("sensors/+/temperature")
+            .await
+            .expect("subscribe");
         publisher
             .send("sensors/1/temperature", b"21.5")
             .await
@@ -165,9 +168,18 @@ mod tests {
         subscriber.connect().await.expect("connect");
         publisher.connect().await.expect("connect");
 
-        subscriber.subscribe("sensors/1/#").await.expect("subscribe");
-        publisher.send("sensors/2/temperature", b"x").await.expect("send");
-        publisher.send("sensors/1/humidity", b"y").await.expect("send");
+        subscriber
+            .subscribe("sensors/1/#")
+            .await
+            .expect("subscribe");
+        publisher
+            .send("sensors/2/temperature", b"x")
+            .await
+            .expect("send");
+        publisher
+            .send("sensors/1/humidity", b"y")
+            .await
+            .expect("send");
 
         let message = subscriber.recv().await.expect("recv").expect("a message");
         assert_eq!(message.topic, "sensors/1/humidity");
@@ -177,7 +189,10 @@ mod tests {
     async fn operations_before_connect_report_closed() {
         let broker = LoopbackBroker::new();
         let mut transport = LoopbackTransport::new(broker);
-        assert!(matches!(transport.send("t", b"x").await, Err(Error::Closed)));
+        assert!(matches!(
+            transport.send("t", b"x").await,
+            Err(Error::Closed)
+        ));
         assert!(matches!(transport.subscribe("t").await, Err(Error::Closed)));
         assert!(matches!(transport.recv().await, Err(Error::Closed)));
         assert!(!transport.is_connected());

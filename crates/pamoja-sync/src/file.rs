@@ -172,8 +172,14 @@ mod tests {
         // A fresh store over the same directory resumes the queue in order.
         let mut reopened = FileStore::open(dir.path()).expect("reopen");
         assert_eq!(reopened.len().await.expect("len"), 2);
-        assert_eq!(reopened.pop().await.expect("pop"), Some(b"durable".to_vec()));
-        assert_eq!(reopened.pop().await.expect("pop"), Some(b"records".to_vec()));
+        assert_eq!(
+            reopened.pop().await.expect("pop"),
+            Some(b"durable".to_vec())
+        );
+        assert_eq!(
+            reopened.pop().await.expect("pop"),
+            Some(b"records".to_vec())
+        );
     }
 
     #[tokio::test]

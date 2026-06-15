@@ -126,10 +126,7 @@ mod tests {
         let mut store = MemoryStore::with_capacity(1);
         store.append(b"first").await.expect("append");
 
-        assert!(matches!(
-            store.append(b"second").await,
-            Err(Error::Io(_))
-        ));
+        assert!(matches!(store.append(b"second").await, Err(Error::Io(_))));
         assert_eq!(store.len().await.expect("len"), 1);
 
         // Draining frees a slot so appends succeed again.
