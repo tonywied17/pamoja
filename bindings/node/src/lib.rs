@@ -1,24 +1,17 @@
-//! Node.js bindings for the zero-edge core, generated with napi-rs.
+//! Node.js bindings for the zero-edge SDK, generated with napi-rs.
 //!
-//! This module is intentionally thin: it exposes the Rust core to JavaScript and
-//! TypeScript. Richer, idiomatic helpers belong in a hand-written layer on top of
-//! the generated surface.
+//! This crate is the generated low-level surface (the contract tier): it exposes
+//! the Rust core and capability crates to JavaScript and TypeScript one-to-one. A
+//! hand-written, idiomatic facade wraps it for everyday use; see the package's
+//! TypeScript entry point.
 
 use napi_derive::napi;
-use zero_edge_core::Error;
 
-/// Returns the version string of the native zero-edge core module.
+/// Returns the version of the native zero-edge module.
 #[napi]
 pub fn version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
-/// Formats a transport error message through the shared core error model.
-///
-/// This exists to prove the native core is linked and callable from Node: it
-/// constructs a core error value from a JavaScript string and returns its
-/// rendered form.
-#[napi]
-pub fn format_transport_error(message: String) -> String {
-    Error::Transport(message).to_string()
-}
+#[cfg(feature = "mqtt")]
+mod mqtt;

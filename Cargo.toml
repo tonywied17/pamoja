@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/zero-edge-core",
     "crates/zero-edge-codec",
+    "crates/zero-edge-mqtt",
     "crates/xtask",
 ]
 # Language bindings are standalone crates with their own toolchains and lint

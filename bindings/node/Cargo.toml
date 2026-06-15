@@ -12,10 +12,18 @@ publish = false
 [lib]
 crate-type = ["cdylib"]
 
+[features]
+default = ["mqtt"]
+# The MQTT transport capability. Kept behind a feature so the binding can later
+# be split into per-capability packages without reshaping the code.
+mqtt = ["dep:zero-edge-mqtt", "dep:tokio"]
+
 [dependencies]
-napi = { version = "2", default-features = false, features = ["napi4"] }
+napi = { version = "2", default-features = false, features = ["napi4", "tokio_rt"] }
 napi-derive = "2"
 zero-edge-core = { path = "../../crates/zero-edge-core" }
+zero-edge-mqtt = { path = "../../crates/zero-edge-mqtt", optional = true }
+tokio = { version = "1", default-features = false, features = ["sync"], optional = true }
 
 [build-dependencies]
 napi-build = "2"

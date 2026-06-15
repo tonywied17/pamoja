@@ -1,0 +1,21 @@
+[package]
+name = "zero-edge-mqtt"
+description = "MQTT transport for the zero-edge device SDK, built on rumqttc."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+zero-edge-core = { path = "../zero-edge-core" }
+rumqttc = "0.24"
+tokio = { version = "1", features = ["rt", "sync", "macros", "time"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
+rumqttd = "0.19"
