@@ -262,8 +262,8 @@ fn unframe(record: &[u8]) -> Result<(String, Vec<u8>)> {
     let topic_bytes = record
         .get(4..4 + topic_len)
         .ok_or_else(|| Error::Codec("ladder record topic is truncated".to_owned()))?;
-    let topic = String::from_utf8(topic_bytes.to_vec())
-        .map_err(|err| Error::Codec(err.to_string()))?;
+    let topic =
+        String::from_utf8(topic_bytes.to_vec()).map_err(|err| Error::Codec(err.to_string()))?;
     let payload = record[4 + topic_len..].to_vec();
     Ok((topic, payload))
 }
@@ -309,7 +309,10 @@ mod tests {
             TransportLadder::new(MemoryStore::new()).rung(LoopbackTransport::new(broker.clone()));
         ladder.connect().await.expect("connect");
 
-        let delivery = ladder.send("sensors/1/temperature", b"21.5").await.expect("send");
+        let delivery = ladder
+            .send("sensors/1/temperature", b"21.5")
+            .await
+            .expect("send");
         assert_eq!(delivery, Delivery::Sent);
         assert_eq!(ladder.buffered().await.expect("buffered"), 0);
 
@@ -329,18 +332,27 @@ mod tests {
 
         let preferred = Faulty::new(LoopbackTransport::new(preferred_broker.clone()), 1);
         let fallback = LoopbackTransport::new(fallback_broker.clone());
-        let mut ladder = TransportLadder::new(MemoryStore::new()).rung(preferred).rung(fallback);
+        let mut ladder = TransportLadder::new(MemoryStore::new())
+            .rung(preferred)
+            .rung(fallback);
         ladder.connect().await.expect("connect");
 
         let delivery = ladder.send("t", b"x").await.expect("send");
         assert_eq!(delivery, Delivery::Sent);
 
-        let message = fallback_observer.recv().await.expect("recv").expect("a message");
+        let message = fallback_observer
+            .recv()
+            .await
+            .expect("recv")
+            .expect("a message");
         assert_eq!(message.payload, b"x");
         // The broken rung delivered nothing: its observer never sees a message.
         let starved =
             tokio::time::timeout(Duration::from_millis(50), preferred_observer.recv()).await;
-        assert!(starved.is_err(), "the broken rung must not deliver anything");
+        assert!(
+            starved.is_err(),
+            "the broken rung must not deliver anything"
+        );
     }
 
     #[tokio::test]
@@ -355,9 +367,18 @@ mod tests {
 
         // First send hits the outage and buffers; the next two preserve order by
         // buffering behind it rather than racing ahead.
-        assert_eq!(ladder.send("out", b"a").await.expect("send"), Delivery::Buffered);
-        assert_eq!(ladder.send("out", b"b").await.expect("send"), Delivery::Buffered);
-        assert_eq!(ladder.send("out", b"c").await.expect("send"), Delivery::Buffered);
+        assert_eq!(
+            ladder.send("out", b"a").await.expect("send"),
+            Delivery::Buffered
+        );
+        assert_eq!(
+            ladder.send("out", b"b").await.expect("send"),
+            Delivery::Buffered
+        );
+        assert_eq!(
+            ladder.send("out", b"c").await.expect("send"),
+            Delivery::Buffered
+        );
         assert_eq!(ladder.buffered().await.expect("buffered"), 3);
 
         // The link is back: drain everything in the order it was accepted.
