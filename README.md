@@ -58,7 +58,7 @@ In active development, the following crates and bindings are available:
 - `pamoja-loopback` - an in-process `Transport` with MQTT-style topic matching, plus a fault-injecting decorator, so examples and tests exercise the full publish/subscribe path and degraded-link behavior with no broker and no hardware.
 - `pamoja-bus` - an in-memory typed publish/subscribe event bus implementing the core `EventBus` trait, broadcasting each event to every subscriber.
 - `pamoja-ffi` - the curated C ABI over the core and MQTT, with a `cbindgen`-generated, drift-checked `pamoja.h`. This is the single auditable unsafe boundary and the seam C, C++, and .NET consume.
-- `@pamoja/core` - the Node binding, shipped in two tiers: a generated contract and a hand-written TypeScript facade.
+- `@pamoja/core` - the Node binding, shipped in two tiers: a generated contract and a hand-written TypeScript facade (the `MqttClient` today, until the capability-scoped packages land).
 - `pamoja-core` (Python) - the Python binding, same two tiers: a generated, type-stubbed contract and a hand-written async facade, built with PyO3 and maturin.
 - `Pamoja.Core` (.NET) - the C#/.NET binding over the C ABI, same two tiers: a P/Invoke interop layer and a hand-written async facade with `IAsyncEnumerable` message streams and `IAsyncDisposable` lifecycle.
 
@@ -132,7 +132,9 @@ transport.send("sensors/1/temperature", b"21.5").await?;
 
 ## Architecture
 
-Every domain capability is a separate crate behind a trait defined in the core. The core knows about `Transport`, `Device`, `Sensor`, `Actuator`, and `Store`; it knows nothing about MQTT or CAN specifically. Concrete crates implement those traits and are pulled in only when needed, so nobody pays for what they do not use, and on a microcontroller you compile in two crates and nothing else.
+Every domain capability is a separate crate behind a trait defined in the core. The core knows about `Transport`, `Device`, `Sensor`, `Actuator`, `Store`, and the event bus; it knows nothing about MQTT or CAN specifically. Concrete crates implement those traits and are pulled in only when needed, so nobody pays for what they do not use, and on a microcontroller you compile in two crates and nothing else.
+
+This separation is literal in Rust: `pamoja-core` defines the traits, and each transport (`pamoja-mqtt`, `pamoja-coap`) is its own crate. That is why the Rust example above pulls `MqttTransport` from `pamoja-mqtt`, not from the core. The language bindings are heading to the same shape, with capability-scoped packages (`@pamoja/mqtt`, `pamoja-mqtt`, `Pamoja.Mqtt`) sitting next to the core package. Today, while the polyglot release pipeline is being proven end to end with a single capability, that first transport ships inside each language's `core` package, which is why the TypeScript, Python, and C# examples above import `MqttClient` from it. Splitting the bindings into scoped packages is on the roadmap.
 
 ```
         bindings (two tiers: generated contract + hand-written facade)
