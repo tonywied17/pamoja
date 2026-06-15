@@ -341,7 +341,9 @@ impl Transport for CoapTransport {
 
         let mut packet = Packet::new();
         packet.header.set_version(1);
-        packet.header.set_type(message_type(self.config.reliability));
+        packet
+            .header
+            .set_type(message_type(self.config.reliability));
         packet.header.code = MessageClass::Request(RequestType::Put);
         packet.header.message_id = id;
         packet.set_token(token);
@@ -513,7 +515,10 @@ mod tests {
     #[tokio::test]
     async fn send_before_connect_reports_closed() {
         let mut transport = CoapTransport::new(CoapConfig::new("localhost", 5683));
-        assert!(matches!(transport.send("t", b"x").await, Err(Error::Closed)));
+        assert!(matches!(
+            transport.send("t", b"x").await,
+            Err(Error::Closed)
+        ));
     }
 
     #[tokio::test]
