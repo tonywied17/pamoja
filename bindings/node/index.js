@@ -310,7 +310,8 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { version, formatTransportError } = nativeBinding
+const { version, Qos, MqttClient } = nativeBinding
 
 module.exports.version = version
-module.exports.formatTransportError = formatTransportError
+module.exports.Qos = Qos
+module.exports.MqttClient = MqttClient
