@@ -53,3 +53,6 @@ jobs:
 
       - name: Publish pamoja-bus
         run: cargo publish -p pamoja-bus
+
+      - name: Publish pamoja-ladder
+        run: cargo publish -p pamoja-ladder

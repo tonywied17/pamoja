@@ -8,6 +8,7 @@ members = [
     "crates/pamoja-ffi",
     "crates/pamoja-sync",
     "crates/pamoja-loopback",
+    "crates/pamoja-ladder",
     "crates/pamoja-bus",
     "crates/xtask",
     "examples",

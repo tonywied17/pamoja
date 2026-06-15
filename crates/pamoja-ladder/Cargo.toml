@@ -1,0 +1,20 @@
+[package]
+name = "pamoja-ladder"
+description = "Cost-aware transport ladder for the pamoja device SDK: try the cheapest link first, buffer offline."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+pamoja-core = { workspace = true }
+
+[dev-dependencies]
+pamoja-sync = { path = "../pamoja-sync" }
+pamoja-loopback = { path = "../pamoja-loopback" }
+tokio = { version = "1", features = ["rt", "macros", "time"] }
