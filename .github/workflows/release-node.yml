@@ -50,7 +50,7 @@ jobs:
         run: npm install
 
       - name: Build native addon
-        run: npm run build -- --target ${{ matrix.target }} ${{ matrix.zig && '--zig' || '' }}
+        run: npm run build:native -- --target ${{ matrix.target }} ${{ matrix.zig && '--zig' || '' }}
 
       - name: Upload addon artifact
         uses: actions/upload-artifact@v4
