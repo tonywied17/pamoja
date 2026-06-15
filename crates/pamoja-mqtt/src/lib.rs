@@ -32,10 +32,10 @@
 
 use std::time::Duration;
 
+use pamoja_core::{Error, Result, Transport};
 use rumqttc::{AsyncClient, ClientError, ConnectionError, Event, MqttOptions, Packet, QoS};
 use tokio::sync::{mpsc, oneshot};
 use tokio::task::JoinHandle;
-use pamoja_core::{Error, Result, Transport};
 
 /// The delivery guarantee applied to published and subscribed messages.
 ///
@@ -352,7 +352,10 @@ mod tests {
     #[tokio::test]
     async fn send_before_connect_reports_closed() {
         let mut transport = MqttTransport::new(MqttConfig::new("c", "localhost", 1883));
-        assert!(matches!(transport.send("t", b"x").await, Err(Error::Closed)));
+        assert!(matches!(
+            transport.send("t", b"x").await,
+            Err(Error::Closed)
+        ));
     }
 
     #[tokio::test]
@@ -371,7 +374,10 @@ mod tests {
     async fn connect_to_unavailable_broker_fails() {
         let config = MqttConfig::new("c", "127.0.0.1", unused_port());
         let mut transport = MqttTransport::new(config.keep_alive(Duration::from_secs(1)));
-        assert!(matches!(transport.connect().await, Err(Error::Transport(_))));
+        assert!(matches!(
+            transport.connect().await,
+            Err(Error::Transport(_))
+        ));
         assert!(!transport.is_connected());
     }
 }

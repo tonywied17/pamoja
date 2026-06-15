@@ -7,9 +7,9 @@ use std::collections::HashMap;
 use std::net::TcpListener;
 use std::time::Duration;
 
-use rumqttd::{Broker, Config, ConnectionSettings, RouterConfig, ServerSettings};
 use pamoja_core::Transport;
 use pamoja_mqtt::{MqttConfig, MqttTransport};
+use rumqttd::{Broker, Config, ConnectionSettings, RouterConfig, ServerSettings};
 
 /// Reserves an ephemeral TCP port for the broker to listen on.
 fn pick_port() -> u16 {

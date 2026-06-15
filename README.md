@@ -4,9 +4,15 @@
 
 **One memory-safe Rust core. Every language. For the devices that change lives.**
 
-[![ci](https://github.com/tonywied17/pamoja/actions/workflows/ci.yml/badge.svg)](https://github.com/tonywied17/pamoja/actions/workflows/ci.yml)
-[![node](https://github.com/tonywied17/pamoja/actions/workflows/node.yml/badge.svg)](https://github.com/tonywied17/pamoja/actions/workflows/node.yml)
-[![license](https://img.shields.io/badge/license-MIT-1FA995)](LICENSE-MIT)
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/tag-iot-dark.svg"><img height="26" alt="IoT" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/tag-iot-light.svg"></picture>
+&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/tag-robotics-drones-dark.svg"><img height="26" alt="robotics &amp; drones" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/tag-robotics-drones-light.svg"></picture>
+&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/tag-edge-first-dark.svg"><img height="26" alt="edge-first" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/tag-edge-first-light.svg"></picture>
+&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/tag-offline-first-dark.svg"><img height="26" alt="offline-first" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/tag-offline-first-light.svg"></picture>
+&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/tag-rust-core-dark.svg"><img height="26" alt="Rust core" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/tag-rust-core-light.svg"></picture>
+
+<a href="https://crates.io/crates/pamoja-core"><img height="26" alt="crates.io" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/btn-crates.svg"></a>
+&nbsp;<a href="https://www.npmjs.com/package/@pamoja/core"><img height="26" alt="npm" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/btn-npm.svg"></a>
+&nbsp;<a href="LICENSE-MIT"><img height="26" alt="MIT license" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/btn-license.svg"></a>
 
 </div>
 
