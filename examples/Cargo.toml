@@ -1,0 +1,25 @@
+[package]
+name = "pamoja-examples"
+description = "Runnable examples composing the pamoja crates."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish = false
+
+[[example]]
+name = "store_and_forward"
+path = "store_and_forward.rs"
+
+[dependencies]
+pamoja-core = { workspace = true }
+pamoja-codec = { path = "../crates/pamoja-codec" }
+pamoja-sync = { path = "../crates/pamoja-sync" }
+pamoja-loopback = { path = "../crates/pamoja-loopback" }
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["rt", "macros"] }
+
+[lints]
+workspace = true

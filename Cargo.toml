@@ -8,6 +8,7 @@ members = [
     "crates/pamoja-sync",
     "crates/pamoja-loopback",
     "crates/xtask",
+    "examples",
 ]
 # Language bindings are standalone crates with their own toolchains and lint
 # policy; they are built by their own pipelines, not the core workspace.

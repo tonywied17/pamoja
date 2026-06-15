@@ -1284,6 +1284,18 @@ name = "pamoja-core"
 version = "0.1.5"
 
 [[package]]
+name = "pamoja-examples"
+version = "0.1.5"
+dependencies = [
+ "pamoja-codec",
+ "pamoja-core",
+ "pamoja-loopback",
+ "pamoja-sync",
+ "serde",
+ "tokio",
+]
+
+[[package]]
 name = "pamoja-ffi"
 version = "0.1.5"
 dependencies = [
