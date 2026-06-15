@@ -1,6 +1,6 @@
 {
   "name": "@pamoja/core",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Node.js bindings for the pamoja device SDK core.",
   "license": "MIT",
   "publishConfig": { "access": "public" },
@@ -44,8 +44,7 @@
     "build:debug": "napi build --platform && tsc -p tsconfig.json",
     "build:facade": "tsc -p tsconfig.json",
     "test": "node test.js",
-    "prepack": "tsc -p tsconfig.json",
-    "prepublishOnly": "napi prepublish -t npm"
+    "prepack": "tsc -p tsconfig.json"
   },
   "devDependencies": {
     "@napi-rs/cli": "^2.18.4",

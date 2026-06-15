@@ -252,11 +252,11 @@ checksum = "d05e27ee213611ffe7d6348b942e8f942b37114c00cc03cec254295a4a17852e"
 
 [[package]]
 name = "pamoja-core"
-version = "0.1.4"
+version = "0.1.5"
 
 [[package]]
 name = "pamoja-mqtt"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "pamoja-core",
  "rumqttc",
@@ -265,7 +265,7 @@ dependencies = [
 
 [[package]]
 name = "pamoja-node"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "napi",
  "napi-build",

@@ -1083,18 +1083,18 @@ dependencies = [
 
 [[package]]
 name = "pamoja-codec"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "pamoja-core",
 ]
 
 [[package]]
 name = "pamoja-core"
-version = "0.1.4"
+version = "0.1.5"
 
 [[package]]
 name = "pamoja-mqtt"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "pamoja-core",
  "rumqttc",
@@ -2370,7 +2370,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.1.4"
+version = "0.1.5"
 
 [[package]]
 name = "yaml-rust"
