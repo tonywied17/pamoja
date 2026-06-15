@@ -59,6 +59,7 @@ In active development, the following crates and bindings are available:
 - `pamoja-ladder` - a cost-aware transport ladder: rank transports cheapest-first, send over the first reachable rung, and buffer to a `Store` when every link is down, draining the backlog in order once one returns.
 - `pamoja-bus` - an in-memory typed publish/subscribe event bus implementing the core `EventBus` trait, broadcasting each event to every subscriber.
 - `pamoja-kit` - a `no_std`, allocation-free helper layer that names the math for the goal, not the technique: smooth a noisy reading, turn a raw reading into real units, keep a temperature, and warn before a tank runs dry, each documenting the real algorithm one layer down.
+- `pamoja-power` - a `no_std` power-scheduling layer: duty cycling with a duty-fraction power proxy, and an energy-aware governor that stretches the work interval as the battery drains and eases off when the panel is charging.
 - `pamoja-ffi` - the curated C ABI over the core and MQTT, with a `cbindgen`-generated, drift-checked `pamoja.h`. This is the single auditable unsafe boundary and the seam C, C++, and .NET consume.
 - `@pamoja/core` - the Node binding, shipped in two tiers: a generated contract and a hand-written TypeScript facade (the `MqttClient` today, until the capability-scoped packages land).
 - `pamoja-core` (Python) - the Python binding, same two tiers: a generated, type-stubbed contract and a hand-written async facade, built with PyO3 and maturin.
@@ -159,7 +160,7 @@ Messaging and radio. MQTT and CoAP work today, behind a cost-aware transport lad
 
 Hardware and sensors. Serial, CAN, GPIO/I2C/SPI, and RS485/Modbus for long field cabling. A catalog of drivers for cheap, common, salvageable parts, plus device profiles you instantiate by name (a vaccine-fridge monitor, an irrigation node, a well-level sensor) instead of wiring pins.
 
-Resilience and power. Offline-first store-and-forward, energy-aware duty cycling for solar and battery, local-first dashboards a device serves over its own hotspot, and data-mule sync for places with no link at all.
+Resilience and power. Offline-first store-and-forward and energy-aware duty cycling for solar and battery work today; next are local-first dashboards a device serves over its own hotspot, and data-mule sync for places with no link at all.
 
 Robotics and drones. A ROS2 and Zenoh bridge, then MAVLink for drones, modeled as ordinary pamoja devices.
 

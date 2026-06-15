@@ -1387,6 +1387,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "pamoja-power"
+version = "0.1.5"
+
+[[package]]
 name = "pamoja-sync"
 version = "0.1.5"
 dependencies = [
