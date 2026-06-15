@@ -52,8 +52,9 @@ Early Development and Planning. The foundation and the first capability work end
 - `pamoja-codec` - the pluggable serialization trait.
 - `pamoja-mqtt` - an MQTT client implementing the core `Transport` trait, tested against an embedded broker.
 - `@pamoja/core` - the Node binding, shipped in two tiers: a generated contract and a hand-written TypeScript facade.
+- `pamoja-core` (Python) - the Python binding, same two tiers: a generated, type-stubbed contract and a hand-written async facade, built with PyO3 and maturin.
 
-CI runs formatting, clippy, and tests for the workspace, builds the Node addon, and fails if the generated binding drifts from the Rust source. Release workflows publish to crates.io and npm on a version tag. Everything past this is on the roadmap below.
+CI runs formatting, clippy, and tests for the workspace, builds the Node and Python bindings, and fails if either generated surface drifts from the Rust source. Release workflows publish to crates.io, npm, and PyPI on a version tag. Everything past this is on the roadmap below.
 
 ## A quick look
 
@@ -70,6 +71,22 @@ await client.publish('sensors/1/temperature', '21.5')
 for await (const message of client) {
   console.log(message.topic, message.payload.toString())
 }
+```
+
+The same shape in Python, through its async facade:
+
+```python
+import asyncio
+from pamoja import MqttClient
+
+async def main():
+    async with MqttClient(client_id="sensor-1", host="localhost", port=1883) as client:
+        await client.subscribe("sensors/+/temperature")
+        await client.publish("sensors/1/temperature", "21.5")
+        async for message in client:
+            print(message.topic, message.payload.decode())
+
+asyncio.run(main())
 ```
 
 The same thing in Rust:
@@ -123,7 +140,7 @@ Reach. Bindings beyond Node: Python, C#/.NET, Lua, WebAssembly, Kotlin, Swift, a
 | --- | --- | --- |
 | Rust | `pamoja-core`, `pamoja-mqtt`, ... | available |
 | TypeScript / Node | `@pamoja/core` | in progress |
-| Python | `pamoja-*` | planned |
+| Python | `pamoja-core` | in progress |
 | C# / .NET | `Pamoja.*` | planned |
 | Lua | embeddable | planned |
 | WebAssembly | browser / npm | planned |
@@ -148,6 +165,11 @@ cargo test --workspace       # run tests, including doctests and the MQTT round-
 cd bindings/node
 npm install && npm run build  # build the native addon and the TypeScript facade
 npm test                      # smoke-test the binding
+
+cd ../python
+python -m venv .venv && . .venv/bin/activate
+pip install maturin pytest && maturin develop  # build the extension and install the facade
+pytest                                          # smoke-test the binding
 ```
 
 The local toolchain needs no extra components; formatting and clippy run in CI.

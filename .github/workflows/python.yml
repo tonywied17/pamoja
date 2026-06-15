@@ -1,0 +1,40 @@
+name: python
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: build and smoke test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bindings/python
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Set up venv and build the extension
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install maturin pytest
+          maturin develop
+
+      - name: Regenerate the type stub
+        run: cargo run --bin stub_gen
+
+      - name: Check the generated stub is in sync with the Rust source
+        run: |
+          if ! git diff --exit-code -- python/pamoja/_core/__init__.pyi; then
+            echo "::error::Generated stub is stale. Run 'cargo run --bin stub_gen' in bindings/python and commit python/pamoja/_core/__init__.pyi."
+            exit 1
+          fi
+
+      - name: Smoke test
+        run: .venv/bin/python -m pytest

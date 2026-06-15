@@ -15,9 +15,11 @@ crate-type = ["cdylib", "rlib"]
 
 # Regenerates the committed type stub from the Rust source. Built without
 # pyo3/extension-module so it links libpython and can run as a normal binary.
+# Kept at src/stub_gen.rs (not src/bin/) so the repo's .NET bin/ ignore rule
+# does not exclude it.
 [[bin]]
 name = "stub_gen"
-path = "src/bin/stub_gen.rs"
+path = "src/stub_gen.rs"
 
 [features]
 default = ["mqtt"]
