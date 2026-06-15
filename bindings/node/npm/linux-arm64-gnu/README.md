@@ -1,3 +1,3 @@
-# `@zero-edge/core-linux-arm64-gnu`
+# `@pamoja/core-linux-arm64-gnu`
 
-This is the **aarch64-unknown-linux-gnu** binary for `@zero-edge/core`
+This is the **aarch64-unknown-linux-gnu** binary for `@pamoja/core`

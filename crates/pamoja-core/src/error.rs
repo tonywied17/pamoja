@@ -1,4 +1,4 @@
-//! The error model shared by every zero-edge crate.
+//! The error model shared by every pamoja crate.
 //!
 //! A single [`Error`] type keeps failure handling uniform across capabilities and
 //! maps cleanly onto each language binding's native error idiom, such as
@@ -6,7 +6,7 @@
 
 use core::fmt;
 
-/// The error type returned by all fallible zero-edge operations.
+/// The error type returned by all fallible pamoja operations.
 ///
 /// This enum is `#[non_exhaustive]`: new variants may be added in future releases
 /// without a breaking change, so downstream `match` expressions must include a

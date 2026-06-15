@@ -1,16 +1,44 @@
-// Smoke test: confirms the native module loads and the core is reachable.
+// Smoke test: confirms the facade loads, the native core is reachable, and the
+// MQTT transport surfaces errors as rejected promises (no broker required).
 const assert = require("node:assert");
-const { version, formatTransportError } = require("./index.js");
+const { version, MqttClient, Qos } = require("./dist/index.js");
 
-const v = version();
-console.log("zero-edge-core version:", v);
-assert.strictEqual(typeof v, "string", "version() should return a string");
+async function main() {
+  const v = version();
+  console.log("pamoja version:", v);
+  assert.strictEqual(typeof v, "string", "version() should return a string");
 
-const rendered = formatTransportError("connection timed out");
-console.log("formatted error:", rendered);
-assert.ok(
-  rendered.includes("transport error"),
-  "formatTransportError should render through the core error model",
-);
+  assert.strictEqual(Qos.AtLeastOnce, "AtLeastOnce", "Qos should expose string levels");
 
-console.log("ok");
+  const client = new MqttClient({
+    clientId: "smoke",
+    host: "127.0.0.1",
+    port: 47811,
+    keepAliveSecs: 1,
+  });
+
+  assert.strictEqual(
+    await client.isConnected(),
+    false,
+    "a fresh client should not be connected",
+  );
+
+  await assert.rejects(
+    () => client.connect(),
+    /transport error/,
+    "connecting to a closed port should reject with a transport error",
+  );
+
+  assert.strictEqual(
+    await client.isConnected(),
+    false,
+    "a failed connect should leave the client disconnected",
+  );
+
+  console.log("ok");
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

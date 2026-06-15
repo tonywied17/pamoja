@@ -8,8 +8,8 @@ use std::net::TcpListener;
 use std::time::Duration;
 
 use rumqttd::{Broker, Config, ConnectionSettings, RouterConfig, ServerSettings};
-use zero_edge_core::Transport;
-use zero_edge_mqtt::{MqttConfig, MqttTransport};
+use pamoja_core::Transport;
+use pamoja_mqtt::{MqttConfig, MqttTransport};
 
 /// Reserves an ephemeral TCP port for the broker to listen on.
 fn pick_port() -> u16 {
@@ -85,7 +85,7 @@ async fn publish_and_subscribe_round_trip() {
     let port = pick_port();
     spawn_broker(port);
 
-    let topic = "zero-edge/it/round-trip";
+    let topic = "pamoja/it/round-trip";
 
     let mut subscriber = connect_with_retry(
         MqttConfig::new("ze-sub", "127.0.0.1", port).keep_alive(Duration::from_secs(5)),

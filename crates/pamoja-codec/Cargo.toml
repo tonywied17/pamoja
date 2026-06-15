@@ -1,6 +1,6 @@
 [package]
-name = "zero-edge-codec"
-description = "Serialization and framing for zero-edge: pluggable wire formats behind a common Codec trait."
+name = "pamoja-codec"
+description = "Serialization and framing for pamoja: pluggable wire formats behind a common Codec trait."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,7 +9,7 @@ repository.workspace = true
 authors.workspace = true
 
 [dependencies]
-zero-edge-core = { path = "../zero-edge-core" }
+pamoja-core = { workspace = true }
 
 [lints]
 workspace = true

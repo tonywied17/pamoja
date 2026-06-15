@@ -1,4 +1,4 @@
-//! Pluggable serialization for zero-edge payloads.
+//! Pluggable serialization for pamoja payloads.
 //!
 //! Concrete wire formats - CBOR for constrained devices, Protocol Buffers, JSON,
 //! or raw framing - implement the [`Codec`] trait. This crate defines the trait;
@@ -9,8 +9,8 @@
 //! A little-endian codec for `u32` values:
 //!
 //! ```
-//! use zero_edge_codec::Codec;
-//! use zero_edge_core::{Error, Result};
+//! use pamoja_codec::Codec;
+//! use pamoja_core::{Error, Result};
 //!
 //! struct LeU32;
 //!
@@ -32,13 +32,13 @@
 //! assert_eq!(codec.decode(&encoded).unwrap(), 42);
 //! ```
 
-use zero_edge_core::Result;
+use pamoja_core::Result;
 
 /// Encodes and decodes values of type `T` to and from byte buffers.
 ///
 /// A codec is the bridge between in-memory values and the bytes carried by a
-/// [`Transport`](zero_edge_core::Transport) or persisted by a
-/// [`Store`](zero_edge_core::Store).
+/// [`Transport`](pamoja_core::Transport) or persisted by a
+/// [`Store`](pamoja_core::Store).
 pub trait Codec<T> {
     /// Encodes a value into a byte buffer.
     ///
@@ -52,7 +52,7 @@ pub trait Codec<T> {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Codec`](zero_edge_core::Error::Codec) if the value cannot
+    /// Returns [`Error::Codec`](pamoja_core::Error::Codec) if the value cannot
     /// be encoded.
     fn encode(&self, value: &T) -> Result<Vec<u8>>;
 
@@ -68,7 +68,7 @@ pub trait Codec<T> {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::Codec`](zero_edge_core::Error::Codec) if `bytes` is not a
+    /// Returns [`Error::Codec`](pamoja_core::Error::Codec) if `bytes` is not a
     /// valid encoding of `T`.
     fn decode(&self, bytes: &[u8]) -> Result<T>;
 }

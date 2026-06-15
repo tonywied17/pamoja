@@ -1,6 +1,6 @@
 [package]
-name = "zero-edge-mqtt"
-description = "MQTT transport for the zero-edge device SDK, built on rumqttc."
+name = "pamoja-mqtt"
+description = "MQTT transport for the pamoja device SDK, built on rumqttc."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -12,7 +12,7 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-zero-edge-core = { path = "../zero-edge-core" }
+pamoja-core = { workspace = true }
 rumqttc = "0.24"
 tokio = { version = "1", features = ["rt", "sync", "macros", "time"] }
 

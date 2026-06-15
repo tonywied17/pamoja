@@ -1,24 +1,24 @@
 {
-  "name": "@zero-edge/core-linux-arm64-gnu",
-  "version": "0.0.0",
+  "name": "@pamoja/core-linux-arm64-gnu",
+  "version": "0.1.0",
   "os": [
     "linux"
   ],
   "cpu": [
     "arm64"
   ],
-  "main": "zero-edge-core.linux-arm64-gnu.node",
+  "main": "pamoja-core.linux-arm64-gnu.node",
   "files": [
-    "zero-edge-core.linux-arm64-gnu.node"
+    "pamoja-core.linux-arm64-gnu.node"
   ],
-  "description": "Node.js bindings for the zero-edge device SDK core.",
+  "description": "Node.js bindings for the pamoja device SDK core.",
   "license": "MIT",
   "engines": {
     "node": ">= 16"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tonywied17/zero-edge.git"
+    "url": "git+https://github.com/tonywied17/pamoja.git"
   },
   "libc": [
     "glibc"

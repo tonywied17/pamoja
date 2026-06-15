@@ -1,23 +1,23 @@
 {
-  "name": "@zero-edge/core-darwin-arm64",
-  "version": "0.0.0",
+  "name": "@pamoja/core-darwin-arm64",
+  "version": "0.1.0",
   "os": [
     "darwin"
   ],
   "cpu": [
     "arm64"
   ],
-  "main": "zero-edge-core.darwin-arm64.node",
+  "main": "pamoja-core.darwin-arm64.node",
   "files": [
-    "zero-edge-core.darwin-arm64.node"
+    "pamoja-core.darwin-arm64.node"
   ],
-  "description": "Node.js bindings for the zero-edge device SDK core.",
+  "description": "Node.js bindings for the pamoja device SDK core.",
   "license": "MIT",
   "engines": {
     "node": ">= 16"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tonywied17/zero-edge.git"
+    "url": "git+https://github.com/tonywied17/pamoja.git"
   }
 }

@@ -1,6 +1,6 @@
 [package]
-name = "zero-edge-core"
-description = "Core engine for the zero-edge device SDK: device model, transport, event bus, and error types."
+name = "pamoja-core"
+description = "Core engine for the pamoja device SDK: device model, transport, event bus, and error types."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

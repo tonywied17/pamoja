@@ -1082,6 +1082,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "pamoja-codec"
+version = "0.1.0"
+dependencies = [
+ "pamoja-core",
+]
+
+[[package]]
+name = "pamoja-core"
+version = "0.1.0"
+
+[[package]]
+name = "pamoja-mqtt"
+version = "0.1.0"
+dependencies = [
+ "pamoja-core",
+ "rumqttc",
+ "rumqttd",
+ "tokio",
+]
+
+[[package]]
 name = "parking_lot"
 version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2349,7 +2370,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.0.0"
+version = "0.1.0"
 
 [[package]]
 name = "yaml-rust"
@@ -2381,27 +2402,6 @@ dependencies = [
  "quote",
  "syn 2.0.117",
  "synstructure 0.13.2",
-]
-
-[[package]]
-name = "zero-edge-codec"
-version = "0.0.0"
-dependencies = [
- "zero-edge-core",
-]
-
-[[package]]
-name = "zero-edge-core"
-version = "0.0.0"
-
-[[package]]
-name = "zero-edge-mqtt"
-version = "0.0.0"
-dependencies = [
- "rumqttc",
- "rumqttd",
- "tokio",
- "zero-edge-core",
 ]
 
 [[package]]

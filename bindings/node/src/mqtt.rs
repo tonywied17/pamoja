@@ -1,6 +1,6 @@
 //! Generated Node bindings for the MQTT transport.
 //!
-//! These mirror the `zero-edge-mqtt` Rust API one-to-one. The shared state lives
+//! These mirror the `pamoja-mqtt` Rust API one-to-one. The shared state lives
 //! behind an async mutex so the napi-generated async methods own a clonable
 //! handle rather than borrowing the JavaScript object across an `await`.
 
@@ -10,8 +10,8 @@ use std::time::Duration;
 use napi::bindgen_prelude::Buffer;
 use napi_derive::napi;
 use tokio::sync::Mutex;
-use zero_edge_core::{Error, Transport};
-use zero_edge_mqtt::{MqttConfig, MqttTransport, QualityOfService};
+use pamoja_core::{Error, Transport};
+use pamoja_mqtt::{MqttConfig, MqttTransport, QualityOfService};
 
 /// MQTT delivery guarantee, mirroring the protocol's quality-of-service levels.
 #[napi(string_enum)]
@@ -60,7 +60,7 @@ pub struct MqttMessage {
     pub payload: Buffer,
 }
 
-/// An MQTT client transport backed by the native zero-edge core.
+/// An MQTT client transport backed by the native pamoja core.
 #[napi]
 pub struct MqttClient {
     inner: Arc<Mutex<MqttTransport>>,
