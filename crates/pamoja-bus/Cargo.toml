@@ -1,0 +1,19 @@
+[package]
+name = "pamoja-bus"
+description = "In-memory typed publish/subscribe event bus implementing the core EventBus trait."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+pamoja-core = { workspace = true }
+tokio = { version = "1", default-features = false, features = ["sync"] }
+
+[dev-dependencies]
+tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
+
+[lints]
+workspace = true

@@ -7,6 +7,7 @@ members = [
     "crates/pamoja-ffi",
     "crates/pamoja-sync",
     "crates/pamoja-loopback",
+    "crates/pamoja-bus",
     "crates/xtask",
     "examples",
 ]

@@ -1269,6 +1269,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "pamoja-bus"
+version = "0.1.5"
+dependencies = [
+ "pamoja-core",
+ "tokio",
+]
+
+[[package]]
 name = "pamoja-codec"
 version = "0.1.5"
 dependencies = [

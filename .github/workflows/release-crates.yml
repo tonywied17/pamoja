@@ -50,3 +50,6 @@ jobs:
 
       - name: Publish pamoja-loopback
         run: cargo publish -p pamoja-loopback
+
+      - name: Publish pamoja-bus
+        run: cargo publish -p pamoja-bus
