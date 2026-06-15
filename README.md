@@ -13,6 +13,7 @@
 <a href="https://crates.io/crates/pamoja-core"><img height="26" alt="crates.io" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/btn-crates.svg"></a>
 &nbsp;<a href="https://www.npmjs.com/package/@pamoja/core"><img height="26" alt="npm" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/btn-npm.svg"></a>
 &nbsp;<a href="https://pypi.org/project/pamoja-core/"><img height="26" alt="PyPI" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/btn-pypi.svg"></a>
+&nbsp;<a href="https://www.nuget.org/packages/Pamoja.Core/"><img height="26" alt="NuGet" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/btn-nuget.svg"></a>
 &nbsp;<a href="LICENSE-MIT"><img height="26" alt="MIT license" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/btn-license.svg"></a>
 
 </div>
