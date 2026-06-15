@@ -12,7 +12,7 @@
 use pamoja_codec::{CborCodec, Codec};
 use pamoja_core::{Result, Store, Transport};
 use pamoja_loopback::{LoopbackBroker, LoopbackTransport};
-use pamoja_sync::MemoryStore;
+use pamoja_sync::{drain_to, MemoryStore};
 use serde::{Deserialize, Serialize};
 
 /// A single temperature reading from a field sensor.
@@ -50,10 +50,9 @@ async fn main() -> Result<()> {
     node.connect().await?;
     gateway.subscribe("sensors/+/temperature").await?;
 
-    // Drain the buffer, forwarding each encoded reading over the link.
-    while let Some(record) = outbox.pop().await? {
-        node.send(topic, &record).await?;
-    }
+    // Drain the buffer, forwarding each encoded reading over the link in order.
+    let forwarded = drain_to(&mut outbox, &mut node, topic).await?;
+    println!("forwarded {forwarded} readings once the link was up");
 
     // The gateway receives and decodes everything that was forwarded.
     for _ in 0..buffered {

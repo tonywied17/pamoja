@@ -71,6 +71,10 @@ impl Store for MemoryStore {
         Ok(())
     }
 
+    async fn peek(&self) -> Result<Option<Vec<u8>>> {
+        Ok(self.records.front().cloned())
+    }
+
     async fn pop(&mut self) -> Result<Option<Vec<u8>>> {
         Ok(self.records.pop_front())
     }
@@ -96,6 +100,18 @@ mod tests {
         assert_eq!(store.pop().await.expect("pop"), Some(b"b".to_vec()));
         assert_eq!(store.pop().await.expect("pop"), Some(b"c".to_vec()));
         assert_eq!(store.pop().await.expect("pop"), None);
+    }
+
+    #[tokio::test]
+    async fn peek_returns_the_oldest_without_removing_it() {
+        let mut store = MemoryStore::new();
+        assert_eq!(store.peek().await.expect("peek"), None);
+
+        store.append(b"a").await.expect("append");
+        store.append(b"b").await.expect("append");
+        assert_eq!(store.peek().await.expect("peek"), Some(b"a".to_vec()));
+        assert_eq!(store.len().await.expect("len"), 2);
+        assert_eq!(store.pop().await.expect("pop"), Some(b"a".to_vec()));
     }
 
     #[tokio::test]

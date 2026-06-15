@@ -24,6 +24,21 @@ pub trait Store {
     /// durable storage.
     async fn append(&mut self, record: &[u8]) -> Result<()>;
 
+    /// Returns the oldest record without removing it.
+    ///
+    /// This lets a forwarder send a record before committing to its removal, so a
+    /// failed send can leave the record buffered in order rather than dropping it.
+    ///
+    /// # Returns
+    ///
+    /// `Some(record)` containing the oldest buffered bytes, or `None` if the queue
+    /// is empty.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Io`](crate::Error::Io) if the queue cannot be read.
+    async fn peek(&self) -> Result<Option<Vec<u8>>>;
+
     /// Removes and returns the oldest record in the queue.
     ///
     /// # Returns

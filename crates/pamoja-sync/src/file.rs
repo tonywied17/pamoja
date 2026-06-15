@@ -114,6 +114,14 @@ impl Store for FileStore {
         Ok(())
     }
 
+    async fn peek(&self) -> Result<Option<Vec<u8>>> {
+        let Some(&sequence) = self.pending.front() else {
+            return Ok(None);
+        };
+        let record = fs::read(self.record_path(sequence)).map_err(io)?;
+        Ok(Some(record))
+    }
+
     async fn pop(&mut self) -> Result<Option<Vec<u8>>> {
         let Some(sequence) = self.pending.pop_front() else {
             return Ok(None);
@@ -166,6 +174,18 @@ mod tests {
         assert_eq!(reopened.len().await.expect("len"), 2);
         assert_eq!(reopened.pop().await.expect("pop"), Some(b"durable".to_vec()));
         assert_eq!(reopened.pop().await.expect("pop"), Some(b"records".to_vec()));
+    }
+
+    #[tokio::test]
+    async fn peek_reads_the_oldest_without_removing_it() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let mut store = FileStore::open(dir.path()).expect("open");
+        store.append(b"oldest").await.expect("append");
+        store.append(b"newer").await.expect("append");
+
+        assert_eq!(store.peek().await.expect("peek"), Some(b"oldest".to_vec()));
+        assert_eq!(store.len().await.expect("len"), 2);
+        assert_eq!(store.pop().await.expect("pop"), Some(b"oldest".to_vec()));
     }
 
     #[tokio::test]
