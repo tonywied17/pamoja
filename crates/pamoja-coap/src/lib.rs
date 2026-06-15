@@ -313,17 +313,12 @@ impl Transport for CoapTransport {
         let pump_socket = Arc::clone(&socket);
         let pump = tokio::spawn(async move {
             let mut buf = vec![0u8; 1500];
-            loop {
-                match pump_socket.recv(&mut buf).await {
-                    Ok(len) => {
-                        let Ok(packet) = Packet::from_bytes(&buf[..len]) else {
-                            continue;
-                        };
-                        if !dispatch(packet, &pending, &tx, &pump_socket).await {
-                            break;
-                        }
-                    }
-                    Err(_) => break,
+            while let Ok(len) = pump_socket.recv(&mut buf).await {
+                let Ok(packet) = Packet::from_bytes(&buf[..len]) else {
+                    continue;
+                };
+                if !dispatch(packet, &pending, &tx, &pump_socket).await {
+                    break;
                 }
             }
         });
