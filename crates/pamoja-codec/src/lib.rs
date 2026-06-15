@@ -1,8 +1,14 @@
 //! Pluggable serialization for pamoja payloads.
 //!
 //! Concrete wire formats - CBOR for constrained devices, Protocol Buffers, JSON,
-//! or raw framing - implement the [`Codec`] trait. This crate defines the trait;
-//! the format implementations are provided by the capability crates.
+//! or raw framing - implement the [`Codec`] trait. This crate defines the trait
+//! and provides serde-based implementations behind feature flags:
+//!
+//! - [`CborCodec`] (feature `cbor`, on by default) - compact binary framing for
+//!   constrained devices and metered links.
+//! - [`JsonCodec`] (feature `json`, on by default) - human-readable framing for
+//!   interop and debugging.
+//! - [`BytesCodec`] (always available) - a no-op codec that carries raw bytes.
 //!
 //! # Examples
 //!
@@ -33,6 +39,19 @@
 //! ```
 
 use pamoja_core::Result;
+
+mod bytes;
+pub use bytes::BytesCodec;
+
+#[cfg(feature = "cbor")]
+mod cbor;
+#[cfg(feature = "cbor")]
+pub use cbor::CborCodec;
+
+#[cfg(feature = "json")]
+mod json;
+#[cfg(feature = "json")]
+pub use json::JsonCodec;
 
 /// Encodes and decodes values of type `T` to and from byte buffers.
 ///

@@ -8,8 +8,24 @@ license.workspace = true
 repository.workspace = true
 authors.workspace = true
 
+[features]
+default = ["cbor", "json"]
+# Compact CBOR framing for constrained devices and metered links.
+cbor = ["dep:ciborium"]
+# Human-readable JSON framing for interop and debugging.
+json = ["dep:serde_json"]
+
 [dependencies]
 pamoja-core = { workspace = true }
+# `alloc` (not `std`) keeps the door open for the no_std core; the serde traits and
+# the Vec/String impls the codecs need are available without pulling in std here.
+serde = { version = "1", default-features = false, features = ["alloc"] }
+ciborium = { version = "0.2", optional = true }
+serde_json = { version = "1", optional = true }
+
+[dev-dependencies]
+serde = { version = "1", features = ["derive"] }
+proptest = "1"
 
 [lints]
 workspace = true
