@@ -1,0 +1,12 @@
+[package]
+name = "pamoja-power"
+description = "Power-aware scheduling for the pamoja device SDK: duty cycling and an energy-aware governor, no_std-friendly."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
