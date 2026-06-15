@@ -46,7 +46,7 @@ What that means in practice:
 
 ## Status
 
-Early, but real. The foundation and the first capability work end to end:
+Early Development and Planning. The foundation and the first capability work end to end:
 
 - `pamoja-core` - the device model and transport, store, event-bus, and error traits.
 - `pamoja-codec` - the pluggable serialization trait.
