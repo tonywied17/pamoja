@@ -71,6 +71,10 @@ jobs:
     name: pack and publish to NuGet
     needs: native
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Required to mint a short-lived NuGet key via OIDC trusted publishing.
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -97,9 +101,15 @@ jobs:
       - name: Pack
         run: dotnet pack bindings/dotnet/src/Pamoja.Core/Pamoja.Core.csproj -c Release -o dist
 
+      - name: Authenticate to NuGet via OIDC trusted publishing
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: pamoja
+
       - name: Publish to NuGet
         run: >
           dotnet nuget push "dist/*.nupkg"
-          --api-key "${{ secrets.NUGET_TOKEN }}"
+          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
           --source https://api.nuget.org/v3/index.json
           --skip-duplicate
