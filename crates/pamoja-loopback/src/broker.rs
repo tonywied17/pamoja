@@ -100,7 +100,10 @@ mod tests {
     #[test]
     fn single_level_wildcard_matches_one_level() {
         assert!(topic_matches("a/+/c", "a/b/c"));
-        assert!(topic_matches("sensors/+/temperature", "sensors/1/temperature"));
+        assert!(topic_matches(
+            "sensors/+/temperature",
+            "sensors/1/temperature"
+        ));
         assert!(!topic_matches("a/+/c", "a/b/c/d"));
         assert!(!topic_matches("a/+", "a"));
     }

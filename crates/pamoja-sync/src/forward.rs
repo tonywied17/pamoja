@@ -77,7 +77,10 @@ mod tests {
         }
 
         async fn send(&mut self, topic: &str, payload: &[u8]) -> Result<()> {
-            if self.fail_after.is_some_and(|limit| self.sent.len() >= limit) {
+            if self
+                .fail_after
+                .is_some_and(|limit| self.sent.len() >= limit)
+            {
                 return Err(Error::Transport("link down".to_owned()));
             }
             self.sent.push((topic.to_owned(), payload.to_vec()));
