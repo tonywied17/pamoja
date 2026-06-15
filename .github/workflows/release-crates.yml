@@ -47,3 +47,6 @@ jobs:
 
       - name: Publish pamoja-sync
         run: cargo publish -p pamoja-sync
+
+      - name: Publish pamoja-loopback
+        run: cargo publish -p pamoja-loopback

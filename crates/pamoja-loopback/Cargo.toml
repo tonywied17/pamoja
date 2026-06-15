@@ -1,0 +1,19 @@
+[package]
+name = "pamoja-loopback"
+description = "In-process loopback transport for pamoja: a broker-free Transport for tests, examples, and simulators."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+pamoja-core = { workspace = true }
+tokio = { version = "1", default-features = false, features = ["sync"] }
+
+[dev-dependencies]
+tokio = { version = "1", default-features = false, features = ["macros", "rt"] }
+
+[lints]
+workspace = true

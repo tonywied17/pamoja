@@ -1294,6 +1294,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "pamoja-loopback"
+version = "0.1.5"
+dependencies = [
+ "pamoja-core",
+ "tokio",
+]
+
+[[package]]
 name = "pamoja-mqtt"
 version = "0.1.5"
 dependencies = [

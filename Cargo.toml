@@ -6,6 +6,7 @@ members = [
     "crates/pamoja-mqtt",
     "crates/pamoja-ffi",
     "crates/pamoja-sync",
+    "crates/pamoja-loopback",
     "crates/xtask",
 ]
 # Language bindings are standalone crates with their own toolchains and lint
