@@ -14,6 +14,7 @@ pamoja-core = { workspace = true }
 [dev-dependencies]
 tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
 tempfile = "3"
+pamoja-loopback = { path = "../pamoja-loopback" }
 
 [lints]
 workspace = true
