@@ -20,8 +20,14 @@ fn main() {
         (LinkCost::Free, Event::debug("loop.tick")),
         (LinkCost::Free, Event::info("reading.ok").with_value(4.8)),
         (LinkCost::Metered, Event::debug("loop.tick")),
-        (LinkCost::Metered, Event::warn("battery.low").with_value(0.18)),
-        (LinkCost::Expensive, Event::info("reading.ok").with_value(5.0)),
+        (
+            LinkCost::Metered,
+            Event::warn("battery.low").with_value(0.18),
+        ),
+        (
+            LinkCost::Expensive,
+            Event::info("reading.ok").with_value(5.0),
+        ),
         (LinkCost::Expensive, Event::error("link.lost")),
     ];
 
@@ -45,7 +51,11 @@ fn main() {
 
     // Ship the aggregate counters as a compact snapshot, not the raw stream.
     let snapshot = reporter.snapshot();
-    let counters: Vec<i64> = snapshot.by_level.iter().map(|&count| count as i64).collect();
+    let counters: Vec<i64> = snapshot
+        .by_level
+        .iter()
+        .map(|&count| count as i64)
+        .collect();
     let packed = encode_deltas(&counters);
     println!(
         "snapshot of {} per-level counts packed into {} bytes",
