@@ -6,42 +6,19 @@
 //! cooler, and publishes the reading to a gateway, which decodes it. A door left open
 //! pushes the temperature into the danger zone and the node raises an excursion
 //! alert; as the simulated battery sags, the node reports a longer wait before the
-//! next sample. No hardware, no broker. This composes five crates - `pamoja-profile`,
-//! `pamoja-kit` and `pamoja-power` (through the profile), `pamoja-codec`, and
-//! `pamoja-loopback` - through the same shapes every binding exposes.
+//! next sample. No hardware, no broker. This composes six crates - `pamoja-profile`,
+//! `pamoja-kit` and `pamoja-power` (through the profile), `pamoja-codec`,
+//! `pamoja-loopback`, and `pamoja-sim` for the fake probe and relay - through the
+//! same shapes every binding exposes.
 //!
 //! Run with: `cargo run -p pamoja-examples --example device_profile`
 
 use pamoja_codec::{CborCodec, Codec};
-use pamoja_core::{Actuator, Result, Sensor, Transport};
+use pamoja_core::{Result, Transport};
 use pamoja_loopback::{LoopbackBroker, LoopbackTransport};
 use pamoja_power::PowerMode;
 use pamoja_profile::{Node, Profile};
-
-/// A fridge probe that plays back a scripted afternoon: steady, then a door is left
-/// open and the temperature climbs out of the safe range, then it recovers.
-struct FridgeProbe {
-    readings: std::vec::IntoIter<f32>,
-}
-
-impl Sensor for FridgeProbe {
-    type Reading = f32;
-
-    async fn read(&mut self) -> Result<f32> {
-        self.readings.next().ok_or(pamoja_core::Error::Closed)
-    }
-}
-
-/// A cooler relay. A real one would switch a compressor; this one is a stand-in.
-struct Cooler;
-
-impl Actuator for Cooler {
-    type Command = bool;
-
-    async fn apply(&mut self, _on: bool) -> Result<()> {
-        Ok(())
-    }
-}
+use pamoja_sim::{RecordingActuator, Replay};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<()> {
@@ -73,11 +50,13 @@ async fn main() -> Result<()> {
         (4.8, 0.10),
     ];
 
+    // A fake probe replays the afternoon, and a fake relay records every switch, both
+    // standing in for hardware behind the same traits a real driver will implement.
     let readings: Vec<f32> = afternoon.iter().map(|&(reading, _)| reading).collect();
-    let probe = FridgeProbe {
-        readings: readings.into_iter(),
-    };
-    let mut node = Node::new(profile, probe, Cooler, link, CborCodec);
+    let probe = Replay::new(readings);
+    let cooler = RecordingActuator::new();
+    let cooler_log = cooler.log();
+    let mut node = Node::new(profile, probe, cooler, link, CborCodec);
 
     // Each cycle the node reads, decides, switches the cooler, and publishes.
     let codec = CborCodec;
@@ -111,9 +90,13 @@ async fn main() -> Result<()> {
         );
     }
 
+    // The recording relay captured every switch the controller made.
+    let runs = cooler_log.commands().iter().filter(|&&on| on).count();
+    println!("\ncooler ran in {runs} of {} cycles", cooler_log.len());
+
     // The profile that drove all of this is plain data: a community could ship it as
     // the manifest below, and a device would load it with `Profile::from_json`.
-    println!("\nshareable manifest:\n{}", node.profile().to_json()?);
+    println!("shareable manifest:\n{}", node.profile().to_json()?);
 
     println!("done");
     Ok(())

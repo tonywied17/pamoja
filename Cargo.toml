@@ -12,6 +12,7 @@ members = [
     "crates/pamoja-kit",
     "crates/pamoja-power",
     "crates/pamoja-profile",
+    "crates/pamoja-sim",
     "crates/pamoja-bus",
     "crates/xtask",
     "examples",
