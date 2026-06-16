@@ -226,7 +226,9 @@ impl Controller {
                 }
             }
             Policy::Surge { surge } => {
-                let alert = surge.update(reading).map(|rate| Alert::ChangingFast { rate });
+                let alert = surge
+                    .update(reading)
+                    .map(|rate| Alert::ChangingFast { rate });
                 Reaction {
                     actuator: None,
                     alert,
