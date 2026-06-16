@@ -16,6 +16,9 @@
 //! - [`Thermostat`] - keep a reading near a setpoint (on/off control with
 //!   hysteresis).
 //! - [`Depletion`] - warn before a falling level runs out (linear extrapolation).
+//! - [`Geofence`] - warn when a tracked point leaves a safe area (great-circle
+//!   distance). Behind the default `geo` feature, which pulls in `libm` for the
+//!   trigonometry; disable it to keep the crate dependency-free.
 //!
 //! The crate is `no_std` and allocation-free, so the same helpers run on a
 //! microcontroller and on a server.
@@ -40,7 +43,13 @@ mod depletion;
 mod smoothing;
 mod thermostat;
 
+#[cfg(feature = "geo")]
+mod geo;
+
 pub use calibration::Calibration;
 pub use depletion::Depletion;
 pub use smoothing::Smoother;
 pub use thermostat::Thermostat;
+
+#[cfg(feature = "geo")]
+pub use geo::{Boundary, Coordinate, Geofence};
