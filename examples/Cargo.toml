@@ -21,6 +21,10 @@ path = "device_profile.rs"
 name = "degraded_link"
 path = "degraded_link.rs"
 
+[[example]]
+name = "signed_telemetry"
+path = "signed_telemetry.rs"
+
 [dependencies]
 pamoja-core = { workspace = true }
 pamoja-codec = { path = "../crates/pamoja-codec" }
@@ -29,6 +33,7 @@ pamoja-loopback = { path = "../crates/pamoja-loopback" }
 pamoja-power = { path = "../crates/pamoja-power" }
 pamoja-profile = { path = "../crates/pamoja-profile" }
 pamoja-sim = { path = "../crates/pamoja-sim" }
+pamoja-security = { path = "../crates/pamoja-security" }
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["rt", "macros"] }
 

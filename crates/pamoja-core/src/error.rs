@@ -32,6 +32,11 @@ pub enum Error {
     /// The operation targeted a resource that is closed or disconnected.
     Closed,
 
+    /// A security check failed, such as an invalid identity or a bad signature.
+    ///
+    /// The payload describes the authentication or integrity fault.
+    Auth(String),
+
     /// The requested capability is not compiled into this build.
     ///
     /// The payload names the missing capability, for example `"mqtt"`.
@@ -45,6 +50,7 @@ impl fmt::Display for Error {
             Self::Io(message) => write!(f, "io error: {message}"),
             Self::Codec(message) => write!(f, "codec error: {message}"),
             Self::Closed => f.write_str("resource is closed"),
+            Self::Auth(message) => write!(f, "authentication error: {message}"),
             Self::Unsupported(capability) => {
                 write!(f, "unsupported capability: {capability}")
             }
