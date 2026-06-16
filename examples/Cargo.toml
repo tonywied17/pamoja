@@ -37,6 +37,10 @@ path = "batched_telemetry.rs"
 name = "telemetry"
 path = "telemetry.rs"
 
+[[example]]
+name = "lora_budget"
+path = "lora_budget.rs"
+
 [dependencies]
 pamoja-core = { workspace = true }
 pamoja-codec = { path = "../crates/pamoja-codec" }
@@ -48,6 +52,7 @@ pamoja-sim = { path = "../crates/pamoja-sim" }
 pamoja-security = { path = "../crates/pamoja-security" }
 pamoja-audit = { path = "../crates/pamoja-audit" }
 pamoja-telemetry = { path = "../crates/pamoja-telemetry" }
+pamoja-lora = { path = "../crates/pamoja-lora" }
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["rt", "macros"] }
 
