@@ -13,6 +13,8 @@ pamoja-core = { workspace = true }
 
 [dev-dependencies]
 tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
+# The DegradedLink doctest wraps a real in-process transport.
+pamoja-loopback = { path = "../pamoja-loopback" }
 
 [lints]
 workspace = true

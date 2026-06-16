@@ -14,10 +14,9 @@
 //!   deterministic tests and scripted demos.
 //! - [`RecordingActuator`] - a fake actuator that logs every command instead of
 //!   driving hardware, so a test can assert what a control loop decided to do.
-//!
-//! Degraded-link conditions - send failures for store-and-forward retry - are
-//! simulated today by `Faulty` in `pamoja-loopback`; richer link simulation (loss,
-//! latency, intermittent windows) is planned alongside these device simulators.
+//! - [`DegradedLink`] - a [`Transport`](pamoja_core::Transport) decorator that
+//!   simulates a lossy and intermittent radio link, so offline-first store-and-
+//!   forward can be proven against a realistic bad network rather than assumed.
 //!
 //! # Examples
 //!
@@ -43,7 +42,9 @@
 //! ```
 
 mod actuator;
+mod link;
 mod sensor;
 
 pub use actuator::{ActuatorLog, RecordingActuator};
+pub use link::DegradedLink;
 pub use sensor::{Replay, SimSensor};
