@@ -1,6 +1,6 @@
 //! The decision logic a profile assembles: turning a reading into a reaction.
 
-use pamoja_kit::{Depletion, Thermostat};
+use pamoja_kit::{Depletion, Surge, Thermostat};
 
 /// An alert raised when a reading crosses a profile's safety threshold.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -17,6 +17,14 @@ pub enum Alert {
     RunningOut {
         /// The estimated number of samples until the level reaches empty.
         samples: u32,
+    },
+    /// A reading is changing faster than its safe rate.
+    ///
+    /// For a river gauge this is a flash-flood warning: the level jumped further in
+    /// one sample than the profile allows.
+    ChangingFast {
+        /// The change since the previous sample, as a positive number.
+        rate: f32,
     },
 }
 
@@ -45,6 +53,9 @@ enum Policy {
         depletion: Depletion,
         warn_within: u32,
     },
+    Surge {
+        surge: Surge,
+    },
     Monitor,
 }
 
@@ -53,9 +64,10 @@ enum Policy {
 /// A controller is what a [`Profile`](crate::Profile) turns its
 /// [`ControlSpec`](crate::ControlSpec) into: the live loop that maps each reading to
 /// a [`Reaction`]. It composes the `pamoja-kit` helpers - a
-/// [`Thermostat`](pamoja_kit::Thermostat) for on/off control and a
-/// [`Depletion`](pamoja_kit::Depletion) predictor for level alerts - so the same
-/// field-tested math drives every profile. The logic is synchronous and
+/// [`Thermostat`](pamoja_kit::Thermostat) for on/off control, a
+/// [`Depletion`](pamoja_kit::Depletion) predictor for level alerts, and a
+/// [`Surge`](pamoja_kit::Surge) alarm for rapid change - so the same field-tested
+/// math drives every profile. The logic is synchronous and
 /// hardware-free, so a profile's whole control policy is unit-testable with no
 /// devices and no network.
 ///
@@ -134,6 +146,32 @@ impl Controller {
         }
     }
 
+    /// Builds a controller that warns when a reading changes too fast.
+    ///
+    /// This is the policy behind "warn me before it is too late": it watches the
+    /// change between samples and raises an [`Alert::ChangingFast`] when a reading
+    /// moves more than `limit` per sample in the watched direction, such as a river
+    /// level rising into a flash flood.
+    ///
+    /// # Arguments
+    ///
+    /// * `rising` - watch a rapid rise (`true`) or a rapid fall (`false`).
+    /// * `limit` - the largest safe change per sample.
+    ///
+    /// # Returns
+    ///
+    /// A controller awaiting its first reading.
+    pub fn surge(rising: bool, limit: f32) -> Self {
+        let surge = if rising {
+            Surge::rising(limit)
+        } else {
+            Surge::falling(limit)
+        };
+        Self {
+            policy: Policy::Surge { surge },
+        }
+    }
+
     /// Builds a controller that reports readings without driving an output.
     ///
     /// # Returns
@@ -187,6 +225,13 @@ impl Controller {
                     alert,
                 }
             }
+            Policy::Surge { surge } => {
+                let alert = surge.update(reading).map(|rate| Alert::ChangingFast { rate });
+                Reaction {
+                    actuator: None,
+                    alert,
+                }
+            }
             Policy::Monitor => Reaction::default(),
         }
     }
@@ -234,6 +279,16 @@ mod tests {
             Some(Alert::RunningOut { samples: 3 })
         ); // now within the window
         assert_eq!(control.evaluate(6.0).actuator, None); // never drives an output
+    }
+
+    #[test]
+    fn surge_warns_on_a_rapid_rise_without_an_output() {
+        let mut control = Controller::surge(true, 0.5);
+        assert_eq!(control.evaluate(1.0).alert, None); // first reading: no rate yet
+        assert_eq!(control.evaluate(1.25).alert, None); // a gentle rise is fine
+        let flood = control.evaluate(2.0); // a 0.75 jump: too fast
+        assert_eq!(flood.alert, Some(Alert::ChangingFast { rate: 0.75 }));
+        assert_eq!(flood.actuator, None); // never drives an output
     }
 
     #[test]

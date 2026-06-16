@@ -13,8 +13,9 @@
 //!   carrying a [`ControlSpec`] and a [`PowerSchedule`]. It serializes to and from
 //!   JSON with [`Profile::to_json`] and [`Profile::from_json`], so a profile can ship
 //!   as a file and be loaded onto a device. The presets
-//!   [`Profile::vaccine_fridge_monitor`], [`Profile::irrigation_node`], and
-//!   [`Profile::well_level`] are convenience constructors for the same data.
+//!   [`Profile::vaccine_fridge_monitor`], [`Profile::irrigation_node`],
+//!   [`Profile::well_level`], and [`Profile::flood_sensor`] are convenience
+//!   constructors for the same data.
 //! - [`Node`] is what the runtime assembles from a profile and real components: a
 //!   [`Sensor`](pamoja_core::Sensor), an [`Actuator`](pamoja_core::Actuator), a
 //!   [`Transport`](pamoja_core::Transport), and a [`Codec`](pamoja_codec::Codec).

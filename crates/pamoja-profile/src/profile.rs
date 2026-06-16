@@ -46,6 +46,13 @@ pub enum ControlSpec {
         /// samples.
         warn_within: u32,
     },
+    /// Warn when a reading changes faster than `limit` per sample.
+    Surge {
+        /// Watch a rapid rise (`true`) or a rapid fall (`false`).
+        rising: bool,
+        /// The largest safe change per sample.
+        limit: f32,
+    },
     /// Report readings only, with no control output and no alerts.
     Monitor,
 }
@@ -240,6 +247,39 @@ impl Profile {
         }
     }
 
+    /// A flash-flood sensor: warn when a river level rises dangerously fast.
+    ///
+    /// Watches a river or stream gauge and raises an
+    /// [`Alert::ChangingFast`](crate::Alert::ChangingFast) when the level rises more
+    /// than 0.3 m in a single sample, the signature of a flash flood. It samples
+    /// often, because a flood gives little warning.
+    ///
+    /// # Returns
+    ///
+    /// The flash-flood monitoring profile.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use pamoja_profile::{Alert, Profile};
+    ///
+    /// let mut control = Profile::flood_sensor().controller();
+    /// control.evaluate(1.0); // first fix establishes the level
+    /// let reaction = control.evaluate(1.5); // the river jumped 0.5 m
+    /// assert!(matches!(reaction.alert, Some(Alert::ChangingFast { .. })));
+    /// ```
+    pub fn flood_sensor() -> Self {
+        Self {
+            name: "flood-sensor".to_owned(),
+            topic: "water/river/level".to_owned(),
+            control: ControlSpec::Surge {
+                rising: true,
+                limit: 0.3,
+            },
+            power: PowerSchedule::new(60, 300, 900),
+        }
+    }
+
     /// Assembles this profile's [`ControlSpec`] into a live [`Controller`].
     ///
     /// # Returns
@@ -255,6 +295,7 @@ impl Profile {
                 safe_band,
             } => Controller::setpoint(setpoint, hysteresis, cooling, safe_band),
             ControlSpec::Level { empty, warn_within } => Controller::level(empty, warn_within),
+            ControlSpec::Surge { rising, limit } => Controller::surge(rising, limit),
             ControlSpec::Monitor => Controller::monitor(),
         }
     }
@@ -356,6 +397,14 @@ mod tests {
     }
 
     #[test]
+    fn the_flood_controller_warns_on_a_rapid_rise() {
+        let mut control = Profile::flood_sensor().controller();
+        control.evaluate(1.0);
+        let reaction = control.evaluate(1.5); // a 0.5 m jump in one sample
+        assert!(matches!(reaction.alert, Some(Alert::ChangingFast { .. })));
+    }
+
+    #[test]
     fn the_schedule_builds_the_documented_power_plan() {
         use pamoja_power::PowerMode;
 
@@ -368,10 +417,13 @@ mod tests {
     #[cfg(feature = "json")]
     #[test]
     fn a_profile_round_trips_through_json() {
-        let profile = Profile::irrigation_node();
-        let json = profile.to_json().expect("serialize");
-        let restored = Profile::from_json(&json).expect("deserialize");
-        assert_eq!(profile, restored);
+        // Cover a setpoint profile and a surge profile, the two manifest shapes that
+        // carry the most fields.
+        for profile in [Profile::irrigation_node(), Profile::flood_sensor()] {
+            let json = profile.to_json().expect("serialize");
+            let restored = Profile::from_json(&json).expect("deserialize");
+            assert_eq!(profile, restored);
+        }
     }
 
     #[cfg(feature = "json")]
