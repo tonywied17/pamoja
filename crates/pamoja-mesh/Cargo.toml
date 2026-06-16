@@ -1,0 +1,12 @@
+[package]
+name = "pamoja-mesh"
+description = "Mesh packet framing for pamoja: an addressed, hop-limited, CRC-checked frame for cheap local and mesh radio (ESP-NOW and nRF24 style), with the relay and duplicate-suppression primitives that turn it into a flooding mesh, no_std and allocation-free. The framing half ahead of the radio driver."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
