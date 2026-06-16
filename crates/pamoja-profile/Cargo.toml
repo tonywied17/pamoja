@@ -1,0 +1,34 @@
+[package]
+name = "pamoja-profile"
+description = "Named, ready-to-run device profiles for pamoja: assemble a sensor, actuator, transport, codec, and power schedule into a working node."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[features]
+# A profile is always serializable; the `json` loader is opt-in but on by default.
+default = ["json"]
+json = ["dep:serde_json"]
+
+[dependencies]
+pamoja-core = { workspace = true }
+# Only the Codec trait is used in the node's signatures, so the concrete codecs
+# (and their serde backends) stay out of this crate's own dependency tree.
+pamoja-codec = { path = "../pamoja-codec", default-features = false }
+pamoja-kit = { path = "../pamoja-kit" }
+pamoja-power = { path = "../pamoja-power" }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", optional = true }
+
+[dev-dependencies]
+# The tests and doctests publish real readings, so they pull in the CBOR codec and
+# the in-process loopback transport.
+pamoja-codec = { path = "../pamoja-codec" }
+pamoja-loopback = { path = "../pamoja-loopback" }
+tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
+
+[lints]
+workspace = true

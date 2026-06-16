@@ -11,6 +11,7 @@ members = [
     "crates/pamoja-ladder",
     "crates/pamoja-kit",
     "crates/pamoja-power",
+    "crates/pamoja-profile",
     "crates/pamoja-bus",
     "crates/xtask",
     "examples",

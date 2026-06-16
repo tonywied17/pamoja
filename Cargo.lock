@@ -1339,6 +1339,8 @@ dependencies = [
  "pamoja-codec",
  "pamoja-core",
  "pamoja-loopback",
+ "pamoja-power",
+ "pamoja-profile",
  "pamoja-sync",
  "serde",
  "tokio",
@@ -1389,6 +1391,20 @@ dependencies = [
 [[package]]
 name = "pamoja-power"
 version = "0.1.6"
+
+[[package]]
+name = "pamoja-profile"
+version = "0.1.6"
+dependencies = [
+ "pamoja-codec",
+ "pamoja-core",
+ "pamoja-kit",
+ "pamoja-loopback",
+ "pamoja-power",
+ "serde",
+ "serde_json",
+ "tokio",
+]
 
 [[package]]
 name = "pamoja-sync"
