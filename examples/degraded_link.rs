@@ -53,7 +53,10 @@ async fn main() -> Result<()> {
 
         // A degraded send leaves that record and the rest queued, in order, to retry.
         let _ = drain_to(&mut outbox, &mut link, topic).await;
-        println!("cycle {sequence}: {} reading(s) waiting on the link", outbox.len().await?);
+        println!(
+            "cycle {sequence}: {} reading(s) waiting on the link",
+            outbox.len().await?
+        );
     }
 
     // Keep retrying until the link has carried the whole backlog.

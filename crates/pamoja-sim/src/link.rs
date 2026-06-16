@@ -91,7 +91,11 @@ impl<T> DegradedLink<T> {
     ///
     /// The updated link, for chaining.
     pub fn intermittent(mut self, up: u32, down: u32) -> Self {
-        self.window = if up + down == 0 { None } else { Some((up, down)) };
+        self.window = if up + down == 0 {
+            None
+        } else {
+            Some((up, down))
+        };
         self
     }
 
@@ -186,7 +190,10 @@ mod tests {
         let inner = CountingTransport::default();
         let mut link = DegradedLink::new(inner).drop_every(3);
         assert_eq!(send_seq(&mut link, 6).await, 2); // sends 3 and 6 are dropped
-        assert_eq!(link.into_inner().sent, vec![vec![1], vec![2], vec![4], vec![5]]);
+        assert_eq!(
+            link.into_inner().sent,
+            vec![vec![1], vec![2], vec![4], vec![5]]
+        );
     }
 
     #[tokio::test]
@@ -195,7 +202,10 @@ mod tests {
         let mut link = DegradedLink::new(inner).intermittent(2, 1);
         // Period of three: two through, one rejected, repeating.
         assert_eq!(send_seq(&mut link, 6).await, 2); // sends 3 and 6 fail
-        assert_eq!(link.into_inner().sent, vec![vec![1], vec![2], vec![4], vec![5]]);
+        assert_eq!(
+            link.into_inner().sent,
+            vec![vec![1], vec![2], vec![4], vec![5]]
+        );
     }
 
     #[tokio::test]
