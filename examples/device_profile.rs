@@ -47,7 +47,10 @@ impl Actuator for Cooler {
 async fn main() -> Result<()> {
     // Pick a profile. The wiring, tuning, and control loop come with it.
     let profile = Profile::vaccine_fridge_monitor();
-    println!("assembled '{}', publishing to {}", profile.name, profile.topic);
+    println!(
+        "assembled '{}', publishing to {}",
+        profile.name, profile.topic
+    );
 
     // A gateway and the node share an in-process broker.
     let broker = LoopbackBroker::new();
