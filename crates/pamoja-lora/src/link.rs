@@ -259,7 +259,9 @@ mod tests {
     #[test]
     fn implicit_header_and_no_crc_shorten_the_frame() {
         let full = LinkSettings::new(9, 125_000);
-        let lean = LinkSettings::new(9, 125_000).implicit_header().without_crc();
+        let lean = LinkSettings::new(9, 125_000)
+            .implicit_header()
+            .without_crc();
         assert!(lean.airtime_us(20) < full.airtime_us(20));
     }
 }
