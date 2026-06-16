@@ -1,0 +1,17 @@
+[package]
+name = "pamoja-audit"
+description = "Tamper-evident audit logs for pamoja: signed, hash-chained entries so altering, reordering, or dropping a record is detectable."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+pamoja-core = { workspace = true }
+pamoja-security = { path = "../pamoja-security" }
+sha2 = { version = "0.10", default-features = false }
+
+[lints]
+workspace = true

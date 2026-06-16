@@ -1360,6 +1360,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "pamoja-audit"
+version = "0.1.6"
+dependencies = [
+ "pamoja-core",
+ "pamoja-security",
+ "sha2",
+]
+
+[[package]]
 name = "pamoja-bus"
 version = "0.1.6"
 dependencies = [
@@ -1395,6 +1404,7 @@ version = "0.1.6"
 name = "pamoja-examples"
 version = "0.1.6"
 dependencies = [
+ "pamoja-audit",
  "pamoja-codec",
  "pamoja-core",
  "pamoja-loopback",

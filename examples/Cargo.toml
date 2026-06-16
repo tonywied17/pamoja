@@ -25,6 +25,10 @@ path = "degraded_link.rs"
 name = "signed_telemetry"
 path = "signed_telemetry.rs"
 
+[[example]]
+name = "signed_audit"
+path = "signed_audit.rs"
+
 [dependencies]
 pamoja-core = { workspace = true }
 pamoja-codec = { path = "../crates/pamoja-codec" }
@@ -34,6 +38,7 @@ pamoja-power = { path = "../crates/pamoja-power" }
 pamoja-profile = { path = "../crates/pamoja-profile" }
 pamoja-sim = { path = "../crates/pamoja-sim" }
 pamoja-security = { path = "../crates/pamoja-security" }
+pamoja-audit = { path = "../crates/pamoja-audit" }
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["rt", "macros"] }
 
