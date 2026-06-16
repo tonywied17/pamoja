@@ -41,7 +41,11 @@ async fn main() -> pamoja_core::Result<()> {
         );
     }
 
-    let verified = outcome.steps.iter().filter(|record| record.verified).count();
+    let verified = outcome
+        .steps
+        .iter()
+        .filter(|record| record.verified)
+        .count();
     println!(
         "\nintegrity:   {verified}/{} frames verified, tampered frame rejected: {}",
         outcome.steps.len(),

@@ -270,7 +270,11 @@ pub async fn run() -> Result<Outcome> {
 
     // Telemetry: a compact snapshot of the counters in place of the raw stream.
     let snapshot = reporter.snapshot();
-    let counters: Vec<i64> = snapshot.by_level.iter().map(|&count| count as i64).collect();
+    let counters: Vec<i64> = snapshot
+        .by_level
+        .iter()
+        .map(|&count| count as i64)
+        .collect();
     let snapshot_packed_bytes = encode_deltas(&counters).len();
 
     Ok(Outcome {

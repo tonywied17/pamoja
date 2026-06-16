@@ -8,7 +8,9 @@ use pamoja_profile::Alert;
 
 #[tokio::test]
 async fn cold_chain_pipeline_holds_end_to_end() {
-    let outcome = cold_chain::run().await.expect("the scenario runs to completion");
+    let outcome = cold_chain::run()
+        .await
+        .expect("the scenario runs to completion");
 
     assert!(!outcome.steps.is_empty(), "the run produced no steps");
 
@@ -21,7 +23,11 @@ async fn cold_chain_pipeline_holds_end_to_end() {
             "step {}: the reading changed crossing the wire",
             record.step
         );
-        assert!(record.verified, "step {}: a genuine frame failed to verify", record.step);
+        assert!(
+            record.verified,
+            "step {}: a genuine frame failed to verify",
+            record.step
+        );
     }
 
     // Security: a frame altered after signing is rejected.
@@ -37,11 +43,20 @@ async fn cold_chain_pipeline_holds_end_to_end() {
     );
 
     // Profile as data: the profile reloaded from its JSON manifest decides identically.
-    assert!(outcome.reloaded_matches, "the reloaded profile decided differently");
+    assert!(
+        outcome.reloaded_matches,
+        "the reloaded profile decided differently"
+    );
 
     // Audit: the genuine chain verifies and an edited one does not.
-    assert!(outcome.genuine_chain_ok, "the genuine audit chain failed to verify");
-    assert!(!outcome.edited_chain_ok, "an edited audit chain still verified");
+    assert!(
+        outcome.genuine_chain_ok,
+        "the genuine audit chain failed to verify"
+    );
+    assert!(
+        !outcome.edited_chain_ok,
+        "an edited audit chain still verified"
+    );
 
     // Codec, metered link: the packed batch is smaller and within the quantizer precision.
     assert!(
@@ -58,9 +73,15 @@ async fn cold_chain_pipeline_holds_end_to_end() {
     // Telemetry: every event counted, the excursion shipped, and routine detail was
     // dropped as the link cost rose.
     let expected_total = 2 * outcome.steps.len() as u32; // a tick and a reading per step
-    assert_eq!(outcome.telemetry_total, expected_total, "telemetry miscounted events");
+    assert_eq!(
+        outcome.telemetry_total, expected_total,
+        "telemetry miscounted events"
+    );
     assert!(outcome.excursion_shipped, "an excursion event was dropped");
-    assert!(outcome.error_events >= 1, "no excursion was reported at error level");
+    assert!(
+        outcome.error_events >= 1,
+        "no excursion was reported at error level"
+    );
     assert!(
         outcome.telemetry_emitted < outcome.telemetry_total,
         "the rising link cost dropped nothing"
