@@ -1,0 +1,12 @@
+[package]
+name = "pamoja-modbus"
+description = "Modbus RTU framing for pamoja: CRC-16/Modbus, the RTU ADU envelope, the standard request PDUs, and response decoding, so a long-cable RS485 field sensor speaks Modbus, no_std and allocation-free. The framing half ahead of the serial driver."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true

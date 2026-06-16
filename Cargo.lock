@@ -1459,6 +1459,10 @@ name = "pamoja-lora"
 version = "0.1.6"
 
 [[package]]
+name = "pamoja-modbus"
+version = "0.1.6"
+
+[[package]]
 name = "pamoja-mqtt"
 version = "0.1.6"
 dependencies = [
