@@ -26,7 +26,11 @@ async fn main() -> Result<()> {
         batch.push(probe.read().await?);
     }
     let payload = Quantizer::new(100.0).encode(&batch);
-    println!("{} readings packed into {} bytes", batch.len(), payload.len());
+    println!(
+        "{} readings packed into {} bytes",
+        batch.len(),
+        payload.len()
+    );
 
     // Compare a long-range, slow link against a shorter, fast one, both at 1% duty.
     for (label, link) in [
