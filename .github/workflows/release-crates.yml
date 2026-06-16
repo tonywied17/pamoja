@@ -55,6 +55,6 @@ jobs:
             pamoja-core pamoja-codec pamoja-mqtt pamoja-coap pamoja-ffi \
             pamoja-sync pamoja-loopback pamoja-bus \
             pamoja-ladder pamoja-kit pamoja-power pamoja-profile pamoja-sim \
-            pamoja-security pamoja-audit; do
+            pamoja-security pamoja-audit pamoja-telemetry; do
             publish "$crate" || exit 1
           done

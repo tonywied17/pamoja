@@ -15,6 +15,7 @@ members = [
     "crates/pamoja-sim",
     "crates/pamoja-security",
     "crates/pamoja-audit",
+    "crates/pamoja-telemetry",
     "crates/pamoja-bus",
     "crates/xtask",
     "examples",
