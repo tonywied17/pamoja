@@ -24,6 +24,7 @@ pamoja-sync = { path = "../crates/pamoja-sync" }
 pamoja-loopback = { path = "../crates/pamoja-loopback" }
 pamoja-power = { path = "../crates/pamoja-power" }
 pamoja-profile = { path = "../crates/pamoja-profile" }
+pamoja-sim = { path = "../crates/pamoja-sim" }
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["rt", "macros"] }
 

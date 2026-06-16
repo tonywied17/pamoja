@@ -1347,6 +1347,7 @@ dependencies = [
  "pamoja-loopback",
  "pamoja-power",
  "pamoja-profile",
+ "pamoja-sim",
  "pamoja-sync",
  "serde",
  "tokio",
@@ -1412,6 +1413,14 @@ dependencies = [
  "pamoja-power",
  "serde",
  "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "pamoja-sim"
+version = "0.1.6"
+dependencies = [
+ "pamoja-core",
  "tokio",
 ]
 

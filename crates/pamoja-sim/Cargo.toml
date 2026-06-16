@@ -1,0 +1,18 @@
+[package]
+name = "pamoja-sim"
+description = "Hardware-free device simulators for pamoja: fake sensors with configurable noise and drift, and a recording actuator, behind the core Sensor and Actuator traits."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+pamoja-core = { workspace = true }
+
+[dev-dependencies]
+tokio = { version = "1", default-features = false, features = ["rt", "macros"] }
+
+[lints]
+workspace = true
