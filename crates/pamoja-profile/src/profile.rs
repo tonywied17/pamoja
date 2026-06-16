@@ -1,0 +1,394 @@
+//! The profile manifest and its named, ready-to-run presets.
+//!
+//! A profile is data: a [`Profile`] serializes to and from a manifest a community
+//! can write by hand, store in a file, and share. The presets here are convenience
+//! constructors for the same data, not a closed set - any manifest that names a
+//! [`ControlSpec`] and a [`PowerSchedule`] is a valid profile.
+
+use core::time::Duration;
+
+use pamoja_power::PowerPlan;
+use serde::{Deserialize, Serialize};
+
+use crate::Controller;
+
+/// How a profile turns each reading into control output and alerts.
+///
+/// This is the policy half of a profile's manifest: the tunable rule a community can
+/// publish and share, with no code to write. [`Profile::controller`] assembles it
+/// into a live [`Controller`]. In a manifest it is tagged by `kind`:
+///
+/// ```json
+/// { "kind": "setpoint", "setpoint": 5.0, "hysteresis": 0.5, "cooling": true, "safe_band": 3.0 }
+/// ```
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum ControlSpec {
+    /// Hold a reading near `setpoint` by switching an output on and off.
+    Setpoint {
+        /// The target reading, such as 5 C for a vaccine fridge.
+        setpoint: f32,
+        /// Half the deadband width around the setpoint, which stops the output
+        /// chattering at the threshold.
+        hysteresis: f32,
+        /// Whether the output cools (switches on above the band) or heats (switches
+        /// on below it). An irrigation valve that adds water is a "heater".
+        cooling: bool,
+        /// How far the reading may stray from the setpoint before an
+        /// [`Alert::OutOfRange`](crate::Alert::OutOfRange) fires.
+        safe_band: f32,
+    },
+    /// Watch a falling level and warn before it reaches `empty`.
+    Level {
+        /// The level treated as empty, such as a dry tank.
+        empty: f32,
+        /// Warn once the level is estimated to reach `empty` within this many more
+        /// samples.
+        warn_within: u32,
+    },
+    /// Report readings only, with no control output and no alerts.
+    Monitor,
+}
+
+/// How often a node samples as its battery drains, in plain seconds.
+///
+/// This is the serializable form of a [`PowerPlan`](pamoja_power::PowerPlan): a
+/// manifest carries the three work intervals as whole seconds and the two
+/// state-of-charge thresholds, and [`plan`](PowerSchedule::plan) assembles the
+/// `pamoja-power` governor from them. The thresholds may be omitted from a manifest,
+/// in which case they default to entering the saver cadence below 50% charge and the
+/// critical cadence below 20%.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct PowerSchedule {
+    /// Seconds between samples at a healthy charge.
+    pub active_secs: u64,
+    /// Seconds between samples while conserving.
+    pub saver_secs: u64,
+    /// Seconds between samples when critically low.
+    pub critical_secs: u64,
+    /// Enter the saver cadence below this state of charge.
+    #[serde(default = "PowerSchedule::default_saver_below")]
+    pub saver_below: f32,
+    /// Enter the critical cadence below this state of charge.
+    #[serde(default = "PowerSchedule::default_critical_below")]
+    pub critical_below: f32,
+}
+
+impl PowerSchedule {
+    fn default_saver_below() -> f32 {
+        0.5
+    }
+
+    fn default_critical_below() -> f32 {
+        0.2
+    }
+
+    /// Creates a schedule from its three work intervals, with default thresholds.
+    ///
+    /// # Arguments
+    ///
+    /// * `active_secs` - seconds between samples at a healthy charge.
+    /// * `saver_secs` - seconds between samples while conserving.
+    /// * `critical_secs` - seconds between samples when critically low.
+    ///
+    /// # Returns
+    ///
+    /// A schedule that enters the saver cadence below 50% charge and the critical
+    /// cadence below 20%.
+    pub fn new(active_secs: u64, saver_secs: u64, critical_secs: u64) -> Self {
+        Self {
+            active_secs,
+            saver_secs,
+            critical_secs,
+            saver_below: Self::default_saver_below(),
+            critical_below: Self::default_critical_below(),
+        }
+    }
+
+    /// Sets the state-of-charge thresholds for entering each lower cadence.
+    ///
+    /// # Arguments
+    ///
+    /// * `saver_below` - enter the saver cadence when charge is below this.
+    /// * `critical_below` - enter the critical cadence when charge is below this,
+    ///   normally lower than `saver_below`.
+    ///
+    /// # Returns
+    ///
+    /// The updated schedule, for chaining.
+    pub fn with_thresholds(mut self, saver_below: f32, critical_below: f32) -> Self {
+        self.saver_below = saver_below;
+        self.critical_below = critical_below;
+        self
+    }
+
+    /// Assembles the `pamoja-power` governor this schedule describes.
+    ///
+    /// # Returns
+    ///
+    /// A [`PowerPlan`](pamoja_power::PowerPlan) with this schedule's intervals and
+    /// thresholds.
+    pub fn plan(&self) -> PowerPlan {
+        PowerPlan::new(
+            Duration::from_secs(self.active_secs),
+            Duration::from_secs(self.saver_secs),
+            Duration::from_secs(self.critical_secs),
+        )
+        .thresholds(self.saver_below, self.critical_below)
+    }
+}
+
+/// A named, pre-wired bundle of control policy, publish topic, and power schedule.
+///
+/// A profile is the unit a builder instantiates instead of wiring pins and tuning
+/// constants, and it is plain data: it serializes to and from a manifest a community
+/// can write, store in a file, and share. Pick a preset such as
+/// [`vaccine_fridge_monitor`](Profile::vaccine_fridge_monitor) or load one with
+/// [`from_json`](Profile::from_json), hand it a sensor, an actuator, a transport, and
+/// a codec, and the resulting [`Node`](crate::Node) reads, decides, drives the
+/// output, and publishes on its own. Every field is public, so a deployment can
+/// adjust the policy, topic, or power schedule in place.
+///
+/// # Examples
+///
+/// ```
+/// use pamoja_profile::{ControlSpec, Profile};
+///
+/// let profile = Profile::vaccine_fridge_monitor();
+/// assert_eq!(profile.name, "vaccine-fridge-monitor");
+/// assert!(matches!(profile.control, ControlSpec::Setpoint { .. }));
+/// ```
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Profile {
+    /// A stable, human-readable name, such as `"vaccine-fridge-monitor"`.
+    pub name: String,
+    /// The topic each reading is published to.
+    pub topic: String,
+    /// The control policy applied to each reading.
+    pub control: ControlSpec,
+    /// The power schedule that sets how often the node samples as the battery drains.
+    pub power: PowerSchedule,
+}
+
+impl Profile {
+    /// A cold-chain fridge monitor: hold 5 C and alert on a spoilage excursion.
+    ///
+    /// Switches a cooler to hold the contents near 5 C and raises an
+    /// [`Alert::OutOfRange`](crate::Alert::OutOfRange) the moment the temperature
+    /// leaves the 2-8 C safe range. Data integrity outweighs power here, so it keeps
+    /// sampling often even as the battery drains.
+    ///
+    /// # Returns
+    ///
+    /// The cold-chain monitoring profile.
+    pub fn vaccine_fridge_monitor() -> Self {
+        Self {
+            name: "vaccine-fridge-monitor".to_owned(),
+            topic: "cold-chain/fridge/temperature".to_owned(),
+            control: ControlSpec::Setpoint {
+                setpoint: 5.0,
+                hysteresis: 0.5,
+                cooling: true,
+                safe_band: 3.0,
+            },
+            power: PowerSchedule::new(60, 300, 900),
+        }
+    }
+
+    /// An irrigation node: hold soil moisture near a target by opening a valve.
+    ///
+    /// Treats the valve as a "heater" for soil moisture, opening it when the soil
+    /// dries below the band and closing it once it is wet enough, and alerts if the
+    /// soil falls critically dry. Samples less often than the fridge, since soil
+    /// changes slowly and battery life matters more.
+    ///
+    /// # Returns
+    ///
+    /// The irrigation profile.
+    pub fn irrigation_node() -> Self {
+        Self {
+            name: "irrigation-node".to_owned(),
+            topic: "farm/irrigation/soil-moisture".to_owned(),
+            control: ControlSpec::Setpoint {
+                setpoint: 35.0,
+                hysteresis: 5.0,
+                cooling: false,
+                safe_band: 25.0,
+            },
+            power: PowerSchedule::new(300, 1800, 3600),
+        }
+    }
+
+    /// A well-level monitor: report depth and warn before the well runs dry.
+    ///
+    /// Observes the water level without driving an output and raises an
+    /// [`Alert::RunningOut`](crate::Alert::RunningOut) once the level is on course to
+    /// reach the dry mark within a few more samples.
+    ///
+    /// # Returns
+    ///
+    /// The well-level monitoring profile.
+    pub fn well_level() -> Self {
+        Self {
+            name: "well-level".to_owned(),
+            topic: "water/well/level".to_owned(),
+            control: ControlSpec::Level {
+                empty: 0.5,
+                warn_within: 6,
+            },
+            power: PowerSchedule::new(600, 1800, 3600),
+        }
+    }
+
+    /// Assembles this profile's [`ControlSpec`] into a live [`Controller`].
+    ///
+    /// # Returns
+    ///
+    /// A fresh controller implementing the profile's policy, with its control state
+    /// reset.
+    pub fn controller(&self) -> Controller {
+        match self.control {
+            ControlSpec::Setpoint {
+                setpoint,
+                hysteresis,
+                cooling,
+                safe_band,
+            } => Controller::setpoint(setpoint, hysteresis, cooling, safe_band),
+            ControlSpec::Level { empty, warn_within } => Controller::level(empty, warn_within),
+            ControlSpec::Monitor => Controller::monitor(),
+        }
+    }
+}
+
+#[cfg(feature = "json")]
+impl Profile {
+    /// Loads a profile from a JSON manifest.
+    ///
+    /// This is how a shared profile reaches a device: a community publishes a manifest
+    /// file, and the runtime loads it into a profile to assemble a node from.
+    ///
+    /// # Arguments
+    ///
+    /// * `manifest` - the JSON text of the profile.
+    ///
+    /// # Returns
+    ///
+    /// The profile described by `manifest`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Codec`](pamoja_core::Error::Codec) if `manifest` is not valid
+    /// JSON or does not describe a profile.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use pamoja_profile::Profile;
+    ///
+    /// // A well-level monitor, shared as a manifest. The power thresholds are
+    /// // optional and default when omitted.
+    /// let manifest = r#"{
+    ///     "name": "tank-level",
+    ///     "topic": "water/tank/level",
+    ///     "control": { "kind": "level", "empty": 0.0, "warn_within": 5 },
+    ///     "power": { "active_secs": 600, "saver_secs": 1800, "critical_secs": 3600 }
+    /// }"#;
+    ///
+    /// let profile = Profile::from_json(manifest).expect("valid manifest");
+    /// assert_eq!(profile.name, "tank-level");
+    ///
+    /// let mut control = profile.controller();
+    /// control.evaluate(10.0); // first reading establishes a level
+    /// assert!(control.evaluate(2.0).alert.is_some()); // falling fast toward empty
+    /// ```
+    pub fn from_json(manifest: &str) -> pamoja_core::Result<Self> {
+        serde_json::from_str(manifest).map_err(|error| pamoja_core::Error::Codec(error.to_string()))
+    }
+
+    /// Serializes this profile to a JSON manifest a community can share.
+    ///
+    /// # Returns
+    ///
+    /// The pretty-printed JSON text of the profile.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Codec`](pamoja_core::Error::Codec) if the profile cannot be
+    /// serialized.
+    pub fn to_json(&self) -> pamoja_core::Result<String> {
+        serde_json::to_string_pretty(self)
+            .map_err(|error| pamoja_core::Error::Codec(error.to_string()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Alert;
+
+    #[test]
+    fn presets_have_stable_names_and_topics() {
+        assert_eq!(
+            Profile::vaccine_fridge_monitor().name,
+            "vaccine-fridge-monitor"
+        );
+        assert_eq!(
+            Profile::vaccine_fridge_monitor().topic,
+            "cold-chain/fridge/temperature"
+        );
+        assert_eq!(Profile::irrigation_node().name, "irrigation-node");
+        assert_eq!(Profile::well_level().name, "well-level");
+    }
+
+    #[test]
+    fn the_fridge_controller_cools_and_flags_a_spoilage_excursion() {
+        let mut control = Profile::vaccine_fridge_monitor().controller();
+        let reaction = control.evaluate(9.0);
+        assert_eq!(reaction.actuator, Some(true));
+        assert!(matches!(reaction.alert, Some(Alert::OutOfRange { .. })));
+    }
+
+    #[test]
+    fn the_well_controller_observes_without_an_output() {
+        let mut control = Profile::well_level().controller();
+        control.evaluate(3.0);
+        assert_eq!(control.evaluate(2.0).actuator, None);
+    }
+
+    #[test]
+    fn the_schedule_builds_the_documented_power_plan() {
+        use pamoja_power::PowerMode;
+
+        let plan = Profile::vaccine_fridge_monitor().power.plan();
+        assert_eq!(plan.mode(0.9), PowerMode::Active);
+        assert_eq!(plan.mode(0.1), PowerMode::Critical);
+        assert_eq!(plan.interval(0.9), Duration::from_secs(60));
+    }
+
+    #[cfg(feature = "json")]
+    #[test]
+    fn a_profile_round_trips_through_json() {
+        let profile = Profile::irrigation_node();
+        let json = profile.to_json().expect("serialize");
+        let restored = Profile::from_json(&json).expect("deserialize");
+        assert_eq!(profile, restored);
+    }
+
+    #[cfg(feature = "json")]
+    #[test]
+    fn a_manifest_may_omit_the_power_thresholds() {
+        let manifest = r#"{
+            "name": "tank",
+            "topic": "water/tank/level",
+            "control": { "kind": "level", "empty": 0.0, "warn_within": 4 },
+            "power": { "active_secs": 600, "saver_secs": 1800, "critical_secs": 3600 }
+        }"#;
+        let profile = Profile::from_json(manifest).expect("valid manifest");
+        assert_eq!(profile.power.saver_below, 0.5);
+        assert_eq!(profile.power.critical_below, 0.2);
+        assert!(matches!(
+            profile.control,
+            ControlSpec::Level { warn_within: 4, .. }
+        ));
+    }
+}

@@ -13,11 +13,17 @@ publish = false
 name = "store_and_forward"
 path = "store_and_forward.rs"
 
+[[example]]
+name = "device_profile"
+path = "device_profile.rs"
+
 [dependencies]
 pamoja-core = { workspace = true }
 pamoja-codec = { path = "../crates/pamoja-codec" }
 pamoja-sync = { path = "../crates/pamoja-sync" }
 pamoja-loopback = { path = "../crates/pamoja-loopback" }
+pamoja-power = { path = "../crates/pamoja-power" }
+pamoja-profile = { path = "../crates/pamoja-profile" }
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["rt", "macros"] }
 

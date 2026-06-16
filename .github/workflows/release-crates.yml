@@ -54,6 +54,6 @@ jobs:
           for crate in \
             pamoja-core pamoja-codec pamoja-mqtt pamoja-coap pamoja-ffi \
             pamoja-sync pamoja-loopback pamoja-bus \
-            pamoja-ladder pamoja-kit pamoja-power; do
+            pamoja-ladder pamoja-kit pamoja-power pamoja-profile; do
             publish "$crate" || exit 1
           done
