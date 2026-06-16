@@ -8,5 +8,15 @@ license.workspace = true
 repository.workspace = true
 authors.workspace = true
 
+[features]
+# The geographic helpers need trigonometry, so they pull in `libm` for `no_std`
+# float math. They are on by default but can be turned off to keep the crate
+# dependency-free on the most constrained targets.
+default = ["geo"]
+geo = ["dep:libm"]
+
+[dependencies]
+libm = { version = "0.2", optional = true }
+
 [lints]
 workspace = true
