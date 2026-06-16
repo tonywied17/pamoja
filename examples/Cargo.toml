@@ -17,6 +17,10 @@ path = "store_and_forward.rs"
 name = "device_profile"
 path = "device_profile.rs"
 
+[[example]]
+name = "degraded_link"
+path = "degraded_link.rs"
+
 [dependencies]
 pamoja-core = { workspace = true }
 pamoja-codec = { path = "../crates/pamoja-codec" }
