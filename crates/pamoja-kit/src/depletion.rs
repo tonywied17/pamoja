@@ -73,8 +73,13 @@ impl Depletion {
     }
 }
 
-// Rounds a positive sample count up; `f32::ceil` lives in `std`.
+// Rounds a positive sample count up; `f32::ceil` lives in `std`. A value at or beyond
+// the `u32` range (including a tiny rate that makes the estimate enormous, or infinity)
+// saturates rather than overflowing.
 fn ceil_samples(value: f32) -> u32 {
+    if value >= u32::MAX as f32 {
+        return u32::MAX;
+    }
     let whole = value as u32;
     if (whole as f32) < value {
         whole + 1
@@ -121,5 +126,14 @@ mod tests {
         let mut tank = Depletion::new(2.0);
         assert_eq!(tank.update(2.0), Some(0));
         assert_eq!(tank.update(1.0), Some(0));
+    }
+
+    #[test]
+    fn an_enormous_estimate_saturates_rather_than_overflowing() {
+        // A far-off threshold with a small rate makes the estimate exceed u32; it must
+        // saturate instead of overflowing the count.
+        let mut tank = Depletion::new(-1e10);
+        tank.update(2.0);
+        assert_eq!(tank.update(1.0), Some(u32::MAX));
     }
 }

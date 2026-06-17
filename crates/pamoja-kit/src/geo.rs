@@ -213,6 +213,24 @@ mod tests {
     }
 
     #[test]
+    fn an_intercontinental_distance_is_accurate() {
+        // New York to London is about 5570 km along the great circle.
+        let nyc = Coordinate::new(40.7128, -74.0060);
+        let london = Coordinate::new(51.5074, -0.1278);
+        let km = nyc.distance_to(london) / 1000.0;
+        assert!((km - 5570.0).abs() < 30.0);
+    }
+
+    #[test]
+    fn antipodal_points_are_half_the_circumference() {
+        // Opposite points are pi * R apart, about 20015 km.
+        let here = Coordinate::new(0.0, 0.0);
+        let opposite = Coordinate::new(0.0, 180.0);
+        let km = here.distance_to(opposite) / 1000.0;
+        assert!((km - 20_015.0).abs() < 5.0);
+    }
+
+    #[test]
     fn a_fence_reports_crossings_once() {
         let mut fence = Geofence::new(Coordinate::new(37.0, -122.0), 100.0);
         let near = Coordinate::new(37.0005, -122.0); // about 56 m north: inside

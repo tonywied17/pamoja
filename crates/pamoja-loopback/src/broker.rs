@@ -70,8 +70,16 @@ impl LoopbackBroker {
 /// Returns whether an MQTT-style topic `filter` matches a concrete `topic`.
 ///
 /// `+` matches exactly one level, and `#` matches the remaining levels including
-/// none.
+/// none. Following the MQTT specification, a filter that begins with a wildcard does
+/// not match a topic that begins with `$`, which is reserved for system topics.
 fn topic_matches(filter: &str, topic: &str) -> bool {
+    if topic.starts_with('$') {
+        if let Some(first) = filter.split('/').next() {
+            if first == "#" || first == "+" {
+                return false;
+            }
+        }
+    }
     let mut filter_levels = filter.split('/');
     let mut topic_levels = topic.split('/');
     loop {
@@ -114,5 +122,15 @@ mod tests {
         assert!(topic_matches("a/#", "a"));
         assert!(topic_matches("#", "a/b/c"));
         assert!(!topic_matches("a/#", "b/c"));
+    }
+
+    #[test]
+    fn leading_wildcards_do_not_match_dollar_topics() {
+        // MQTT reserves $-prefixed topics from wildcard subscriptions.
+        assert!(!topic_matches("#", "$SYS/broker/uptime"));
+        assert!(!topic_matches("+/broker", "$SYS/broker"));
+        // An explicit filter still reaches a $ topic.
+        assert!(topic_matches("$SYS/#", "$SYS/broker/uptime"));
+        assert!(topic_matches("$SYS/+", "$SYS/uptime"));
     }
 }

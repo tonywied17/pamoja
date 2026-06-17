@@ -250,6 +250,27 @@ mod tests {
     }
 
     #[test]
+    fn varints_match_the_canonical_leb128_encodings() {
+        let cases: [(u64, &[u8]); 4] =
+            [(0, &[0x00]), (1, &[0x01]), (128, &[0x80, 0x01]), (300, &[0xAC, 0x02])];
+        for (value, encoded) in cases {
+            let mut out = Vec::new();
+            write_uvarint(value, &mut out);
+            assert_eq!(out, encoded, "varint of {value}");
+        }
+    }
+
+    #[test]
+    fn zigzag_matches_the_protobuf_mapping() {
+        let cases: [(i64, u64); 6] =
+            [(0, 0), (-1, 1), (1, 2), (-2, 3), (2, 4), (2_147_483_647, 4_294_967_294)];
+        for (signed, unsigned) in cases {
+            assert_eq!(zigzag(signed), unsigned, "zigzag of {signed}");
+            assert_eq!(unzigzag(unsigned), signed, "unzigzag of {unsigned}");
+        }
+    }
+
+    #[test]
     fn a_quantizer_round_trips_within_its_precision() {
         let quantizer = Quantizer::new(100.0);
         let readings = [4.0, 4.62, 5.13, 4.77, 3.98];

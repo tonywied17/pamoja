@@ -236,6 +236,22 @@ mod tests {
     }
 
     #[test]
+    fn an_empty_chain_is_trivially_valid() {
+        let public = device().public();
+        assert!(verify_chain(&public, &[]).is_ok());
+    }
+
+    #[test]
+    fn a_chain_that_does_not_start_at_the_beginning_is_rejected() {
+        let (entries, public) = sample_log();
+        // The slice's first entry has index 1, but verification expects to begin at 0.
+        assert!(matches!(
+            verify_chain(&public, &entries[1..]),
+            Err(Error::Auth(_))
+        ));
+    }
+
+    #[test]
     fn resume_continues_the_chain() {
         let public = device().public();
         let mut log = AuditLog::new(device());
