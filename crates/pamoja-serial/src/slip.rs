@@ -361,7 +361,7 @@ mod tests {
     #[test]
     fn decode_tolerates_a_missing_trailing_end() {
         let mut out = [0u8; 4];
-        let n = decode(&[b'h', b'i'], &mut out).unwrap();
+        let n = decode(b"hi", &mut out).unwrap();
         assert_eq!(&out[..n], b"hi");
     }
 
