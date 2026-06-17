@@ -411,6 +411,19 @@ section { position: relative; }
 .pledge input:focus, .pledge textarea:focus { outline: none; border-color: var(--accent); }
 .pledge textarea { resize: vertical; }
 .form-note { font-size: 0.78rem; color: var(--muted); margin: 0.9rem 0 0; }
+
+/* Preview / not-live framing for the (disabled) backing section. */
+.preview-banner {
+  display: flex; align-items: center; gap: 0.9rem; max-width: 760px; margin: 0 auto 1.6rem;
+  padding: 0.9rem 1.2rem; border-radius: 14px; background: rgba(255, 182, 39, 0.06);
+  border: 1px solid rgba(255, 182, 39, 0.3);
+}
+.preview-banner p { margin: 0; color: #d7c6a0; font-size: 0.86rem; line-height: 1.55; }
+.preview-pill { flex: none; font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #2a1606; background: var(--amber); padding: 0.28rem 0.6rem; border-radius: 999px; }
+.pledge-fields { border: 0; margin: 0; padding: 0; min-width: 0; }
+.pledge-fields:disabled { opacity: 0.55; }
+.pledge-fields:disabled .btn-primary { background: rgba(251, 243, 228, 0.12); color: var(--muted); box-shadow: none; cursor: not-allowed; }
+.pledge-fields:disabled input, .pledge-fields:disabled textarea, .pledge-fields:disabled .role { cursor: not-allowed; }
 .back-side p { color: #c7d3e3; }
 .pkg-links { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.2rem 0; }
 .pkg-links a { font-family: var(--mono); font-size: 0.78rem; padding: 0.4rem 0.75rem; border-radius: 9px; border: 1px solid var(--line); color: var(--cream); transition: all 0.2s ease; }

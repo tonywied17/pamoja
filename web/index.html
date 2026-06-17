@@ -293,8 +293,17 @@
         </p>
       </div>
 
+      <aside class="preview-banner">
+        <span class="preview-pill">Preview</span>
+        <p>
+          Backing is not open yet. The campaign, packages, tiers, and amounts
+          below are an early sketch of how supporting pamoja will work - a rough
+          estimate, not a live campaign or a commitment.
+        </p>
+      </aside>
+
       <div class="goal">
-        <div class="goal-meta"><span>First campaign: <strong>100 field kits</strong></span><span id="goal-count">0 funded</span></div>
+        <div class="goal-meta"><span>Planned first campaign: <strong>100 field kits</strong></span><span id="goal-count">opens later</span></div>
         <div class="goal-bar"><i id="goal-fill" style="width:0%"></i></div>
       </div>
 
@@ -313,28 +322,30 @@
       <div class="back-grid">
         <form id="pledge-form" class="pledge" novalidate>
           <h3>Pledge or partner</h3>
-          <div class="role-toggle" role="tablist">
-            <button type="button" class="role active" data-role="donor" role="tab">I want to donate</button>
-            <button type="button" class="role" data-role="vendor" role="tab">I'm a vendor / partner</button>
-          </div>
-          <div class="field-row">
-            <label>Name<input name="name" type="text" autocomplete="name" required /></label>
-            <label>Email<input name="email" type="email" autocomplete="email" required /></label>
-          </div>
-          <label class="amount-row" data-when="donor">Amount (USD)
-            <input name="amount" type="number" min="1" step="1" value="40" inputmode="numeric" />
-          </label>
-          <label class="org-row" data-when="vendor" hidden>Company / organisation
-            <input name="org" type="text" autocomplete="organization" />
-          </label>
-          <label>Message
-            <textarea name="message" rows="3" placeholder="What would you like to back, or how can you help?"></textarea>
-          </label>
-          <button type="submit" class="btn btn-primary btn-block">Send pledge</button>
+          <fieldset class="pledge-fields" disabled>
+            <div class="role-toggle" role="tablist">
+              <button type="button" class="role active" data-role="donor" role="tab">I want to donate</button>
+              <button type="button" class="role" data-role="vendor" role="tab">I'm a vendor / partner</button>
+            </div>
+            <div class="field-row">
+              <label>Name<input name="name" type="text" autocomplete="name" /></label>
+              <label>Email<input name="email" type="email" autocomplete="email" /></label>
+            </div>
+            <label class="amount-row" data-when="donor">Amount (USD)
+              <input name="amount" type="number" min="1" step="1" value="40" inputmode="numeric" />
+            </label>
+            <label class="org-row" data-when="vendor" hidden>Company / organisation
+              <input name="org" type="text" autocomplete="organization" />
+            </label>
+            <label>Message
+              <textarea name="message" rows="3" placeholder="What would you like to back, or how can you help?"></textarea>
+            </label>
+            <button type="submit" class="btn btn-primary btn-block">Backing opens later</button>
+          </fieldset>
           <p class="form-note" id="form-note">
-            This opens your email to <strong>tonywied17@gmail.com</strong> with your
-            pledge - nothing is charged here. Real payment and partner onboarding
-            come next.
+            A preview, not a live campaign. Backing, payment, and partner
+            onboarding are not open yet - the packages and amounts here are an
+            early estimate of how supporting pamoja will work, not a commitment.
           </p>
         </form>
 
@@ -364,7 +375,7 @@
       <a href="https://pypi.org/user/tonywied17/" target="_blank" rel="noopener">PyPI</a>
       <a href="https://www.nuget.org/profiles/tonywied17" target="_blank" rel="noopener">NuGet</a>
     </nav>
-    <p class="foot-fine">MIT licensed &middot; <em>pamoja</em> is Swahili for "together".</p>
+    <p class="foot-fine">MIT licensed</p>
   </footer>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
