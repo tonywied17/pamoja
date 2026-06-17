@@ -16,12 +16,6 @@
 &nbsp;<a href="https://www.nuget.org/profiles/tonywied17"><img height="26" alt="NuGet" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/btn-nuget.svg"></a>
 &nbsp;<a href="LICENSE-MIT"><img height="26" alt="MIT license" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/btn-license.svg"></a>
 
-<br>
-
-<img src="https://raw.githubusercontent.com/tonywied17/pamoja/main/assets/pamoja-globe.svg" alt="pamoja - a global mesh of devices relaying data around the world" width="880">
-
-<em>One core, meshing the world's hardest places together - farms, clinics, off-grid villages, and disaster zones.</em>
-
 </div>
 
 ## What is pamoja
