@@ -1407,6 +1407,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "pamoja-can"
+version = "0.1.6"
+
+[[package]]
 name = "pamoja-coap"
 version = "0.1.6"
 dependencies = [

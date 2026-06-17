@@ -56,6 +56,6 @@ jobs:
             pamoja-sync pamoja-loopback pamoja-bus \
             pamoja-ladder pamoja-kit pamoja-power pamoja-profile pamoja-sim \
             pamoja-security pamoja-audit pamoja-telemetry pamoja-lora pamoja-modbus \
-            pamoja-mesh pamoja-lorawan pamoja-routing; do
+            pamoja-mesh pamoja-lorawan pamoja-routing pamoja-can; do
             publish "$crate" || exit 1
           done
