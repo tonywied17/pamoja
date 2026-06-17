@@ -8,7 +8,9 @@ use pamoja_examples::degraded_link;
 
 #[tokio::test]
 async fn store_and_forward_survives_a_degraded_link() {
-    let outcome = degraded_link::run().await.expect("the scenario runs to completion");
+    let outcome = degraded_link::run()
+        .await
+        .expect("the scenario runs to completion");
 
     // The link genuinely degraded, so the node had to buffer: the test exercises the
     // offline path rather than a trivially perfect link.
