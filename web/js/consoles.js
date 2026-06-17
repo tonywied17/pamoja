@@ -1,8 +1,3 @@
-// The live device consoles: each field scenario is rendered as the glassy
-// telemetry dashboard a pamoja node serves over its own link. Pure DOM + SVG,
-// driven by a light rAF loop that only animates the console in view. Every
-// scenario runs a short scripted timeline so the data tells its story.
-
 import { prefersReducedMotion } from './config.js';
 
 const ACCENT = { farm: '#1fa995', clinic: '#ffb627', water: '#36b6dd', conservation: '#46c97e', village: '#33c9a6', storm: '#f26a4b' };
@@ -15,7 +10,8 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 // ---- tile renderers: each returns { node, update(s) } ------------------
 
-function tRadial(spec) {
+function tRadial(spec)
+{
   const node = el('div', 'tile t-radial');
   const C = 2 * Math.PI * 30, sweep = 0.75; // 270deg gauge
   node.innerHTML = `
@@ -33,12 +29,14 @@ function tRadial(spec) {
   const lbl = node.querySelector('.t-label');
   return {
     node,
-    update(s) {
+    update(s)
+    {
       const v = s.v[spec.key] || 0;
       const pct = clamp(v / spec.max, 0, 1);
       valC.setAttribute('stroke-dasharray', `${(C * sweep * pct).toFixed(1)} ${C.toFixed(1)}`);
       num.textContent = spec.fmt ? spec.fmt(v) : Math.round(v);
-      if (spec.status) {
+      if (spec.status)
+      {
         const [txt, tone] = spec.status(s);
         lbl.innerHTML = `${spec.label} <i class="t-tag ${tone}">${txt}</i>`;
       }
@@ -46,7 +44,8 @@ function tRadial(spec) {
   };
 }
 
-function tBar(spec) {
+function tBar(spec)
+{
   const node = el('div', 'tile t-bar');
   node.innerHTML = `
     <div class="t-row"><span class="t-label">${spec.label}</span><span class="t-val"><b>0</b>${spec.unit}</span></div>
@@ -55,7 +54,8 @@ function tBar(spec) {
   const val = node.querySelector('.t-val b');
   return {
     node,
-    update(s) {
+    update(s)
+    {
       const v = s.v[spec.key] || 0; const pct = clamp(v / spec.max, 0, 1);
       fill.style.width = (pct * 100).toFixed(1) + '%';
       val.textContent = spec.fmt ? spec.fmt(v) : Math.round(v);
@@ -63,14 +63,16 @@ function tBar(spec) {
   };
 }
 
-function tKpi(spec) {
+function tKpi(spec)
+{
   const node = el('div', 'tile t-kpi');
   node.innerHTML = `<div class="t-label">${spec.label}</div><div class="kpi"><b>0</b><span>${spec.unit}</span></div>`;
   const b = node.querySelector('.kpi b');
   const lbl = node.querySelector('.t-label');
   return {
     node,
-    update(s) {
+    update(s)
+    {
       const v = s.v[spec.key] || 0;
       b.textContent = spec.fmt ? spec.fmt(v) : Math.round(v);
       if (spec.status) { const [txt, tone] = spec.status(s); lbl.innerHTML = `${spec.label} <i class="t-tag ${tone}">${txt}</i>`; }
@@ -78,7 +80,8 @@ function tKpi(spec) {
   };
 }
 
-function tChip(spec) {
+function tChip(spec)
+{
   const node = el('div', 'tile t-chip');
   node.innerHTML = `<div class="t-label">${spec.label}</div><div class="chip"><span class="chip-dot"></span><b></b></div>`;
   const dot = node.querySelector('.chip-dot'); const b = node.querySelector('.chip b'); const chip = node.querySelector('.chip');
@@ -88,7 +91,8 @@ function tChip(spec) {
   };
 }
 
-function tSpark(spec) {
+function tSpark(spec)
+{
   const node = el('div', 'tile t-spark');
   node.innerHTML = `<div class="t-row"><span class="t-label">${spec.label}</span><span class="t-val"><b>0</b>${spec.unit || ''}</span></div>
     <svg viewBox="0 0 200 46" preserveAspectRatio="none" class="spark"><polyline class="sp-line" points=""/><polyline class="sp-area" points=""/></svg>`;
@@ -97,7 +101,8 @@ function tSpark(spec) {
   let acc = 0;
   return {
     node,
-    update(s, dt) {
+    update(s, dt)
+    {
       acc += dt; if (acc < 0.22) { val.textContent = spec.fmt ? spec.fmt(s.v[spec.key]) : Math.round(s.v[spec.key]); return; } acc = 0;
       buf.push(s.v[spec.key] || 0); buf.shift();
       const max = spec.max || 100;
@@ -110,7 +115,8 @@ function tSpark(spec) {
 }
 
 // Live acoustic monitor: a bar equaliser that spikes on an alert event.
-function tWave(spec) {
+function tWave(spec)
+{
   const node = el('div', 'tile t-wave wide');
   const N = 32;
   node.innerHTML = `<div class="t-row"><span class="t-label">${spec.label}</span><span class="t-val acoustic"><b>OK</b></span></div>
@@ -119,12 +125,14 @@ function tWave(spec) {
   let alert = 0;
   return {
     node,
-    update(s, dt) {
+    update(s, dt)
+    {
       if (s.flags.alert) { alert = 1; s.flags.alert = false; }
       alert = Math.max(0, alert - dt * 0.5);
       tag.classList.toggle('hot', alert > 0.1);
       tag.querySelector('b').textContent = alert > 0.1 ? 'CHAINSAW' : 'ambient';
-      bars.forEach((b, i) => {
+      bars.forEach((b, i) =>
+      {
         const base = 0.12 + 0.18 * Math.abs(Math.sin(s.t * 3 + i));
         const spike = alert * (0.5 + 0.5 * Math.sin(s.t * 22 + i * 1.3)) * (1 - Math.abs(i - N / 2) / N);
         b.style.transform = `scaleY(${(base + spike * 2).toFixed(3)})`;
@@ -135,13 +143,15 @@ function tWave(spec) {
 }
 
 // The tamper-evident, hash-chained log: blocks prepend as records are signed.
-function tChain(spec) {
+function tChain(spec)
+{
   const node = el('div', 'tile t-chain wide');
   node.innerHTML = `<div class="t-row"><span class="t-label">${spec.label}</span><span class="t-val mono chain-c">0</span></div><div class="chain"></div>`;
   const row = node.querySelector('.chain'); const count = node.querySelector('.chain-c');
   const hex = () => Math.floor(Math.random() * 0xffff).toString(16).padStart(4, '0');
   let n = 1041;
-  const add = () => {
+  const add = () =>
+  {
     const blk = el('span', 'block', `#${hex()}`); row.prepend(blk);
     requestAnimationFrame(() => blk.classList.add('in'));
     while (row.children.length > 5) row.lastChild.remove();
@@ -155,11 +165,13 @@ function tChain(spec) {
 }
 
 // A compact mesh / signal-flow schematic with travelling packets (SMIL).
-function tMesh(spec) {
+function tMesh(spec)
+{
   const node = el('div', 'tile t-mesh wide');
   const { nodes, links, packets, sat } = spec.cfg;
   const linkSvg = links.map((l) => `<line x1="${nodes[l[0]][0]}" y1="${nodes[l[0]][1]}" x2="${nodes[l[1]][0]}" y2="${nodes[l[1]][1]}" class="ml${l[2] ? ' weak' : ''}"/>`).join('');
-  const pktSvg = packets.map((p, i) => {
+  const pktSvg = packets.map((p, i) =>
+  {
     const path = p.map((k, j) => `${j ? 'L' : 'M'}${nodes[k][0]},${nodes[k][1]}`).join(' ');
     return `<circle r="3.2" class="pk"><animateMotion dur="${(1.6 + i * 0.2).toFixed(2)}s" repeatCount="indefinite" begin="${(i * 0.5).toFixed(2)}s" path="${path}"/><animate attributeName="opacity" values="0;1;1;0" dur="${(1.6 + i * 0.2).toFixed(2)}s" repeatCount="indefinite" begin="${(i * 0.5).toFixed(2)}s"/></circle>`;
   }).join('');
@@ -179,13 +191,13 @@ function tMesh(spec) {
 const RENDER = { radial: tRadial, bar: tBar, kpi: tKpi, chip: tChip, spark: tSpark, wave: tWave, chain: tChain, mesh: tMesh };
 
 // ---- scenario specs ----------------------------------------------------
-// step(s, t, cycle, steps): fire a step's set/msg/ev once when its window is
-// entered, so the timeline reads as a sequence of events.
-function step(s, cycle, steps) {
+function step(s, cycle, steps)
+{
   const p = s.t % cycle; let idx = 0;
   for (let i = 0; i < steps.length; i++) if (p >= steps[i].at) idx = i;
   const fire = Math.floor(s.t / cycle) * 100 + idx;
-  if (s._fire !== fire) {
+  if (s._fire !== fire)
+  {
     s._fire = fire; const st = steps[idx];
     if (st.set) for (const k in st.set) s.target[k] = st.set[k];
     if (st.ev) s.flags[st.ev] = true;
@@ -204,7 +216,8 @@ const SPECS = {
       { type: 'kpi', label: 'battery', key: 'batt', unit: 'V', fmt: (v) => v.toFixed(2) },
       { type: 'spark', label: 'soil trend · 24h', key: 'soil', max: 100, start: 50 },
     ],
-    script(s) {
+    script(s)
+    {
       s.v.batt = 3.9 + 0.25 * (0.5 + 0.5 * Math.sin(s.t * 0.2));
       step(s, 13, [
         { at: 0, set: { soil: 33, well: 60 }, msg: 'soil 33% — below threshold' },
@@ -226,7 +239,8 @@ const SPECS = {
       { type: 'chip', label: 'uplink', state: (s) => (s.flags.offline ? [`buffering · ${Math.round(s.v.queued)}`, 'warn'] : ['synced', 'ok']) },
       { type: 'chain', label: 'tamper-evident log' },
     ],
-    script(s) {
+    script(s)
+    {
       s.v.temp = 4.2 + 1.6 * Math.sin(s.t * 0.5) + 0.3 * Math.sin(s.t * 2.1);
       step(s, 16, [
         { at: 0, set: { o2: 74, power: 90, queued: 0 }, ev: 'sign', msg: 'temp logged · signed' },
@@ -249,7 +263,8 @@ const SPECS = {
       { type: 'chip', label: 'pump health', state: (s) => (s.flags.weak ? ['weakening', 'warn'] : ['nominal', 'ok']) },
       { type: 'spark', label: 'flow · today', key: 'flow', max: 16, start: 0 },
     ],
-    script(s) {
+    script(s)
+    {
       s.v.tank = clamp(s.v.tank + (s.flags.draw ? 0.4 : -0.05), 20, 92);
       step(s, 11, [
         { at: 0, set: { flow: 0, well: 60 }, msg: 'idle' },
@@ -271,7 +286,8 @@ const SPECS = {
       { type: 'kpi', label: 'battery', key: 'batt', unit: '%', fmt: (v) => Math.round(v) },
       { type: 'mesh', label: 'relay → ranger post', note: (s) => (s.flags.relaying ? 'relaying' : 'idle'), cfg: { nodes: [[24, 80], [90, 58, 0], [150, 70, 0], [200, 56, 'gw']], links: [[0, 1], [1, 2], [2, 3]], packets: [[0, 1, 2, 3]] } },
     ],
-    script(s) {
+    script(s)
+    {
       s.v.batt = 90 + 6 * Math.sin(s.t * 0.1);
       s.v.river = 36 + 4 * Math.sin(s.t * 0.3);
       step(s, 9, [
@@ -293,7 +309,8 @@ const SPECS = {
       { type: 'chip', label: 'routing', state: (s) => (s.flags.reroute ? ['learning', 'warn'] : ['optimised', 'ok']) },
       { type: 'spark', label: 'messages relayed', key: 'relayed', max: 360, start: 300 },
     ],
-    script(s) {
+    script(s)
+    {
       s.v.relayed += s.dt * 1.4;
       step(s, 12, [
         { at: 0, set: { hops: 3, neighbors: 5 }, msg: 'heard A→B (cost 3)' },
@@ -315,7 +332,8 @@ const SPECS = {
       { type: 'kpi', label: 'reports carried', key: 'carried', unit: '' },
       { type: 'bar', label: 'uplink queue', key: 'queue', unit: '', max: 16 },
     ],
-    script(s) {
+    script(s)
+    {
       s.v.batt = 70 + 5 * Math.sin(s.t * 0.15);
       step(s, 10, [
         { at: 0, set: { queue: 11 }, msg: 'cell tower lost — landfall' },
@@ -328,8 +346,10 @@ const SPECS = {
 };
 
 // ---- console + deck ----------------------------------------------------
-class Console {
-  constructor(fig, name) {
+class Console
+{
+  constructor(fig, name)
+  {
     this.fig = fig; this.active = false;
     const spec = SPECS[name]; this.spec = spec;
     const accent = ACCENT[name];
@@ -337,7 +357,8 @@ class Console {
     fig.classList.add('console');
 
     this.s = { v: { ...spec.init }, target: { ...spec.init }, t: 0, dt: 0, flags: {}, min: 12 * 60 + 1, lines: [], say: null };
-    this.s.say = (msg) => {
+    this.s.say = (msg) =>
+    {
       this.s.min += 1 + Math.floor(Math.random() * 2);
       this.s.lines.push({ t: `${pad((this.s.min / 60 | 0) % 24)}:${pad(this.s.min % 60)}`, msg });
       while (this.s.lines.length > 4) this.s.lines.shift();
@@ -368,11 +389,13 @@ class Console {
     if (prefersReducedMotion) { const svgs = fig.querySelectorAll('svg'); svgs.forEach((sv) => sv.pauseAnimations && sv.pauseAnimations()); }
   }
 
-  renderLog() {
+  renderLog()
+  {
     this.logEl.innerHTML = this.s.lines.map((l, i) => `<div class="log-line${i === this.s.lines.length - 1 ? ' new' : ''}"><span>${l.t}</span>${l.msg}</div>`).join('');
   }
 
-  update(t, dt) {
+  update(t, dt)
+  {
     const s = this.s; s.t = t; s.dt = dt;
     this.spec.script(s);
     const k = 1 - Math.exp(-dt * 3.2);
@@ -381,9 +404,11 @@ class Console {
   }
 }
 
-export function mountConsoles() {
+export function mountConsoles()
+{
   const items = [];
-  document.querySelectorAll('[data-diorama]').forEach((fig) => {
+  document.querySelectorAll('[data-diorama]').forEach((fig) =>
+  {
     const name = fig.dataset.diorama;
     if (SPECS[name]) items.push(new Console(fig, name));
   });
@@ -396,7 +421,8 @@ export function mountConsoles() {
   items.forEach((i) => io.observe(i.fig));
 
   let last = performance.now();
-  const loop = (now) => {
+  const loop = (now) =>
+  {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     const t = now / 1000;
     for (const it of items) if (it.active) it.update(t, dt);

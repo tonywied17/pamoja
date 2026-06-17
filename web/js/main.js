@@ -12,19 +12,22 @@ const fovRad = MathUtils.degToRad(CAM.fov);
 
 function hideLoader() { loader.classList.add('gone'); setTimeout(() => (loader.style.display = 'none'), 800); }
 
-function fail(reason) {
+function fail(reason)
+{
   console.warn('[pamoja] running without the 3D stage:', reason);
   document.body.classList.add('no-webgl');
   hideLoader();
-  // The page (including the device consoles) stays fully usable without WebGL.
   initUI({ onScene: (name) => setAccent(SCENES[name] && SCENES[name].theme) });
 }
 
-async function boot() {
+async function boot()
+{
   let renderer;
-  try {
+  try
+  {
     renderer = new WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  } catch (err) {
+  } catch (err)
+  {
     return fail(err.message);
   }
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
@@ -47,13 +50,15 @@ async function boot() {
   const director = new Director(camera, world, globe, network);
   director.onTheme = (theme) => setAccent(theme);
 
-  const applyScale = () => {
+  const applyScale = () =>
+  {
     const s = renderer.domElement.height / (2 * Math.tan(fovRad / 2));
     globe.setScale(s);
     network.setScale(s);
   };
 
-  const onResize = () => {
+  const onResize = () =>
+  {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight, false);
@@ -62,8 +67,10 @@ async function boot() {
   window.addEventListener('resize', onResize, { passive: true });
   applyScale();
 
-  if (!isMobile && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    window.addEventListener('pointermove', (e) => {
+  if (!isMobile && !window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  {
+    window.addEventListener('pointermove', (e) =>
+    {
       director.setPointer((e.clientX / window.innerWidth) * 2 - 1, -((e.clientY / window.innerHeight) * 2 - 1));
     }, { passive: true });
   }
@@ -72,7 +79,8 @@ async function boot() {
 
   let last = performance.now();
   let started = false;
-  const loop = (now) => {
+  const loop = (now) =>
+  {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     director.update(now / 1000, dt);

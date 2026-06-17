@@ -16,6 +16,12 @@
 &nbsp;<a href="https://www.nuget.org/profiles/tonywied17"><img height="26" alt="NuGet" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/btn-nuget.svg"></a>
 &nbsp;<a href="LICENSE-MIT"><img height="26" alt="MIT license" src="https://raw.githubusercontent.com/tonywied17/pamoja/main/.github/badges/btn-license.svg"></a>
 
+<br>
+
+<img src="https://raw.githubusercontent.com/tonywied17/pamoja/main/assets/pamoja-globe.svg" alt="pamoja - a global mesh of devices relaying data around the world" width="880">
+
+<em>One core, meshing the world's hardest places together - farms, clinics, off-grid villages, and disaster zones.</em>
+
 </div>
 
 ## What is pamoja
@@ -48,33 +54,43 @@ What that means in practice:
 
 ## Status
 
-In active development, the following crates and bindings are available:
+The engine and capability crates and the language bindings below are available
+today.
 
-- `pamoja-core` - the device model and transport, store, event-bus, and error traits.
-- `pamoja-codec` - the pluggable serialization trait with serde-based CBOR, JSON, and raw-bytes codecs behind feature flags, plus delta-and-varint batch encoding and an `f32` quantizer that pack a batch of readings into a fraction of the bytes for metered links.
-- `pamoja-mqtt` - an MQTT client implementing the core `Transport` trait, tested against an embedded broker.
-- `pamoja-coap` - a CoAP client implementing the core `Transport` trait over UDP, with confirmable and non-confirmable delivery and RFC 7641 observe, tested against an in-process server.
-- `pamoja-sync` - offline-first store-and-forward queues implementing the core `Store` trait: an in-memory queue and a crash-safe on-disk queue that survives power loss.
-- `pamoja-loopback` - an in-process `Transport` with MQTT-style topic matching, plus a fault-injecting decorator, so examples and tests exercise the full publish/subscribe path and degraded-link behavior with no broker and no hardware.
-- `pamoja-sim` - hardware-free simulators behind the core traits: a fake sensor with seedable noise and drift, a replay sensor for scripted readings, a recording actuator, and a degraded-link `Transport` decorator that drops and intermittently blocks sends, so the full stack and its offline-first behavior run and are tested with no hardware.
-- `pamoja-ladder` - a cost-aware transport ladder: rank transports cheapest-first, send over the first reachable rung, and buffer to a `Store` when every link is down, draining the backlog in order once one returns.
-- `pamoja-bus` - an in-memory typed publish/subscribe event bus implementing the core `EventBus` trait, broadcasting each event to every subscriber.
-- `pamoja-kit` - a `no_std` helper layer that names the math for the goal, not the technique: smooth a noisy reading, turn a raw reading into real units, keep a temperature, warn before a tank runs dry, catch a reading that changes dangerously fast, and geofence a tracked point (great-circle distance), each documenting the real algorithm one layer down. The geo helpers sit behind a default feature that adds `libm`; the rest stay allocation-free and dependency-free.
-- `pamoja-power` - a `no_std` power-scheduling layer: duty cycling with a duty-fraction power proxy, and an energy-aware governor that stretches the work interval as the battery drains and eases off when the panel is charging.
-- `pamoja-security` - a `no_std` device-identity layer: ed25519 keys that sign a device's telemetry and verify it, so a gateway can prove a reading is authentic and unaltered. The data-integrity and audit-trail foundation for the cold-chain and metering deployments, ahead of transport TLS/DTLS and signed OTA.
-- `pamoja-audit` - a `no_std` tamper-evident log: signed, SHA-256 hash-chained entries where each commits to the one before, so altering, reordering, inserting, or dropping any record breaks verification. The append-only audit trail a vaccine fridge's temperature history needs to stand as evidence.
-- `pamoja-telemetry` - a `no_std`, allocation-free observability layer: structured leveled events and a reporter that ships only what is worth the bytes as the link cost rises, while counting everything so a compact periodic snapshot stays complete. Device-side observability that degrades gracefully on metered links.
-- `pamoja-lora` - a `no_std`, allocation-free LoRa link model: the exact integer time-on-air of a payload and the duty-cycle off-time it forces, so a long-range node stays within regulations and budgets its power. The link-budget half of LoRa support, ahead of the radio driver.
-- `pamoja-modbus` - a `no_std`, allocation-free Modbus RTU framing layer: CRC-16/Modbus, the RTU frame envelope that assembles and CRC-verifies on the wire, builders for the standard read and write requests, and decoders that read registers and packed coils back out of a reply, with the exception a device returns when it refuses. The protocol half that lets a node talk to long-cable RS485 field sensors like soil probes and energy meters, ahead of the serial driver.
-- `pamoja-mesh` - a `no_std`, allocation-free mesh packet layer: an addressed, hop-limited, CRC-checked frame for cheap local and mesh radio (ESP-NOW and nRF24 style), whose checksum covers everything but the hop limit so integrity stays end to end as a packet floods, plus the relay primitive and a fixed-size duplicate suppressor that together flood a packet across the mesh exactly once. The disaster-and-rural messaging backbone where there is no infrastructure, ahead of the radio driver.
-- `pamoja-lorawan` - a `no_std`, allocation-free LoRaWAN 1.0.x MAC framing layer: build and parse data-frame `PHYPayload`s with the AES-CMAC message integrity code and the AES payload encryption the spec mandates, binding the device address and frame counter into both, plus the over-the-air-activation join exchange that derives the session keys from the root key, validated against the AES (FIPS-197) and CMAC (RFC 4493) reference vectors. The secured-packet half that turns the LoRa link budget into real over-the-air LoRaWAN traffic, ahead of the radio driver.
-- `pamoja-routing` - a `no_std`, allocation-free mesh routing layer: a fixed-size table that learns reverse-path routes from the traffic a node hears (a packet's source is reachable via the neighbour it arrived through, at the cost it reports), keeps the cheapest route to each destination, and decides per packet whether to deliver, relay toward a known destination, or fall back to flooding. The optimization over `pamoja-mesh`'s flooding that saves the airtime and battery a cheap-radio mesh lives on.
-- `pamoja-can` - a `no_std`, allocation-free CAN framing layer: classic CAN 2.0 and CAN-FD frames with 11-bit and 29-bit identifiers and the discrete CAN-FD length encoding, plus J1939 identifier decoding and composition (priority, parameter group number, source and destination) for the trucks, tractors, and gensets that speak it. The identifier-and-payload half ahead of the CAN controller, the SDK's path to robotics actuators and diesel-and-hydraulic machinery.
-- `pamoja-profile` - named, ready-to-run device profiles: pick a preset like the vaccine-fridge monitor or load a profile from a shareable JSON manifest, hand it a sensor, actuator, transport, and codec, and the assembled node reads, decides with the `pamoja-kit` controllers, drives the output, and publishes on the profile's `pamoja-power` schedule. The profile is plain data and the control policy is pure and hardware-free, so a whole profile is shareable and testable with no devices.
-- `pamoja-ffi` - the curated C ABI over the core and MQTT, with a `cbindgen`-generated, drift-checked `pamoja.h`. This is the single auditable unsafe boundary and the seam C, C++, and .NET consume.
-- `@pamoja/core` - the Node binding, shipped in two tiers: a generated contract and a hand-written TypeScript facade (the `MqttClient` today, until the capability-scoped packages land).
-- `pamoja-core` (Python) - the Python binding, same two tiers: a generated, type-stubbed contract and a hand-written async facade, built with PyO3 and maturin.
-- `Pamoja.Core` (.NET) - the C#/.NET binding over the C ABI, same two tiers: a P/Invoke interop layer and a hand-written async facade with `IAsyncEnumerable` message streams and `IAsyncDisposable` lifecycle.
+### Engine and capability crates
+
+| Crate | Area | What it does |
+| --- | --- | --- |
+| `pamoja-core` | core | The device model: `Transport`, `Device`, `Sensor`, `Actuator`, `Store`, event-bus, and error traits. |
+| `pamoja-codec` | serialize | CBOR, JSON, and raw codecs behind one trait, plus delta+varint batch packing and an `f32` quantizer for metered links. |
+| `pamoja-mqtt` | messaging | An MQTT client implementing the core `Transport` trait, tested against an embedded broker. |
+| `pamoja-coap` | messaging | A CoAP client over UDP with confirmable and non-confirmable delivery and RFC 7641 observe. |
+| `pamoja-ladder` | resilience | A cost-aware transport ladder: cheapest reachable rung first, buffering to a `Store` when every link is down. |
+| `pamoja-sync` | resilience | Offline-first store-and-forward queues: in-memory, plus a crash-safe on-disk queue that survives power loss. |
+| `pamoja-bus` | core | An in-memory typed publish/subscribe event bus implementing the core `EventBus` trait. |
+| `pamoja-loopback` | testing | An in-process `Transport` with topic matching and a fault injector, exercising the full path with no broker. |
+| `pamoja-sim` | testing | Hardware-free simulators: noisy and replay sensors, a recording actuator, and a degraded-link transport. |
+| `pamoja-power` | energy | Duty cycling plus an energy-aware governor that stretches work as the battery drains and eases off while charging. |
+| `pamoja-security` | trust | ed25519 device identity: sign a device's telemetry and verify it, so a gateway can prove a reading is authentic. |
+| `pamoja-audit` | trust | A `no_std` tamper-evident, SHA-256 hash-chained log; altering, reordering, or dropping any record breaks verification. |
+| `pamoja-telemetry` | observe | Allocation-free observability that ships only what is worth the bytes as link cost rises, while counting everything. |
+| `pamoja-lora` | radio | The exact LoRa time-on-air of a payload and the duty-cycle off-time it forces, so a node stays in regulation and budget. |
+| `pamoja-lorawan` | radio | LoRaWAN 1.0.x MAC framing with AES-CMAC and AES encryption and OTAA join, against the FIPS-197 and RFC 4493 vectors. |
+| `pamoja-mesh` | mesh | Addressed, hop-limited, CRC-checked frames plus duplicate suppression that floods a packet across the mesh exactly once. |
+| `pamoja-routing` | mesh | Reverse-path routing that learns the cheapest route from overheard traffic, saving the airtime flooding wastes. |
+| `pamoja-modbus` | field I/O | Modbus RTU framing (CRC-16/Modbus) with request builders and reply decoders for RS485 field sensors. |
+| `pamoja-can` | field I/O | CAN 2.0 and CAN-FD frames (11- and 29-bit IDs) plus J1939 decode and compose for trucks, tractors, and gensets. |
+| `pamoja-kit` | ergonomics | Plain-language helpers that name the goal over the math: smooth, calibrate, keep, warn, and geofence. |
+| `pamoja-profile` | ergonomics | Named, ready-to-run device profiles from plain data or a JSON manifest; assembled and testable with no hardware. |
+| `pamoja-ffi` | bindings | The curated C ABI over the core and MQTT, with a `cbindgen`-generated, drift-checked `pamoja.h`. |
+
+### Language bindings
+
+| Package | Language | What it is |
+| --- | --- | --- |
+| `@pamoja/core` | TypeScript / Node | A generated contract plus a hand-written TypeScript facade (napi-rs). |
+| `pamoja-core` | Python | A generated, type-stubbed contract plus a hand-written async facade (PyO3 + maturin). |
+| `Pamoja.Core` | C# / .NET | A P/Invoke interop layer plus an async facade with `IAsyncEnumerable` streams and `IAsyncDisposable` lifecycle. |
 
 CI runs formatting, clippy, and tests for the workspace, builds the Node, Python, and .NET bindings, and fails if any generated surface (the binding contracts and the C header) drifts from the Rust source. Release workflows publish to crates.io, npm, PyPI, and NuGet on a version tag. Everything past this is on the roadmap below.
 
