@@ -1,0 +1,17 @@
+[package]
+name = "pamoja-lorawan"
+description = "LoRaWAN 1.0.x MAC framing for pamoja: build and parse data-frame PHYPayloads with the message integrity code and payload encryption the spec mandates, so a long-range node speaks LoRaWAN, no_std and allocation-free. The secured-packet half ahead of the radio driver."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+# AES-128 is the one primitive LoRaWAN is built on; the CMAC and the keystream
+# constructions are implemented on top of it here, so this is the only dependency.
+aes = { version = "0.8", default-features = false }
+
+[lints]
+workspace = true
