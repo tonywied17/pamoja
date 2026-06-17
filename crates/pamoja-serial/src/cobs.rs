@@ -358,9 +358,18 @@ mod tests {
             (vec![0x00], vec![0x01, 0x01, 0x00]),
             (vec![0x00, 0x00], vec![0x01, 0x01, 0x01, 0x00]),
             (vec![0x00, 0x11, 0x00], vec![0x01, 0x02, 0x11, 0x01, 0x00]),
-            (vec![0x11, 0x22, 0x00, 0x33], vec![0x03, 0x11, 0x22, 0x02, 0x33, 0x00]),
-            (vec![0x11, 0x22, 0x33, 0x44], vec![0x05, 0x11, 0x22, 0x33, 0x44, 0x00]),
-            (vec![0x11, 0x00, 0x00, 0x00], vec![0x02, 0x11, 0x01, 0x01, 0x01, 0x00]),
+            (
+                vec![0x11, 0x22, 0x00, 0x33],
+                vec![0x03, 0x11, 0x22, 0x02, 0x33, 0x00],
+            ),
+            (
+                vec![0x11, 0x22, 0x33, 0x44],
+                vec![0x05, 0x11, 0x22, 0x33, 0x44, 0x00],
+            ),
+            (
+                vec![0x11, 0x00, 0x00, 0x00],
+                vec![0x02, 0x11, 0x01, 0x01, 0x01, 0x00],
+            ),
         ];
 
         // Example 7: 254 non-zero bytes 01..FE encode to a single 0xFF run, no phantom code.
@@ -479,19 +488,28 @@ mod tests {
     fn a_code_that_overruns_the_frame_is_truncated() {
         // Code 0x03 claims two data bytes but only one precedes the delimiter.
         let mut out = [0u8; 4];
-        assert_eq!(decode(&[0x03, 0x11, 0x00], &mut out), Err(SerialError::TruncatedFrame));
+        assert_eq!(
+            decode(&[0x03, 0x11, 0x00], &mut out),
+            Err(SerialError::TruncatedFrame)
+        );
     }
 
     #[test]
     fn encode_reports_a_full_buffer() {
         let mut frame = [0u8; 3];
-        assert_eq!(encode(&[0x11, 0x22, 0x33], &mut frame), Err(SerialError::BufferTooSmall));
+        assert_eq!(
+            encode(&[0x11, 0x22, 0x33], &mut frame),
+            Err(SerialError::BufferTooSmall)
+        );
     }
 
     #[test]
     fn decode_reports_a_full_buffer() {
         let mut out = [0u8; 1];
-        assert_eq!(decode(&[0x03, 0x11, 0x22, 0x00], &mut out), Err(SerialError::BufferTooSmall));
+        assert_eq!(
+            decode(&[0x03, 0x11, 0x22, 0x00], &mut out),
+            Err(SerialError::BufferTooSmall)
+        );
     }
 
     #[test]
