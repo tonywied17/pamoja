@@ -809,7 +809,9 @@ mod tests {
     #[test]
     fn another_sessions_keys_cannot_read_a_frame() {
         let session = session();
-        let frame = session.encode_uplink(&Uplink::new(1, 1, b"secret")).unwrap();
+        let frame = session
+            .encode_uplink(&Uplink::new(1, 1, b"secret"))
+            .unwrap();
         let stranger = Session::new(DEV_ADDR, [0xAA; 16], [0xBB; 16]);
         assert_eq!(
             stranger.decode(frame.as_bytes(), 1),

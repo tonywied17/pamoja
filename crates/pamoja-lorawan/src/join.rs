@@ -387,6 +387,9 @@ mod tests {
         // The derived session still secures a data frame.
         let session = accepted.session();
         let uplink = session.encode_uplink(&Uplink::new(1, 1, b"cf")).unwrap();
-        assert_eq!(session.decode(uplink.as_bytes(), 1).unwrap().payload(), b"cf");
+        assert_eq!(
+            session.decode(uplink.as_bytes(), 1).unwrap().payload(),
+            b"cf"
+        );
     }
 }
