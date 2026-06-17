@@ -44,6 +44,15 @@ export function showToast(msg)
   toastTimer = setTimeout(() => t.classList.remove('show'), 4200);
 }
 
+// Backing is not live yet; the whole section is a preview. Buttons and the form
+// surface this instead of doing anything.
+const PREVIEW_MSG = 'Backing is not open yet - this section is a preview of how it will work.';
+function comingSoon()
+{
+  $('#back').scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+  showToast(PREVIEW_MSG);
+}
+
 // ---- builders ----------------------------------------------------------
 
 function buildStats()
@@ -204,14 +213,7 @@ function buildTiers(form)
       <p class="head">${t.headline}</p>
       <ul>${t.items.map((i) => `<li>${i}</li>`).join('')}</ul>
       <button class="btn btn-ghost" type="button">Back the ${t.name}</button>`;
-    card.querySelector('button').addEventListener('click', () =>
-    {
-      form.querySelector('[data-role="donor"]').click();
-      form.elements.amount.value = t.amount;
-      form.elements.message.value = `I'd like to back the ${t.name} tier ($${t.amount}) - ${t.headline.toLowerCase()}.`;
-      $('#back').scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
-      form.elements.name.focus({ preventScroll: true });
-    });
+    card.querySelector('button').addEventListener('click', comingSoon);
     wrap.appendChild(card);
   });
 }
@@ -233,16 +235,7 @@ function buildUplinks(form)
       <p class="head">${u.headline}</p>
       <ul>${u.items.map((i) => `<li>${i}</li>`).join('')}</ul>
       <button class="btn btn-ghost" type="button">${u.role === 'vendor' ? 'Become a partner' : 'Sponsor this'}</button>`;
-    card.querySelector('button').addEventListener('click', () =>
-    {
-      form.querySelector(`[data-role="${u.role}"]`).click();
-      if (recurring) form.elements.amount.value = u.amount;
-      form.elements.message.value = u.role === 'vendor'
-        ? "We're a carrier / integrator interested in sponsoring uplink capacity for pamoja's gateways."
-        : `I'd like to sponsor the ${u.name} ($${u.amount} ${u.per}) - ${u.headline.toLowerCase()}.`;
-      $('#back').scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
-      form.elements.name.focus({ preventScroll: true });
-    });
+    card.querySelector('button').addEventListener('click', comingSoon);
     wrap.appendChild(card);
   });
 }
@@ -290,30 +283,12 @@ function wireForm()
     }),
   );
 
+  // Backing is not live yet: the form is disabled and submitting does nothing
+  // but surface the preview message.
   form.addEventListener('submit', (e) =>
   {
     e.preventDefault();
-    const f = form.elements;
-    if (!f.name.value.trim() || !f.email.value.trim())
-    {
-      showToast('A name and email help us follow up.');
-      return;
-    }
-    const isDonor = role === 'donor';
-    const subject = isDonor
-      ? `pamoja pledge - $${f.amount.value || '0'} field kit fund`
-      : 'pamoja vendor / partner enquiry';
-    const lines = [
-      `Role: ${isDonor ? 'Donor' : 'Vendor / partner'}`,
-      `Name: ${f.name.value}`,
-      `Email: ${f.email.value}`,
-      isDonor ? `Pledge: $${f.amount.value || '0'}` : `Organisation: ${f.org.value || '-'}`,
-      '',
-      f.message.value || '(no message)',
-    ];
-    const href = `mailto:tonywied17@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join('\n'))}`;
-    window.location.href = href;
-    showToast('Opening your email to send the pledge - thank you.');
+    showToast(PREVIEW_MSG);
   });
 
   return form;
@@ -321,8 +296,8 @@ function wireForm()
 
 function animateGoal()
 {
-  requestAnimationFrame(() => { $('#goal-fill').style.width = '2%'; });
-  $('#goal-count').textContent = '0 of 100 funded - be the first';
+  $('#goal-fill').style.width = '0%';
+  $('#goal-count').textContent = 'opens later';
 }
 
 // ---- scroll wiring -----------------------------------------------------
