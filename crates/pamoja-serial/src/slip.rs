@@ -368,13 +368,19 @@ mod tests {
     #[test]
     fn an_invalid_escape_is_rejected() {
         let mut out = [0u8; 4];
-        assert_eq!(decode(&[ESC, 0x01, END], &mut out), Err(SerialError::InvalidEscape));
+        assert_eq!(
+            decode(&[ESC, 0x01, END], &mut out),
+            Err(SerialError::InvalidEscape)
+        );
     }
 
     #[test]
     fn an_escape_at_the_end_is_truncated() {
         let mut out = [0u8; 4];
-        assert_eq!(decode(&[0x01, ESC], &mut out), Err(SerialError::TruncatedFrame));
+        assert_eq!(
+            decode(&[0x01, ESC], &mut out),
+            Err(SerialError::TruncatedFrame)
+        );
     }
 
     #[test]
