@@ -49,6 +49,10 @@ path = "conformance.rs"
 name = "conformance"
 path = "tests/conformance.rs"
 
+[[test]]
+name = "degraded_link"
+path = "tests/degraded_link.rs"
+
 [dependencies]
 pamoja-core = { workspace = true }
 pamoja-codec = { path = "../crates/pamoja-codec" }

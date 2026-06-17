@@ -7,3 +7,4 @@
 //! on them) drive the exact same run.
 
 pub mod cold_chain;
+pub mod degraded_link;
