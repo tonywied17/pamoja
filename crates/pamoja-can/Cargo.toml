@@ -1,0 +1,12 @@
+[package]
+name = "pamoja-can"
+description = "CAN bus framing for pamoja: classic CAN 2.0 and CAN-FD frames with 11-bit and 29-bit identifiers and the discrete CAN-FD length encoding, plus J1939 identifier decoding for trucks, tractors, and gensets, no_std and allocation-free. The framing half ahead of the CAN controller."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
