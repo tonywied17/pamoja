@@ -120,7 +120,9 @@ impl<const N: usize> Router<N> {
             return false;
         }
         if let Some(index) = self.index_of(origin) {
-            let route = self.routes[index].as_mut().expect("index_of points at a route");
+            let route = self.routes[index]
+                .as_mut()
+                .expect("index_of points at a route");
             if cost < route.cost || via == route.next_hop {
                 let changed = route.next_hop != via || route.cost != cost;
                 route.next_hop = via;
@@ -191,9 +193,8 @@ impl<const N: usize> Router<N> {
     ///
     /// The [`Route`], or [`None`] if no route is known.
     pub fn route(&self, dst: u32) -> Option<Route> {
-        self.index_of(dst).map(|index| {
-            self.routes[index].expect("index_of points at a route")
-        })
+        self.index_of(dst)
+            .map(|index| self.routes[index].expect("index_of points at a route"))
     }
 
     /// Decides what to do with a packet bound for a destination.
