@@ -39,9 +39,14 @@
 //! let _probe = Thermometer { celsius: 20.5 };
 //! ```
 
+// The core is `no_std` unless the default `std` feature is on, so it fits a
+// microcontroller. The owned types it needs (`String`, `Vec`) come from `alloc`.
+#![cfg_attr(not(feature = "std"), no_std)]
 // The public traits use `async fn`, which is intentional for this statically
 // dispatched SDK; the associated lint is therefore allowed crate-wide.
 #![allow(async_fn_in_trait)]
+
+extern crate alloc;
 
 pub mod bus;
 pub mod device;

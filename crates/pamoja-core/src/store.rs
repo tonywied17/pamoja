@@ -1,5 +1,7 @@
 //! Durable local storage backing the offline-first synchronization layer.
 
+use alloc::vec::Vec;
+
 use crate::error::Result;
 
 /// A durable, first-in first-out queue for store-and-forward buffering.

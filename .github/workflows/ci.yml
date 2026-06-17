@@ -33,5 +33,11 @@ jobs:
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
 
+      # Build the no_std crates with their default features off, so the core stays
+      # `no_std` (only `core` and `alloc`) and never silently regains a `std`
+      # dependency that would break the microcontroller target.
+      - name: no_std build
+        run: cargo build --no-default-features -p pamoja-core -p pamoja-codec -p pamoja-security -p pamoja-audit
+
       - name: Test
         run: cargo test --workspace
