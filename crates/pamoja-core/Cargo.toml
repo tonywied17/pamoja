@@ -8,5 +8,12 @@ license.workspace = true
 repository.workspace = true
 authors.workspace = true
 
+[features]
+# `std` is on by default and brings in the `std::error::Error` impl for hosted
+# targets. Turn it off (`default-features = false`) to build the core for a `no_std`
+# target, where it relies only on `core` and `alloc`.
+default = ["std"]
+std = []
+
 [lints]
 workspace = true

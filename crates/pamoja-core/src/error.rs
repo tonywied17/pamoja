@@ -4,6 +4,7 @@
 //! maps cleanly onto each language binding's native error idiom, such as
 //! exceptions or rejected promises.
 
+use alloc::string::String;
 use core::fmt;
 
 /// The error type returned by all fallible pamoja operations.
@@ -58,6 +59,7 @@ impl fmt::Display for Error {
     }
 }
 
+#[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
 /// A specialized [`core::result::Result`] whose error type is fixed to [`Error`].
