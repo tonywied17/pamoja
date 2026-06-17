@@ -777,4 +777,43 @@ mod tests {
         let rx = other.decode(frame.as_bytes(), 1).unwrap();
         assert_eq!(rx.payload(), b"mac");
     }
+
+    #[test]
+    fn the_largest_payload_round_trips() {
+        let session = session();
+        let payload = [0xAB; MAX_PAYLOAD];
+        let frame = session.encode_uplink(&Uplink::new(1, 1, &payload)).unwrap();
+        assert_eq!(frame.as_bytes().len(), crate::MAX_FRAME);
+        let rx = session.decode(frame.as_bytes(), 1).unwrap();
+        assert_eq!(rx.payload(), &payload[..]);
+    }
+
+    #[test]
+    fn the_full_frame_counter_is_bound_into_the_mic() {
+        let session = session();
+        // Only the low 16 bits of the counter travel on the wire, but the whole 32-bit
+        // value is folded into the MIC.
+        let frame = session
+            .encode_uplink(&Uplink::new(0x0001_0001, 1, b"x"))
+            .unwrap();
+        // The right low bits but the wrong upper bits must still fail the MIC.
+        assert_eq!(
+            session.decode(frame.as_bytes(), 0x0000_0001),
+            Err(LorawanError::MicMismatch)
+        );
+        // The full counter verifies.
+        let rx = session.decode(frame.as_bytes(), 0x0001_0001).unwrap();
+        assert_eq!(rx.fcnt(), 0x0001);
+    }
+
+    #[test]
+    fn another_sessions_keys_cannot_read_a_frame() {
+        let session = session();
+        let frame = session.encode_uplink(&Uplink::new(1, 1, b"secret")).unwrap();
+        let stranger = Session::new(DEV_ADDR, [0xAA; 16], [0xBB; 16]);
+        assert_eq!(
+            stranger.decode(frame.as_bytes(), 1),
+            Err(LorawanError::MicMismatch)
+        );
+    }
 }

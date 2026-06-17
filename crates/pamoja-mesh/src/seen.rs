@@ -70,6 +70,10 @@ impl<const N: usize> SeenCache<N> {
         if self.contains(key) {
             return false;
         }
+        // A zero-capacity cache remembers nothing, so every key reads as new.
+        if N == 0 {
+            return true;
+        }
         self.keys[self.next] = Some(key);
         self.next = (self.next + 1) % N;
         true
@@ -120,6 +124,14 @@ mod tests {
     #[test]
     fn an_empty_cache_remembers_nothing() {
         let seen: SeenCache<4> = SeenCache::default();
+        assert!(!seen.contains((1, 1)));
+    }
+
+    #[test]
+    fn a_zero_capacity_cache_reads_every_key_as_new_without_panicking() {
+        let mut seen: SeenCache<0> = SeenCache::new();
+        assert!(seen.record((1, 1)));
+        assert!(seen.record((1, 1))); // nothing was remembered, so it is new again
         assert!(!seen.contains((1, 1)));
     }
 }

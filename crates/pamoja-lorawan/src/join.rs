@@ -352,4 +352,41 @@ mod tests {
             Err(LorawanError::UnsupportedMType(0x00))
         );
     }
+
+    // Builds a 33-byte join-accept carrying a 16-byte channel list, the two-block form.
+    fn make_join_accept_with_cflist(app_key: &[u8; 16], cflist: [u8; 16]) -> [u8; 33] {
+        let cipher = Cipher::new(app_key);
+        let mut clear = [0u8; 32];
+        clear[0..3].copy_from_slice(&[0x01, 0x02, 0x03]); // AppNonce
+        clear[3..6].copy_from_slice(&[0x04, 0x05, 0x06]); // NetID
+        clear[6..10].copy_from_slice(&0x2601_1BDAu32.to_le_bytes()); // DevAddr
+        clear[10] = 0x00; // DLSettings
+        clear[11] = 0x01; // RxDelay
+        clear[12..28].copy_from_slice(&cflist);
+        let mut signed = [0u8; 29];
+        signed[0] = MTYPE_JOIN_ACCEPT;
+        signed[1..29].copy_from_slice(&clear[..28]);
+        let tag = cipher.cmac(&signed);
+        clear[28..32].copy_from_slice(&tag[..4]);
+
+        let mut frame = [0u8; 33];
+        frame[0] = MTYPE_JOIN_ACCEPT;
+        let first: [u8; 16] = clear[0..16].try_into().unwrap();
+        let second: [u8; 16] = clear[16..32].try_into().unwrap();
+        frame[1..17].copy_from_slice(&cipher.decrypt_block(&first));
+        frame[17..33].copy_from_slice(&cipher.decrypt_block(&second));
+        frame
+    }
+
+    #[test]
+    fn a_join_accept_with_a_channel_list_activates() {
+        let device = Device::new(DEV_EUI, APP_EUI, APP_KEY);
+        let frame = make_join_accept_with_cflist(&APP_KEY, [0x11; 16]);
+        let accepted = device.accept_join(&frame, DEV_NONCE).unwrap();
+        assert_eq!(accepted.dev_addr(), 0x2601_1BDA);
+        // The derived session still secures a data frame.
+        let session = accepted.session();
+        let uplink = session.encode_uplink(&Uplink::new(1, 1, b"cf")).unwrap();
+        assert_eq!(session.decode(uplink.as_bytes(), 1).unwrap().payload(), b"cf");
+    }
 }

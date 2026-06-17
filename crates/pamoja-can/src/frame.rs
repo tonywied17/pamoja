@@ -321,4 +321,21 @@ mod tests {
         assert_eq!(len_to_dlc(33), 14); // the code for 48 bytes
         assert_eq!(dlc_to_len(14), 48);
     }
+
+    #[test]
+    fn a_zero_length_fd_frame_is_valid() {
+        let frame = Frame::fd(CanId::standard(0x1), &[]).unwrap();
+        assert!(frame.is_fd());
+        assert!(frame.is_empty());
+        assert_eq!(frame.len(), 0);
+        assert_eq!(frame.dlc(), 0);
+        assert_eq!(frame.data(), &[]);
+    }
+
+    #[test]
+    fn a_classic_frame_can_be_empty() {
+        let frame = Frame::new(CanId::standard(0x1), &[]).unwrap();
+        assert!(frame.is_empty());
+        assert_eq!(frame.dlc(), 0);
+    }
 }

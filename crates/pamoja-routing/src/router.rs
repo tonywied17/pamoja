@@ -142,17 +142,19 @@ impl<const N: usize> Router<N> {
             return true;
         }
 
-        // The table is full; replace the costliest route if this one is cheaper.
-        let (worst, worst_cost) = self
+        // The table is full; replace the costliest route if this one is cheaper. A
+        // capacity of zero leaves nothing to replace, so the observation is dropped.
+        if let Some((worst, worst_cost)) = self
             .routes
             .iter()
             .enumerate()
             .filter_map(|(i, slot)| slot.as_ref().map(|route| (i, route.cost)))
             .max_by_key(|&(_, cost)| cost)
-            .expect("a full table has routes");
-        if cost < worst_cost {
-            self.routes[worst] = Some(new);
-            return true;
+        {
+            if cost < worst_cost {
+                self.routes[worst] = Some(new);
+                return true;
+            }
         }
         false
     }
@@ -351,5 +353,14 @@ mod tests {
         let router: Router<8> = Router::new(1);
         assert!(router.is_empty());
         assert_eq!(router.len(), 0);
+    }
+
+    #[test]
+    fn a_zero_capacity_router_never_learns_but_does_not_panic() {
+        let mut router: Router<0> = Router::new(1);
+        assert!(!router.observe(9, 5, 2));
+        assert_eq!(router.next_hop(9), None);
+        assert_eq!(router.forward(9), Forward::Flood);
+        assert!(router.is_empty());
     }
 }

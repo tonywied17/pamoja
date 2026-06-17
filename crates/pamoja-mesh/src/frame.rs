@@ -410,4 +410,13 @@ mod tests {
         let frame = Frame::new(0xDEAD_BEEF, 2, 0x1234, b"x").unwrap();
         assert_eq!(frame.dedup_key(), (0xDEAD_BEEF, 0x1234));
     }
+
+    #[test]
+    fn the_largest_payload_round_trips() {
+        let payload = [0xCD; Frame::MAX_PAYLOAD];
+        let frame = Frame::new(1, 2, 3, &payload).unwrap();
+        assert_eq!(frame.as_bytes().len(), Frame::MAX_LEN);
+        let parsed = Frame::parse(frame.as_bytes()).unwrap();
+        assert_eq!(parsed.payload(), &payload[..]);
+    }
 }

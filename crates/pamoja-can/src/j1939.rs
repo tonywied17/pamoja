@@ -233,4 +233,22 @@ mod tests {
         assert_eq!(with_dest.to_id(), without.to_id());
         assert_eq!(with_dest.to_id(), CanId::extended(0x0CF0_0400));
     }
+
+    #[test]
+    fn the_data_page_bits_round_trip() {
+        // Identifiers that set the data-page bit (0x0DF00400) and both the extended and
+        // data-page bits (0x03F00400) must survive decode and re-encode unchanged.
+        for raw in [0x0DF0_0400u32, 0x03F0_0400] {
+            let id = CanId::extended(raw);
+            assert_eq!(J1939Id::from_id(id).unwrap().to_id(), id);
+        }
+    }
+
+    #[test]
+    fn a_data_page_one_pgn_decodes_above_the_first_page() {
+        let message = J1939Id::from_id(CanId::extended(0x0DF0_0400)).unwrap();
+        assert_eq!(message.pgn(), 0x1_F004);
+        assert_eq!(message.priority(), 3);
+        assert!(message.is_broadcast());
+    }
 }

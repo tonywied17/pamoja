@@ -224,4 +224,24 @@ mod tests {
         let frame = Adu::from_pdu(0x11, &[0x03, 0x02, 0x00, 0x64]).unwrap();
         assert_eq!(frame.exception(), None);
     }
+
+    #[test]
+    fn a_maximum_length_frame_round_trips() {
+        // The largest PDU is 253 bytes; with the address and CRC that is the 256-byte
+        // maximum RTU frame.
+        let pdu = [0xAB; 253];
+        let frame = Adu::from_pdu(0x01, &pdu).unwrap();
+        assert_eq!(frame.as_bytes().len(), Adu::MAX_LEN);
+        let parsed = Adu::parse(frame.as_bytes()).unwrap();
+        assert_eq!(parsed.pdu(), &pdu[..]);
+    }
+
+    #[test]
+    fn an_exception_bit_without_a_code_is_not_an_exception() {
+        // A reply whose function code has the exception bit set but carries no exception
+        // byte must read as no exception rather than panic.
+        let frame = Adu::from_pdu(0x11, &[0x83]).unwrap();
+        let parsed = Adu::parse(frame.as_bytes()).unwrap();
+        assert_eq!(parsed.exception(), None);
+    }
 }
