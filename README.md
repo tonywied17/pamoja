@@ -74,6 +74,7 @@ today.
 | `pamoja-routing` | mesh | Reverse-path routing that learns the cheapest route from overheard traffic, saving the airtime flooding wastes. |
 | `pamoja-modbus` | field I/O | Modbus RTU framing (CRC-16/Modbus) with request builders and reply decoders for RS485 field sensors. |
 | `pamoja-can` | field I/O | CAN 2.0 and CAN-FD frames (11- and 29-bit IDs) plus J1939 decode and compose for trucks, tractors, and gensets. |
+| `pamoja-serial` | field I/O | SLIP (RFC 1055) and COBS byte-stuffing with streaming frame decoders, so a raw UART byte stream carries discrete packets to motor controllers, GPS, and LiDAR. |
 | `pamoja-kit` | ergonomics | Plain-language helpers that name the goal over the math: smooth, calibrate, keep, warn, and geofence. |
 | `pamoja-profile` | ergonomics | Named, ready-to-run device profiles from plain data or a JSON manifest; assembled and testable with no hardware. |
 | `pamoja-ffi` | bindings | The curated C ABI over the core and MQTT, with a `cbindgen`-generated, drift-checked `pamoja.h`. |
