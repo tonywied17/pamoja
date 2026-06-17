@@ -204,7 +204,13 @@ fn copy_reversed(dst: &mut [u8], src: &[u8]) {
 }
 
 // Derives a session key by encrypting the spec's key-derivation block with the root key.
-fn derive_key(cipher: &Cipher, kind: u8, app_nonce: &[u8], net_id: &[u8], dev_nonce: u16) -> [u8; 16] {
+fn derive_key(
+    cipher: &Cipher,
+    kind: u8,
+    app_nonce: &[u8],
+    net_id: &[u8],
+    dev_nonce: u16,
+) -> [u8; 16] {
     let mut block = [0u8; 16];
     block[0] = kind;
     block[1..4].copy_from_slice(app_nonce);
@@ -259,14 +265,24 @@ mod tests {
         assert_eq!(bytes.len(), JOIN_REQUEST_LEN);
         assert_eq!(bytes[0], MTYPE_JOIN_REQUEST);
         // EUIs are transmitted little-endian, so reversed from how they are written.
-        assert_eq!(&bytes[1..9], &[0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA, 0x99, 0x88]);
+        assert_eq!(
+            &bytes[1..9],
+            &[0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA, 0x99, 0x88]
+        );
         assert_eq!(&bytes[17..19], &DEV_NONCE.to_le_bytes());
     }
 
     #[test]
     fn a_join_activates_a_session_that_secures_data() {
         let device = Device::new(DEV_EUI, APP_EUI, APP_KEY);
-        let frame = make_join_accept(&APP_KEY, [0x01, 0x02, 0x03], [0x04, 0x05, 0x06], 0x2601_1BDA, 0x00, 0x01);
+        let frame = make_join_accept(
+            &APP_KEY,
+            [0x01, 0x02, 0x03],
+            [0x04, 0x05, 0x06],
+            0x2601_1BDA,
+            0x00,
+            0x01,
+        );
 
         let accepted = device.accept_join(&frame, DEV_NONCE).unwrap();
         assert_eq!(accepted.dev_addr(), 0x2601_1BDA);
@@ -275,7 +291,9 @@ mod tests {
 
         // The derived session secures a data-frame round-trip.
         let session = accepted.session();
-        let uplink = session.encode_uplink(&Uplink::new(1, 1, b"joined")).unwrap();
+        let uplink = session
+            .encode_uplink(&Uplink::new(1, 1, b"joined"))
+            .unwrap();
         let rx = session.decode(uplink.as_bytes(), 1).unwrap();
         assert_eq!(rx.payload(), b"joined");
     }
@@ -283,22 +301,45 @@ mod tests {
     #[test]
     fn a_tampered_join_accept_fails_the_mic() {
         let device = Device::new(DEV_EUI, APP_EUI, APP_KEY);
-        let mut frame = make_join_accept(&APP_KEY, [0x01, 0x02, 0x03], [0x04, 0x05, 0x06], 0x2601_1BDA, 0x00, 0x01);
+        let mut frame = make_join_accept(
+            &APP_KEY,
+            [0x01, 0x02, 0x03],
+            [0x04, 0x05, 0x06],
+            0x2601_1BDA,
+            0x00,
+            0x01,
+        );
         frame[5] ^= 0xff;
-        assert_eq!(device.accept_join(&frame, DEV_NONCE), Err(LorawanError::MicMismatch));
+        assert_eq!(
+            device.accept_join(&frame, DEV_NONCE),
+            Err(LorawanError::MicMismatch)
+        );
     }
 
     #[test]
     fn the_wrong_root_key_rejects_the_join() {
         let device = Device::new(DEV_EUI, APP_EUI, [0x00; 16]);
-        let frame = make_join_accept(&APP_KEY, [0x01, 0x02, 0x03], [0x04, 0x05, 0x06], 0x2601_1BDA, 0x00, 0x01);
-        assert_eq!(device.accept_join(&frame, DEV_NONCE), Err(LorawanError::MicMismatch));
+        let frame = make_join_accept(
+            &APP_KEY,
+            [0x01, 0x02, 0x03],
+            [0x04, 0x05, 0x06],
+            0x2601_1BDA,
+            0x00,
+            0x01,
+        );
+        assert_eq!(
+            device.accept_join(&frame, DEV_NONCE),
+            Err(LorawanError::MicMismatch)
+        );
     }
 
     #[test]
     fn a_join_accept_of_the_wrong_length_is_malformed() {
         let device = Device::new(DEV_EUI, APP_EUI, APP_KEY);
-        assert_eq!(device.accept_join(&[MTYPE_JOIN_ACCEPT; 20], DEV_NONCE), Err(LorawanError::MalformedFrame));
+        assert_eq!(
+            device.accept_join(&[MTYPE_JOIN_ACCEPT; 20], DEV_NONCE),
+            Err(LorawanError::MalformedFrame)
+        );
     }
 
     #[test]

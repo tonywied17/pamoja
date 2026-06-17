@@ -184,7 +184,14 @@ impl Session {
         at += 1;
 
         let key = self.payload_key(fport);
-        crypt_payload(key, self.dev_addr, direction, fcnt, payload, &mut buf[at..at + payload.len()]);
+        crypt_payload(
+            key,
+            self.dev_addr,
+            direction,
+            fcnt,
+            payload,
+            &mut buf[at..at + payload.len()],
+        );
         at += payload.len();
 
         let mic = self.mic(direction, fcnt, &buf[..at]);
@@ -663,7 +670,9 @@ mod tests {
     #[test]
     fn the_payload_is_encrypted_on_the_wire() {
         let session = session();
-        let frame = session.encode_uplink(&Uplink::new(1, 1, b"secret")).unwrap();
+        let frame = session
+            .encode_uplink(&Uplink::new(1, 1, b"secret"))
+            .unwrap();
         // The plaintext must not appear in the encoded frame.
         assert!(frame
             .as_bytes()
@@ -674,7 +683,9 @@ mod tests {
     #[test]
     fn the_header_is_laid_out_as_the_spec_requires() {
         let session = session();
-        let frame = session.encode_uplink(&Uplink::new(0x0102, 1, b"x")).unwrap();
+        let frame = session
+            .encode_uplink(&Uplink::new(0x0102, 1, b"x"))
+            .unwrap();
         let bytes = frame.as_bytes();
         assert_eq!(bytes[0], MTYPE_UNCONFIRMED_UP);
         // DevAddr little-endian.
