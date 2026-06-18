@@ -54,13 +54,16 @@
       </svg>
       <span class="brand-word">pamoja</span>
     </a>
-    <nav class="nav-links">
+    <nav class="nav-links" id="nav-links">
       <a href="#field">The field</a>
       <a href="#crates">Crates</a>
       <a href="#languages">Languages</a>
       <a href="#roadmap">Vision</a>
     </nav>
     <a href="#back" class="btn btn-primary nav-cta">Back the mission</a>
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav-links">
+      <span></span><span></span><span></span>
+    </button>
   </header>
 
   <main>
@@ -209,8 +212,8 @@
         <p class="section-lead">
           Every capability is a separate crate behind a trait in
           <code>pamoja-core</code>. On a microcontroller you bring in two crates
-          and nothing else. Solid nodes ship today; the dashed outer ring is the
-          committed roadmap. Hover any node to see what it does.
+          and nothing else. Solid markers ship today; the dashed ones are the
+          committed roadmap.<span class="desk-hint"> Hover any node to see what it does.</span>
         </p>
       </div>
       <div class="crate-stage">

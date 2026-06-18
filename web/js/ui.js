@@ -175,6 +175,61 @@ function buildConstellation()
   });
 }
 
+// The constellation reads as overlapping labels on a phone, so narrow screens
+// get this plain card grid instead (CSS swaps the two by width). Same data, so
+// nothing drifts; the hidden one costs nothing.
+function buildCrateGrid()
+{
+  const stage = $('.crate-stage');
+  if (!stage) return;
+  const grid = el('div', 'crate-grid');
+  grid.id = 'crate-grid';
+
+  const card = (c) =>
+  {
+    const node = el('div', 'cg-card' + (c.planned ? ' planned' : ''));
+    node.dataset.accent = c.color || 'amber';
+    node.innerHTML =
+      `<p class="cg-role">${c.role}</p>`
+      + `<h4 class="cg-name">${c.name}</h4>`
+      + `<p class="cg-blurb">${c.blurb}</p>`;
+    return node;
+  };
+
+  const group = (title, list) =>
+  {
+    grid.appendChild(el('p', 'cg-head', title));
+    const cards = el('div', 'cg-cards');
+    list.forEach((c) => cards.appendChild(card(c)));
+    grid.appendChild(cards);
+  };
+
+  group('Shipping now', CRATES);
+  group('On the roadmap', PLANNED_CRATES);
+  stage.appendChild(grid);
+}
+
+// Hamburger menu for narrow screens: toggle the panel, close on link tap or
+// once the viewport is wide enough to show the inline links again.
+function wireNav()
+{
+  const nav = $('#nav');
+  const toggle = $('#nav-toggle');
+  if (!nav || !toggle) return;
+  const close = () =>
+  {
+    nav.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+  };
+  toggle.addEventListener('click', () =>
+  {
+    const open = nav.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  $$('.nav-links a', nav).forEach((a) => a.addEventListener('click', close));
+  window.addEventListener('resize', () => { if (window.innerWidth > 760) close(); }, { passive: true });
+}
+
 function buildLanguages()
 {
   const tabs = $('#lang-tabs');
@@ -369,6 +424,7 @@ export function initUI({ onScene })
   buildScenarioChips();
   mountConsoles();
   buildConstellation();
+  buildCrateGrid();
   buildLanguages();
   const form = wireForm();
   buildTiers(form);
@@ -376,6 +432,7 @@ export function initUI({ onScene })
   buildTracks();
   buildPackages();
   animateGoal();
+  wireNav();
   wireParallax();
   wireScroll(onScene);
   countUp();

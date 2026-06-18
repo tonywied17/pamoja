@@ -160,6 +160,14 @@ export const CRATES = [
       'CAN 2.0 and CAN-FD frames with 11- and 29-bit IDs, plus J1939 decode and compose for the trucks, tractors, and gensets that speak it. The path to diesel and hydraulic machinery.',
   },
   {
+    id: 'pamoja-serial',
+    name: 'pamoja-serial',
+    role: 'field I/O',
+    color: 'teal',
+    blurb:
+      'SLIP (RFC 1055) and COBS byte-stuffing with streaming frame decoders, so a raw UART byte stream becomes discrete packets to a motor controller, a GPS, or a LiDAR. Validated against each spec\'s own reference vectors.',
+  },
+  {
     id: 'pamoja-security',
     name: 'pamoja-security',
     role: 'trust',
@@ -490,7 +498,7 @@ export const TRACKS = [
     lead: 'Talk to the cheap, salvageable parts the field already runs on, by name instead of by pin.',
     tags: [
       { t: 'Modbus / RS485', on: true }, { t: 'CAN / J1939', on: true }, { t: 'device profiles', on: true },
-      { t: 'serial', on: false }, { t: 'GPIO / I2C / SPI', on: false }, { t: 'driver catalog', on: false },
+      { t: 'serial (SLIP / COBS)', on: true }, { t: 'GPIO / I2C / SPI', on: false }, { t: 'driver catalog', on: false },
     ],
   },
   {

@@ -25,12 +25,14 @@ async function boot()
   let renderer;
   try
   {
-    renderer = new WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+    renderer = new WebGLRenderer({ canvas, antialias: !isMobile, powerPreference: 'high-performance' });
   } catch (err)
   {
     return fail(err.message);
   }
-  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  // Phones are fill-rate bound on a full-screen WebGL background: cap the device
+  // pixel ratio (a 3x panel shades ~9x the pixels) and skip MSAA.
+  renderer.setPixelRatio(Math.min(isMobile ? 1.5 : 2, window.devicePixelRatio || 1));
   renderer.setSize(window.innerWidth, window.innerHeight, false);
   renderer.setClearColor(new Color('#0a1322'), 1);
 
@@ -79,14 +81,19 @@ async function boot()
 
   let last = performance.now();
   let started = false;
+  // Cap the background to ~36 fps on mobile; it is decorative, and a locked 60 fps
+  // is what heats a phone. Desktop runs at the display's rate. RAF already pauses
+  // when the tab is hidden, and the dt clamp above absorbs the resume.
+  const minFrame = isMobile ? 1000 / 36 : 0;
   const loop = (now) =>
   {
+    requestAnimationFrame(loop);
+    if (now - last < minFrame) return;
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     director.update(now / 1000, dt);
     renderer.render(scene, camera);
     if (!started) { started = true; hideLoader(); }
-    requestAnimationFrame(loop);
   };
   requestAnimationFrame(loop);
 
