@@ -558,14 +558,15 @@ section { position: relative; }
   .card { padding: 1.6rem 1.4rem; }
   .card h2 { font-size: 1.5rem; }
   .why-list { grid-template-columns: 1fr 1fr; }
-  /* Language pills become a thumb-scrollable strip; drop the status sub-label. */
-  .lang-tabs { flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-bottom: 3px; }
-  .lang-tabs::-webkit-scrollbar { display: none; }
-  .lang-tab { flex: 0 0 auto; scroll-snap-align: start; }
+  /* Wrap the language pills so every tab stays on screen; drop the status
+     sub-label to keep the row compact. */
+  .lang-tabs { flex-wrap: wrap; }
   .lang-tab .st { display: none; }
   .lang-code { padding: 1.1rem 1rem; }
   .lang-code code { font-size: 0.78rem; }
-  .tiers, .tracks { grid-template-columns: 1fr; }
+  /* .tiers.uplinks needs the matching two-class selector or its base rule wins
+     over a single-class one here and the cards overflow the viewport. */
+  .tiers, .tiers.uplinks, .tracks { grid-template-columns: 1fr; }
   .cg-cards { grid-template-columns: 1fr; }
   .scroll-cue { display: none; }
 }

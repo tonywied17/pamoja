@@ -110,6 +110,10 @@ export class Globe
       const theta = golden * i;
       v.set(Math.cos(theta) * rad, y, Math.sin(theta) * rad);
       const { lat, lon } = vec3ToLatLon(v);
+      // Antarctica rings the south pole and reads as a stray circle of dots on
+      // the globe's lower limb. The network only spans inhabited latitudes, so
+      // drop the far south.
+      if (lat < -58) continue;
       if (this.mask.sample(lat, lon) < 90) continue;
       positions.push(v.x * r, v.y * r, v.z * r);
       phases.push(Math.random());
