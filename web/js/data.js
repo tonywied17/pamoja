@@ -88,6 +88,14 @@ export const CRATES = [
       'The device model: Transport, Device, Sensor, Actuator, Store and event-bus traits, plus one shared error and result type. Knows nothing about any specific protocol.',
   },
   {
+    id: 'pamoja-bus',
+    name: 'pamoja-bus',
+    role: 'core',
+    color: 'cream',
+    blurb:
+      'An in-memory typed publish/subscribe event bus implementing the core EventBus trait, so app code and capabilities exchange typed events without coupling to each other.',
+  },
+  {
     id: 'pamoja-codec',
     name: 'pamoja-codec',
     role: 'serialize',
@@ -206,6 +214,14 @@ export const CRATES = [
     color: 'teal',
     blurb:
       'Offline-first store-and-forward: a device disconnected for days buffers locally and loses nothing, then drains the backlog when a link returns.',
+  },
+  {
+    id: 'pamoja-ladder',
+    name: 'pamoja-ladder',
+    role: 'resilience',
+    color: 'teal',
+    blurb:
+      'A cost-aware transport ladder: it tries the cheapest reachable link first and buffers to a Store when every link is down, so connectivity degrades gracefully instead of failing outright.',
   },
   {
     id: 'pamoja-kit',

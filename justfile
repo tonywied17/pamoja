@@ -39,6 +39,10 @@ ci: fmt-check lint test
 bindings:
     cargo xtask codegen
 
-# publish all packages (not yet implemented)
+# publish every workspace crate to crates.io in dependency order
 release:
     cargo xtask release
+
+# package and verify every crate without uploading
+release-dry:
+    cargo xtask release --dry-run

@@ -178,15 +178,15 @@ This separation is literal in Rust: `pamoja-core` defines the traits, and each t
 
 ## Roadmap
 
-Messaging and radio. MQTT and CoAP work today, behind a cost-aware transport ladder that tries the cheapest link first and buffers when there is none. Next: LoRa and LoRaWAN, cheap local mesh (ESP-NOW, nRF24), a Meshtastic bridge for off-grid networks, and cellular uplink, each adding another rung to that ladder.
+Messaging and radio. MQTT and CoAP work today, behind a cost-aware transport ladder that tries the cheapest link first and buffers when there is none. LoRa and LoRaWAN long-range radio, and a CRC-checked mesh frame with reverse-path routing, now ship as further rungs. Next: the cheap-radio drivers they ride on (ESP-NOW, nRF24), a Meshtastic bridge for off-grid networks, and cellular and satellite uplinks for the most remote telemetry.
 
-Hardware and sensors. Serial, CAN, GPIO/I2C/SPI, and RS485/Modbus for long field cabling. A catalog of drivers for cheap, common, salvageable parts, plus device profiles you instantiate by name (a vaccine-fridge monitor, an irrigation node, a well-level sensor) instead of wiring pins.
+Hardware and sensors. Serial (SLIP/COBS), CAN with J1939, and RS485/Modbus ship today for long field cabling, with GPIO/I2C/SPI next. A catalog of drivers for cheap, common, salvageable parts, plus device profiles you instantiate by name (an irrigation node, a well-level monitor) instead of wiring pins.
 
 Resilience and power. Offline-first store-and-forward and energy-aware duty cycling for solar and battery work today; next are local-first dashboards a device serves over its own hotspot, and data-mule sync for places with no link at all.
 
 Robotics and drones. A ROS2 and Zenoh bridge, then MAVLink for drones, modeled as ordinary pamoja devices.
 
-Security. TLS 1.3 and DTLS, X.509 device identity, and signed OTA updates with verified rollback.
+Security. Memory safety by construction today, with ed25519 device identity and a tamper-evident, hash-chained audit log already shipping. Next: TLS 1.3 and DTLS, X.509 device identity, and signed OTA updates with verified rollback.
 
 Reach. Bindings beyond Node: Python, C#/.NET, Lua, WebAssembly, Kotlin, Swift, and Go. The plain-language helper layer (`pamoja-kit`) has its first slice today - keep a temperature, smooth a noisy reading, warn before a tank runs dry - each naming the goal over the math with the real algorithm one layer down; more helpers (calibration curves, geo, control) follow. And an offline-first community cookbook so the SDK reaches the people it is built for.
 

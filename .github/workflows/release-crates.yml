@@ -16,6 +16,9 @@ jobs:
   publish:
     name: publish to crates.io
     runs-on: ubuntu-latest
+    # New crates publish one per ten minutes, so a first-time release of the
+    # whole workspace sleeps through several waits. Give the job room for them.
+    timeout-minutes: 180
     env:
       CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_TOKEN }}
     steps:
@@ -30,32 +33,9 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.toml') }}
 
-      # Publish in dependency order: core first, then the crates that depend on
-      # it. cargo waits for each crate to appear in the index before returning, so
-      # a dependent can resolve the crate just published ahead of it. Each publish
-      # is idempotent: a version already on crates.io is skipped rather than failed,
-      # so the job can be safely re-run after a partial publish (for example after
-      # the crates.io new-crate rate limit throttles a burst of new crates).
+      # Publish every workspace crate in dependency order. xtask skips versions
+      # already on crates.io and waits out the new-crate rate limit (one new
+      # crate per ten minutes), retrying until the whole workspace is published,
+      # so a first-time release of many crates completes in a single run.
       - name: Publish crates
-        run: |
-          set -uo pipefail
-          publish() {
-            local crate="$1" log
-            log="$(mktemp)"
-            if cargo publish -p "$crate" 2>&1 | tee "$log"; then
-              echo "::notice::published $crate"
-            elif grep -qiE "already (uploaded|exists)" "$log"; then
-              echo "::notice::skipping $crate; this version is already on crates.io"
-            else
-              echo "::error::failed to publish $crate"
-              return 1
-            fi
-          }
-          for crate in \
-            pamoja-core pamoja-codec pamoja-mqtt pamoja-coap pamoja-ffi \
-            pamoja-sync pamoja-loopback pamoja-bus \
-            pamoja-ladder pamoja-kit pamoja-power pamoja-profile pamoja-sim \
-            pamoja-security pamoja-audit pamoja-telemetry pamoja-lora pamoja-modbus \
-            pamoja-mesh pamoja-lorawan pamoja-routing pamoja-can; do
-            publish "$crate" || exit 1
-          done
+        run: cargo xtask release
