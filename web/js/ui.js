@@ -95,140 +95,82 @@ function buildScenarioChips()
   });
 }
 
-function buildConstellation()
+// A capability board: every crate shown at once, grouped by the area it serves,
+// so what the SDK offers is scannable without hovering, and the grid reflows to
+// one column on a phone. Replaces the old radial constellation.
+function buildCrateBoard()
 {
-  const stage = $('#crate-constellation');
-  const ship = CRATES.filter((c) => c.id !== 'pamoja-core');
-  const inner = ship.slice(0, 6);
-  const mid = ship.slice(6);
+  const board = $('#crate-board');
+  if (!board) return;
 
-  const svgNS = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(svgNS, 'svg');
-  svg.setAttribute('viewBox', '0 0 100 100');
-  svg.setAttribute('preserveAspectRatio', 'none');
-  stage.appendChild(svg);
+  const areaOf = (role) =>
+    ({
+      'the core': 'Core & data', serialize: 'Core & data',
+      messaging: 'Messaging & radio', radio: 'Messaging & radio', mesh: 'Messaging & radio',
+      'field I/O': 'Field I/O & sensors',
+      trust: 'Security & trust',
+      observe: 'Resilience & power', energy: 'Resilience & power', resilience: 'Resilience & power',
+      ergonomics: 'Ergonomics & reach', language: 'Ergonomics & reach',
+      robotics: 'Robotics & drones', drones: 'Robotics & drones',
+    })[role.replace(' · planned', '')] || 'More';
 
-  stage.appendChild(el('div', 'crate-core', 'pamoja<br>core'));
+  const order = [
+    'Core & data', 'Messaging & radio', 'Field I/O & sensors',
+    'Resilience & power', 'Security & trust', 'Ergonomics & reach', 'Robotics & drones',
+  ];
 
-  const place = (group, radius, startAngle, planned) =>
+  const byArea = {};
+  [...CRATES, ...PLANNED_CRATES].forEach((c) =>
   {
-    group.forEach((c, i) =>
-    {
-      const a = startAngle + (i / group.length) * Math.PI * 2;
-      const x = 50 + radius * Math.cos(a);
-      const y = 50 + radius * Math.sin(a);
-
-      const line = document.createElementNS(svgNS, 'line');
-      line.setAttribute('x1', 50); line.setAttribute('y1', 50);
-      line.setAttribute('x2', x); line.setAttribute('y2', y);
-      line.setAttribute('stroke', 'rgba(251,243,228,0.16)');
-      line.setAttribute('stroke-width', '0.4');
-      if (planned) line.setAttribute('stroke-dasharray', '1.6 1.8');
-      line.dataset.line = c.id;
-      line.dataset.kind = planned ? 'roadmap' : 'shipping';
-      svg.appendChild(line);
-
-      const node = el('button', 'crate-node' + (planned ? ' planned' : ''), c.name);
-      node.style.left = x + '%';
-      node.style.top = y + '%';
-      node.dataset.crate = c.id;
-      node.dataset.kind = planned ? 'roadmap' : 'shipping';
-      stage.appendChild(node);
-    });
-  };
-  place(inner, 20, -Math.PI / 2, false);
-  place(mid, 32.5, -Math.PI / 2 + Math.PI / mid.length, false);
-  place(PLANNED_CRATES, 45, -Math.PI / 2 + Math.PI / PLANNED_CRATES.length, true);
-
-  const detail = $('#crate-detail');
-  const show = (c) =>
-  {
-    detail.querySelector('.cd-role').textContent = c.role;
-    detail.querySelector('.cd-name').textContent = c.name;
-    detail.querySelector('.cd-blurb').textContent = c.blurb;
-    detail.classList.toggle('is-planned', !!c.planned);
-  };
-  const setActive = (id) =>
-  {
-    $$('.crate-node', stage).forEach((n) =>
-    {
-      const on = n.dataset.crate === id;
-      n.classList.toggle('active', on);
-      n.classList.toggle('dim', id && !on);
-    });
-    $$('line', svg).forEach((l) =>
-    {
-      l.setAttribute('stroke', l.dataset.line === id ? 'var(--accent)' : 'rgba(251,243,228,0.16)');
-      l.setAttribute('stroke-width', l.dataset.line === id ? '0.8' : '0.4');
-    });
-  };
-
-  $$('.crate-node', stage).forEach((node) =>
-  {
-    const c = crateById[node.dataset.crate];
-    node.addEventListener('mouseenter', () => { show(c); setActive(c.id); });
-    node.addEventListener('focus', () => { show(c); setActive(c.id); });
-    node.addEventListener('click', () => { show(c); setActive(c.id); });
+    const a = areaOf(c.role);
+    (byArea[a] = byArea[a] || []).push(c);
   });
-  stage.addEventListener('mouseleave', () =>
-  {
-    setActive(null);
-    show(crateById['pamoja-core']);
-  });
-}
-
-// The constellation reads as overlapping labels on a phone, so narrow screens
-// get this plain card grid instead (CSS swaps the two by width). Same data, so
-// nothing drifts; the hidden one costs nothing.
-function buildCrateGrid()
-{
-  const stage = $('.crate-stage');
-  if (!stage) return;
-  const grid = el('div', 'crate-grid');
-  grid.id = 'crate-grid';
+  const areas = order.filter((a) => byArea[a]).concat(Object.keys(byArea).filter((a) => !order.includes(a)));
 
   const card = (c) =>
   {
-    const node = el('div', 'cg-card' + (c.planned ? ' planned' : ''));
-    node.dataset.accent = c.color || 'amber';
-    node.innerHTML =
-      `<p class="cg-role">${c.role}</p>`
-      + `<h4 class="cg-name">${c.name}</h4>`
-      + `<p class="cg-blurb">${c.blurb}</p>`;
-    return node;
+    const t = el('article', 'cb-card' + (c.planned ? ' planned' : '') + (c.id === 'pamoja-core' ? ' is-core' : ''));
+    t.dataset.accent = c.color || 'amber';
+    t.dataset.kind = c.planned ? 'roadmap' : 'shipping';
+    t.innerHTML =
+      `<div class="cb-top"><span class="cb-role">${c.role.replace(' · planned', '')}</span>`
+      + `<span class="cb-status">${c.planned ? 'roadmap' : 'live'}</span></div>`
+      + `<h4 class="cb-name">${c.name}</h4>`
+      + `<p class="cb-blurb">${c.blurb}</p>`;
+    return t;
   };
 
-  const group = (title, list, kind) =>
+  areas.forEach((areaName) =>
   {
-    const wrap = el('div', 'cg-group');
-    wrap.dataset.kind = kind;
-    wrap.appendChild(el('p', 'cg-head', title));
-    const cards = el('div', 'cg-cards');
-    list.forEach((c) => cards.appendChild(card(c)));
-    wrap.appendChild(cards);
-    grid.appendChild(wrap);
-  };
-
-  group('Shipping now', CRATES, 'shipping');
-  group('On the roadmap', PLANNED_CRATES, 'roadmap');
-  stage.appendChild(grid);
+    const section = el('div', 'crate-area');
+    section.appendChild(el('p', 'ca-head', areaName));
+    const cards = el('div', 'cb-cards');
+    byArea[areaName].forEach((c) => cards.appendChild(card(c)));
+    section.appendChild(cards);
+    board.appendChild(section);
+  });
 }
 
-// The filter chips isolate the shipping crates, the roadmap, or both, so the
-// constellation and the card grid never have to show all of them at once.
+// The filter chips isolate the shipping crates, the roadmap, or both, and hide
+// any capability area the current filter leaves empty.
 function wireCrateFilter()
 {
   const filter = $('#crate-filter');
-  const stage = $('.crate-stage');
-  if (!filter || !stage) return;
+  const board = $('#crate-board');
+  if (!filter || !board) return;
   const apply = (f) =>
   {
-    stage.dataset.filter = f;
+    board.dataset.filter = f;
     $$('.cf-btn', filter).forEach((b) =>
     {
       const on = b.dataset.filter === f;
       b.classList.toggle('active', on);
       b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    $$('.crate-area', board).forEach((area) =>
+    {
+      const has = $$('.cb-card', area).some((c) => f === 'all' || c.dataset.kind === f);
+      area.classList.toggle('empty', !has);
     });
   };
   $$('.cf-btn', filter).forEach((b) => b.addEventListener('click', () => apply(b.dataset.filter)));
@@ -449,8 +391,7 @@ export function initUI({ onScene })
   buildStats();
   buildScenarioChips();
   mountConsoles();
-  buildConstellation();
-  buildCrateGrid();
+  buildCrateBoard();
   wireCrateFilter();
   buildLanguages();
   const form = wireForm();
