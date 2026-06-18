@@ -360,7 +360,10 @@ section { position: relative; }
 .cg-blurb { font-size: 0.86rem; color: #c1cee0; margin: 0; line-height: 1.5; }
 
 /* ---------- Languages ---------- */
-.lang-stage { max-width: 860px; margin: 0 auto; }
+/* width:100% is load-bearing: margin:0 auto makes this a flex item with auto
+   cross-axis margins, which disables stretch, so without an explicit width it
+   grows to the code block's max-content and overflows narrow screens. */
+.lang-stage { max-width: 860px; width: 100%; margin: 0 auto; }
 .lang-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .lang-tab {
   cursor: pointer; border: 1px solid var(--line); background: rgba(251, 243, 228, 0.03); color: var(--muted);

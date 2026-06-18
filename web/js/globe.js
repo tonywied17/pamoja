@@ -20,7 +20,7 @@ const POINT_VERT = `
     vFacing = clamp(dot(viewNormal, normalize(-mv.xyz)), 0.0, 1.0);
     vTwinkle = 0.62 + 0.38 * sin(uTime * 1.7 + aPhase * 6.2831853);
     vPhase = aPhase;
-    float size = uSize * (1.0 + 0.5 * vTwinkle) * (0.45 + 0.55 * vFacing);
+    float size = uSize * (1.0 + 0.5 * vTwinkle) * (0.28 + 0.72 * vFacing);
     gl_PointSize = size * uScale / -mv.z;
     gl_Position = projectionMatrix * mv;
   }
@@ -43,7 +43,9 @@ const POINT_FRAG = `
     float core = smoothstep(0.5, 0.0, r);
     vec3 base = mix(uColorA, uColorB, vPhase);
     vec3 col = mix(base, uTheme, 0.32 + 0.34 * vTwinkle);
-    float limb = 0.32 + 0.68 * vFacing;
+    // Fade dots to nothing at the silhouette so foreshortened land does not pile
+    // into a bright ring around the globe's edge.
+    float limb = smoothstep(0.04, 0.4, vFacing);
     float a = core * uOpacity * limb * (0.68 + 0.42 * vTwinkle) * (1.0 - 0.72 * uDim);
     gl_FragColor = vec4(col * 1.12, a);
   }
@@ -110,10 +112,6 @@ export class Globe
       const theta = golden * i;
       v.set(Math.cos(theta) * rad, y, Math.sin(theta) * rad);
       const { lat, lon } = vec3ToLatLon(v);
-      // Antarctica rings the south pole and reads as a stray circle of dots on
-      // the globe's lower limb. The network only spans inhabited latitudes, so
-      // drop the far south.
-      if (lat < -58) continue;
       if (this.mask.sample(lat, lon) < 90) continue;
       positions.push(v.x * r, v.y * r, v.z * r);
       phases.push(Math.random());
