@@ -162,7 +162,9 @@ fn publish(crate_name: &str, dry_run: bool, retry_secs: u64) -> bool {
         }
 
         if report.contains("rate limit") || report.contains("too many") || report.contains("429") {
-            println!("{crate_name} hit the crates.io rate limit; waiting {retry_secs}s before retry\n");
+            println!(
+                "{crate_name} hit the crates.io rate limit; waiting {retry_secs}s before retry\n"
+            );
             sleep(Duration::from_secs(retry_secs));
             continue;
         }
