@@ -212,8 +212,8 @@
         <p class="section-lead">
           Every capability is a separate crate behind a trait in
           <code>pamoja-core</code>. On a microcontroller you bring in two crates
-          and nothing else. Switch between what ships today and the committed
-          roadmap.<span class="desk-hint"> Hover any node to see what it does.</span>
+          and nothing else. Everything below is grouped by what it does and
+          filtered to what ships today or the committed roadmap.
         </p>
       </div>
       <div class="crate-filter" id="crate-filter" role="tablist" aria-label="Filter crates by status">
@@ -221,19 +221,7 @@
         <button class="cf-btn" type="button" data-filter="roadmap" role="tab">Roadmap</button>
         <button class="cf-btn" type="button" data-filter="all" role="tab">All</button>
       </div>
-      <div class="crate-stage">
-        <div id="crate-constellation"></div>
-        <aside id="crate-detail" class="crate-detail">
-          <span class="cd-badge">on the roadmap</span>
-          <p class="cd-role">the core</p>
-          <h3 class="cd-name">pamoja-core</h3>
-          <p class="cd-blurb">
-            The device model: Transport, Device, Sensor, Actuator, Store and
-            event-bus traits, plus one shared error and result type. Hover any
-            crate to swap this panel.
-          </p>
-        </aside>
-      </div>
+      <div class="crate-board" id="crate-board"></div>
     </section>
 
     <!-- LANGUAGES -->
