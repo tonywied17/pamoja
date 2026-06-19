@@ -86,6 +86,7 @@ export const CRATES = [
     color: 'cream',
     blurb:
       'The device model: Transport, Device, Sensor, Actuator, Store and event-bus traits, plus one shared error and result type. Knows nothing about any specific protocol.',
+    pkgs: { npm: '@pamoja/core', pypi: 'pamoja-core', nuget: 'Pamoja.Core' },
   },
   {
     id: 'pamoja-bus',
@@ -241,8 +242,6 @@ export const CRATES = [
   },
 ];
 
-// Crates on the committed roadmap, shown in the constellation as a dashed outer
-// ring. Same idea as the vision tracks: this is direction, not shipped.
 export const PLANNED_CRATES = [
   {
     id: 'pamoja-satellite',
@@ -333,6 +332,35 @@ export const PLANNED_CRATES = [
       'Bluetooth Low Energy for phone-to-node setup in the field and the cheap sensors that only speak BLE, behind the same Transport trait as every other link.',
   },
 ];
+
+export const AREA_ORDER = [
+  'Core & data', 'Messaging & radio', 'Field I/O & sensors',
+  'Resilience & power', 'Security & trust', 'Ergonomics & reach', 'Robotics & drones',
+];
+
+export function areaOf(role)
+{
+  return {
+    'the core': 'Core & data', core: 'Core & data', serialize: 'Core & data',
+    messaging: 'Messaging & radio', radio: 'Messaging & radio', mesh: 'Messaging & radio',
+    'field I/O': 'Field I/O & sensors',
+    trust: 'Security & trust',
+    observe: 'Resilience & power', energy: 'Resilience & power', resilience: 'Resilience & power',
+    ergonomics: 'Ergonomics & reach', language: 'Ergonomics & reach',
+    robotics: 'Robotics & drones', drones: 'Robotics & drones',
+  }[role.replace(' · planned', '')] || 'More';
+}
+
+export function packagesFor(crate)
+{
+  if (!crate || crate.planned) return [];
+  const out = [{ kind: 'crates', label: 'crates.io', href: `https://crates.io/crates/${crate.id}` }];
+  const p = crate.pkgs;
+  if (p?.npm) out.push({ kind: 'npm', label: 'npm', href: `https://www.npmjs.com/package/${p.npm}` });
+  if (p?.pypi) out.push({ kind: 'pypi', label: 'PyPI', href: `https://pypi.org/project/${p.pypi}/` });
+  if (p?.nuget) out.push({ kind: 'nuget', label: 'NuGet', href: `https://www.nuget.org/packages/${p.nuget}` });
+  return out;
+}
 
 export const SCENARIO_CRATES = {
   farm: ['pamoja-modbus', 'pamoja-lora', 'pamoja-kit', 'pamoja-power', 'pamoja-sync', 'pamoja-profile'],

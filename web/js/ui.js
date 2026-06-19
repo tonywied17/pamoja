@@ -1,9 +1,12 @@
 import
-  {
-    STATS, CRATES, PLANNED_CRATES, SCENARIO_CRATES, LANGUAGES, PLANNED_LANGS, TIERS, UPLINKS, TRACKS,
-  } from './data.js';
+{
+  STATS, CRATES, PLANNED_CRATES, SCENARIO_CRATES, LANGUAGES, PLANNED_LANGS, TIERS, UPLINKS, TRACKS,
+  AREA_ORDER, areaOf, packagesFor,
+} from './data.js';
 import { prefersReducedMotion } from './config.js';
 import { mountConsoles } from './consoles.js';
+import { mountCardFx } from './cardfx.js';
+import { crateVersion } from './crateversions.js';
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -44,8 +47,6 @@ export function showToast(msg)
   toastTimer = setTimeout(() => t.classList.remove('show'), 4200);
 }
 
-// Backing is not live yet; the whole section is a preview. Buttons and the form
-// surface this instead of doing anything.
 const PREVIEW_MSG = 'Backing is not open yet - this section is a preview of how it will work.';
 function comingSoon()
 {
@@ -95,90 +96,136 @@ function buildScenarioChips()
   });
 }
 
-// A capability board: every crate shown at once, grouped by the area it serves,
-// so what the SDK offers is scannable without hovering, and the grid reflows to
-// one column on a phone. Replaces the old radial constellation.
-function buildCrateBoard()
+function pkgButtons(crate)
 {
-  const board = $('#crate-board');
+  const box = el('div', 'pkg-btns');
+  const pkgs = packagesFor(crate);
+  if (!pkgs.length)
+  {
+    box.appendChild(el('span', 'pkg-none', crate.planned ? 'On the roadmap - not published yet' : ''));
+    return box;
+  }
+  pkgs.forEach((p) =>
+  {
+    const a = el('a', 'pkg-btn ' + p.kind, p.label);
+    a.href = p.href; a.target = '_blank'; a.rel = 'noopener';
+    a.setAttribute('aria-label', `${crate.name} on ${p.label}`);
+    box.appendChild(a);
+  });
+  return box;
+}
+
+const BENTO_BIG = 'pamoja-core';
+const BENTO_WIDE = new Set(['pamoja-mqtt', 'pamoja-mesh', 'pamoja-security', 'pamoja-profile']);
+const BENTO_FX = {
+  'pamoja-core': 'core', 'pamoja-mqtt': 'broadcast', 'pamoja-mesh': 'mesh',
+  'pamoja-security': 'shield', 'pamoja-profile': 'bars',
+};
+
+function buildBento()
+{
+  const board = $('#crate-bento');
   if (!board) return;
 
-  const areaOf = (role) =>
-    ({
-      'the core': 'Core & data', serialize: 'Core & data',
-      messaging: 'Messaging & radio', radio: 'Messaging & radio', mesh: 'Messaging & radio',
-      'field I/O': 'Field I/O & sensors',
-      trust: 'Security & trust',
-      observe: 'Resilience & power', energy: 'Resilience & power', resilience: 'Resilience & power',
-      ergonomics: 'Ergonomics & reach', language: 'Ergonomics & reach',
-      robotics: 'Robotics & drones', drones: 'Robotics & drones',
-    })[role.replace(' · planned', '')] || 'More';
-
-  const order = [
-    'Core & data', 'Messaging & radio', 'Field I/O & sensors',
-    'Resilience & power', 'Security & trust', 'Ergonomics & reach', 'Robotics & drones',
-  ];
-
   const byArea = {};
-  [...CRATES, ...PLANNED_CRATES].forEach((c) =>
+  [...CRATES, ...PLANNED_CRATES].forEach((c) => { (byArea[areaOf(c.role)] ||= []).push(c); });
+  const areas = AREA_ORDER.filter((a) => byArea[a]).concat(Object.keys(byArea).filter((a) => !AREA_ORDER.includes(a)));
+  const ordered = [];
+  areas.forEach((a) => byArea[a].forEach((c) => ordered.push(c)));
+  ordered.sort((a, b) => (a.id === BENTO_BIG ? -1 : b.id === BENTO_BIG ? 1 : 0));
+
+  ordered.forEach((c) =>
   {
-    const a = areaOf(c.role);
-    (byArea[a] = byArea[a] || []).push(c);
+    const span = c.id === BENTO_BIG ? ' span-big' : BENTO_WIDE.has(c.id) ? ' span-wide' : '';
+    const card = el('article', 'bento-card' + (c.planned ? ' planned' : '') + span);
+    card.dataset.accent = c.color || 'amber';
+    card.dataset.kind = c.planned ? 'roadmap' : 'shipping';
+    card.tabIndex = 0;
+    card.innerHTML =
+      `<div class="bc-face">`
+      + `<div class="bc-top"><span class="bc-role">${c.role.replace(' · planned', '')}</span>`
+      + `<span class="bc-ver">${c.planned ? 'roadmap' : ''}</span></div>`
+      + `<h4 class="bc-name">${c.name}</h4>`
+      + `</div>`
+      + `<div class="bc-pop"><p class="bc-blurb">${c.blurb}</p></div>`;
+    card.querySelector('.bc-pop').appendChild(pkgButtons(c));
+    board.appendChild(card);
+    if (!c.planned)
+    {
+      const ver = card.querySelector('.bc-ver');
+      crateVersion(c.id).then((v) => { if (v) ver.textContent = `v${v}`; });
+    }
+    if (BENTO_FX[c.id]) mountCardFx(card, c.id === BENTO_BIG ? 'amber' : (c.color || 'amber'), BENTO_FX[c.id]);
   });
-  const areas = order.filter((a) => byArea[a]).concat(Object.keys(byArea).filter((a) => !order.includes(a)));
 
-  const card = (c) =>
-  {
-    const t = el('article', 'cb-card' + (c.planned ? ' planned' : '') + (c.id === 'pamoja-core' ? ' is-core' : ''));
-    t.dataset.accent = c.color || 'amber';
-    t.dataset.kind = c.planned ? 'roadmap' : 'shipping';
-    t.innerHTML =
-      `<div class="cb-top"><span class="cb-role">${c.role.replace(' · planned', '')}</span>`
-      + `<span class="cb-status">${c.planned ? 'roadmap' : 'live'}</span></div>`
-      + `<h4 class="cb-name">${c.name}</h4>`
-      + `<p class="cb-blurb">${c.blurb}</p>`;
-    return t;
-  };
+  wireBento(board);
+}
 
-  areas.forEach((areaName) =>
+function wireBento(board)
+{
+  const cards = $$('.bento-card', board);
+  const lively = () => !prefersReducedMotion && window.matchMedia('(min-width: 821px)').matches;
+  const resetTilt = (card) => { card.style.removeProperty('--rx'); card.style.removeProperty('--ry'); };
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  cards.forEach((card) =>
   {
-    const section = el('div', 'crate-area');
-    section.appendChild(el('p', 'ca-head', areaName));
-    const cards = el('div', 'cb-cards');
-    byArea[areaName].forEach((c) => cards.appendChild(card(c)));
-    section.appendChild(cards);
-    board.appendChild(section);
+    card.addEventListener('pointermove', (e) =>
+    {
+      if (!lively() || card.classList.contains('pinned')) return;
+      const r = card.getBoundingClientRect();
+      const px = clamp((e.clientX - r.left) / r.width - 0.5, -0.5, 0.5);
+      const py = clamp((e.clientY - r.top) / r.height - 0.5, -0.5, 1.1);
+      card.style.setProperty('--rx', `${(-py * 8).toFixed(2)}deg`);
+      card.style.setProperty('--ry', `${(px * 10).toFixed(2)}deg`);
+    });
+    card.addEventListener('pointerleave', () => resetTilt(card));
+    card.addEventListener('click', (e) =>
+    {
+      if (e.target.closest('a')) return;
+      const open = card.classList.contains('pinned');
+      cards.forEach((c) => { c.classList.remove('pinned'); resetTilt(c); });
+      if (!open) card.classList.add('pinned');
+    });
+    card.addEventListener('keydown', (e) =>
+    {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+      if (e.key === 'Escape') { card.classList.remove('pinned'); resetTilt(card); }
+    });
+  });
+
+  document.addEventListener('click', (e) =>
+  {
+    if (!e.target.closest('.bento-card')) cards.forEach((c) => { c.classList.remove('pinned'); resetTilt(c); });
   });
 }
 
-// The filter chips isolate the shipping crates, the roadmap, or both, and hide
-// any capability area the current filter leaves empty.
 function wireCrateFilter()
 {
   const filter = $('#crate-filter');
-  const board = $('#crate-board');
+  const board = $('#crate-bento');
   if (!filter || !board) return;
+  const cards = $$('.bento-card', board);
   const apply = (f) =>
   {
-    board.dataset.filter = f;
     $$('.cf-btn', filter).forEach((b) =>
     {
       const on = b.dataset.filter === f;
       b.classList.toggle('active', on);
       b.setAttribute('aria-selected', on ? 'true' : 'false');
     });
-    $$('.crate-area', board).forEach((area) =>
+    cards.forEach((c) =>
     {
-      const has = $$('.cb-card', area).some((c) => f === 'all' || c.dataset.kind === f);
-      area.classList.toggle('empty', !has);
+      const show = f === 'all' || c.dataset.kind === f;
+      c.classList.remove('pinned');
+      c.classList.toggle('hide', !show);
+      if (show) { c.classList.remove('in'); void c.offsetWidth; c.classList.add('in'); }
     });
   };
   $$('.cf-btn', filter).forEach((b) => b.addEventListener('click', () => apply(b.dataset.filter)));
   apply('shipping');
 }
 
-// Hamburger menu for narrow screens: toggle the panel, close on link tap or
-// once the viewport is wide enough to show the inline links again.
 function wireNav()
 {
   const nav = $('#nav');
@@ -306,8 +353,6 @@ function wireForm()
     }),
   );
 
-  // Backing is not live yet: the form is disabled and submitting does nothing
-  // but surface the preview message.
   form.addEventListener('submit', (e) =>
   {
     e.preventDefault();
@@ -391,7 +436,7 @@ export function initUI({ onScene })
   buildStats();
   buildScenarioChips();
   mountConsoles();
-  buildCrateBoard();
+  buildBento();
   wireCrateFilter();
   buildLanguages();
   const form = wireForm();

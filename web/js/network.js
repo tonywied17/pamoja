@@ -1,8 +1,8 @@
 import
-  {
-    Group, Points, BufferGeometry, BufferAttribute, ShaderMaterial, AdditiveBlending,
-    LineSegments, Color, Vector3, Matrix4,
-  } from 'three';
+{
+  Group, Points, BufferGeometry, BufferAttribute, ShaderMaterial, AdditiveBlending,
+  LineSegments, Color, Vector3, Matrix4,
+} from 'three';
 import { C, GLOBE } from './config.js';
 import { NODES } from './data.js';
 import { latLonToVec3, arcPoints } from './geo.js';
@@ -154,7 +154,6 @@ class ArcNetwork
     this.keyAlpha = {};
     Object.keys(this.byKey).forEach((k) => (this.keyAlpha[k] = 0));
 
-    // Flatten arcs into one line buffer with a per-vertex alpha we drive.
     this.arcs = [];
     Object.entries(this.byKey).forEach(([key, list]) =>
       list.forEach((a) => this.arcs.push({ ...a, key })),
@@ -313,7 +312,6 @@ class ArcNetwork
       });
       this.lineGeo.attributes.aAlpha.needsUpdate = true;
     }
-    // March each pulse along its arc toward the gateway (last point).
     this.arcs.forEach((arc, i) =>
     {
       const a = this.keyAlpha[arc.key];
@@ -434,7 +432,6 @@ class Storm
     });
     this.group.add(new Points(sgeo, this.satMat));
 
-    // A single pulse climbing the beam.
     const pgeo = new BufferGeometry();
     this.climbPos = new Float32Array(3);
     pgeo.setAttribute('position', new BufferAttribute(this.climbPos, 3));

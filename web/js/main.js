@@ -30,8 +30,7 @@ async function boot()
   {
     return fail(err.message);
   }
-  // Phones are fill-rate bound on a full-screen WebGL background: cap the device
-  // pixel ratio (a 3x panel shades ~9x the pixels) and skip MSAA.
+
   renderer.setPixelRatio(Math.min(isMobile ? 1.5 : 2, window.devicePixelRatio || 1));
   renderer.setSize(window.innerWidth, window.innerHeight, false);
   renderer.setClearColor(new Color('#0a1322'), 1);
@@ -81,9 +80,6 @@ async function boot()
 
   let last = performance.now();
   let started = false;
-  // Cap the background to ~36 fps on mobile; it is decorative, and a locked 60 fps
-  // is what heats a phone. Desktop runs at the display's rate. RAF already pauses
-  // when the tab is hidden, and the dt clamp above absorbs the resume.
   const minFrame = isMobile ? 1000 / 36 : 0;
   const loop = (now) =>
   {
