@@ -12,12 +12,16 @@
 //! The first helpers cover the jobs the cookbook leans on most:
 //!
 //! - [`Smoother`] - smooth a noisy reading (exponential moving average).
+//! - [`Kalman`] - settle to a steady value from a noisy sensor (one-dimensional Kalman).
+//! - [`Complementary`] - fuse a fast rate with a slow absolute reading (complementary filter).
 //! - [`Median`] - reject spikes with a rolling median (robust to a lone bad reading).
 //! - [`Debounce`] - clean a chattering on/off signal into one event (counter debounce).
 //! - [`Calibration`] - turn a raw reading into real units (two-point linear map).
 //! - [`deadband`] - ignore small wiggle around a setpoint so an actuator does not chatter.
 //! - [`Thermostat`] - keep a reading near a setpoint (on/off control with
 //!   hysteresis).
+//! - [`Pid`] - hold a value at a target with a smooth, proportional command (PID control).
+//! - [`Ramp`] - ease a command toward a target at a limited rate (slew-rate limiter).
 //! - [`Depletion`] - warn before a falling level runs out (linear extrapolation).
 //! - [`Surge`] - warn when a reading changes dangerously fast (first difference).
 //! - [`Trend`] - tell whether a value is rising or falling and how fast (least-squares slope).
@@ -26,10 +30,14 @@
 //!   (min, max, range, mean, population variance).
 //! - [`units`] - convert a reading to the unit a person reads (Celsius and Fahrenheit,
 //!   pascals to hPa/kPa/psi, ratio and percent).
-//! - [`Coordinate`] - great-circle distance and initial bearing between two earth points.
-//! - [`Geofence`] - warn when a tracked point leaves a safe area. Both are behind the
-//!   default `geo` feature, which pulls in `libm` for the trigonometry; disable it to keep
-//!   the crate dependency-free.
+//! - [`DiffDrive`] - convert between a robot's motion and its two wheel speeds.
+//! - [`Coordinate`] / [`Geofence`] - great-circle distance and bearing, and leaving a safe
+//!   area (behind the default `geo` feature).
+//! - [`imu`] - roll and pitch from a three-axis accelerometer (behind the `imu` feature).
+//! - [`weather`] - the dew point from temperature and humidity (behind the `weather` feature).
+//!
+//! The `geo`, `imu`, and `weather` features each pull in `libm` for `no_std` float math and
+//! can be turned off on the most constrained targets.
 //!
 //! The crate is `no_std` and allocation-free, so the same helpers run on a
 //! microcontroller and on a server.
@@ -51,9 +59,14 @@
 
 mod anomaly;
 mod calibration;
+mod complementary;
 mod debounce;
 mod depletion;
+mod drive;
+mod kalman;
 mod median;
+mod pid;
+mod ramp;
 mod shape;
 mod smoothing;
 mod surge;
@@ -66,11 +79,22 @@ pub mod units;
 #[cfg(feature = "geo")]
 mod geo;
 
+#[cfg(feature = "imu")]
+pub mod imu;
+
+#[cfg(feature = "weather")]
+pub mod weather;
+
 pub use anomaly::Anomaly;
 pub use calibration::Calibration;
+pub use complementary::Complementary;
 pub use debounce::Debounce;
 pub use depletion::Depletion;
+pub use drive::DiffDrive;
+pub use kalman::Kalman;
 pub use median::Median;
+pub use pid::Pid;
+pub use ramp::Ramp;
 pub use shape::deadband;
 pub use smoothing::Smoother;
 pub use surge::Surge;

@@ -1,6 +1,6 @@
 [package]
 name = "pamoja-kit"
-description = "Goal-named helper math for the pamoja device SDK: smoothing, calibration, control, and prediction, no_std-friendly."
+description = "Goal-named helper math for the pamoja device SDK: smoothing/filtering, calibration and units, PID and on/off control, prediction and anomaly detection, rolling stats, differential-drive kinematics, and geo/IMU/weather helpers; no_std-friendly."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,11 +9,13 @@ repository.workspace = true
 authors.workspace = true
 
 [features]
-# The geographic helpers need trigonometry, so they pull in `libm` for `no_std`
-# float math. They are on by default but can be turned off to keep the crate
-# dependency-free on the most constrained targets.
-default = ["geo"]
+# The geo, imu, and weather helpers need trigonometry or logarithms, so they pull
+# in `libm` for `no_std` float math. They are on by default but can be turned off
+# individually to keep the crate dependency-free on the most constrained targets.
+default = ["geo", "imu", "weather"]
 geo = ["dep:libm"]
+imu = ["dep:libm"]
+weather = ["dep:libm"]
 
 [dependencies]
 libm = { version = "0.2", optional = true }
