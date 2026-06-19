@@ -12,6 +12,10 @@ fn to_radians(degrees: f64) -> f64 {
     degrees * (PI / 180.0)
 }
 
+fn to_degrees(radians: f64) -> f64 {
+    radians * (180.0 / PI)
+}
+
 // `f64::abs` lives in `std`, so this `no_std` crate takes the magnitude by hand.
 fn magnitude(value: f64) -> f64 {
     if value < 0.0 {
@@ -88,6 +92,35 @@ impl Coordinate {
         let a = sin_lat * sin_lat + cos(lat1) * cos(lat2) * sin_lon * sin_lon;
         let c = 2.0 * atan2(sqrt(a), sqrt(1.0 - a));
         EARTH_RADIUS_M * c
+    }
+
+    /// Returns the initial bearing to another coordinate, in degrees clockwise from north.
+    ///
+    /// This is the forward azimuth of the great-circle path: the compass heading to set off
+    /// on to reach `other` by the shortest route. Because a great circle curves, the bearing
+    /// changes along the way; this is the heading at the start. The result is normalised to
+    /// `[0.0, 360.0)`, with 0 north, 90 east, 180 south, and 270 west.
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - the coordinate to head toward.
+    ///
+    /// # Returns
+    ///
+    /// The initial bearing in degrees, in `[0.0, 360.0)`. When both points are the same the
+    /// result is `0.0`.
+    pub fn bearing_to(&self, other: Coordinate) -> f64 {
+        let lat1 = to_radians(self.latitude);
+        let lat2 = to_radians(other.latitude);
+        let dlon = to_radians(other.longitude - self.longitude);
+        let y = sin(dlon) * cos(lat2);
+        let x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dlon);
+        let bearing = to_degrees(atan2(y, x));
+        if bearing < 0.0 {
+            bearing + 360.0
+        } else {
+            bearing
+        }
     }
 }
 
@@ -228,6 +261,26 @@ mod tests {
         let opposite = Coordinate::new(0.0, 180.0);
         let km = here.distance_to(opposite) / 1000.0;
         assert!((km - 20_015.0).abs() < 5.0);
+    }
+
+    #[test]
+    fn bearing_to_the_cardinal_directions() {
+        let here = Coordinate::new(0.0, 0.0);
+        assert!((here.bearing_to(Coordinate::new(1.0, 0.0)) - 0.0).abs() < 1e-6); // north
+        assert!((here.bearing_to(Coordinate::new(0.0, 1.0)) - 90.0).abs() < 1e-6); // east
+        let north = Coordinate::new(1.0, 0.0);
+        assert!((north.bearing_to(here) - 180.0).abs() < 1e-6); // south
+        let east = Coordinate::new(0.0, 1.0);
+        assert!((east.bearing_to(here) - 270.0).abs() < 1e-6); // west
+    }
+
+    #[test]
+    fn bearing_matches_a_worked_example() {
+        // Movable Type's worked example: Baghdad (35 N, 45 E) to Osaka (35 N, 135 E)
+        // sets off on an initial bearing of about 60 degrees.
+        let baghdad = Coordinate::new(35.0, 45.0);
+        let osaka = Coordinate::new(35.0, 135.0);
+        assert!((baghdad.bearing_to(osaka) - 60.0).abs() < 1.0);
     }
 
     #[test]

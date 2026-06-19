@@ -15,18 +15,21 @@
 //! - [`Median`] - reject spikes with a rolling median (robust to a lone bad reading).
 //! - [`Debounce`] - clean a chattering on/off signal into one event (counter debounce).
 //! - [`Calibration`] - turn a raw reading into real units (two-point linear map).
+//! - [`deadband`] - ignore small wiggle around a setpoint so an actuator does not chatter.
 //! - [`Thermostat`] - keep a reading near a setpoint (on/off control with
 //!   hysteresis).
 //! - [`Depletion`] - warn before a falling level runs out (linear extrapolation).
 //! - [`Surge`] - warn when a reading changes dangerously fast (first difference).
 //! - [`Trend`] - tell whether a value is rising or falling and how fast (least-squares slope).
+//! - [`Anomaly`] - flag a reading that departs from its recent history (three-sigma rule).
 //! - [`Window`] - keep a rolling window of recent readings and read their spread
 //!   (min, max, range, mean, population variance).
 //! - [`units`] - convert a reading to the unit a person reads (Celsius and Fahrenheit,
 //!   pascals to hPa/kPa/psi, ratio and percent).
-//! - [`Geofence`] - warn when a tracked point leaves a safe area (great-circle
-//!   distance). Behind the default `geo` feature, which pulls in `libm` for the
-//!   trigonometry; disable it to keep the crate dependency-free.
+//! - [`Coordinate`] - great-circle distance and initial bearing between two earth points.
+//! - [`Geofence`] - warn when a tracked point leaves a safe area. Both are behind the
+//!   default `geo` feature, which pulls in `libm` for the trigonometry; disable it to keep
+//!   the crate dependency-free.
 //!
 //! The crate is `no_std` and allocation-free, so the same helpers run on a
 //! microcontroller and on a server.
@@ -46,10 +49,12 @@
 //! assert!(cooler_on);
 //! ```
 
+mod anomaly;
 mod calibration;
 mod debounce;
 mod depletion;
 mod median;
+mod shape;
 mod smoothing;
 mod surge;
 mod thermostat;
@@ -61,10 +66,12 @@ pub mod units;
 #[cfg(feature = "geo")]
 mod geo;
 
+pub use anomaly::Anomaly;
 pub use calibration::Calibration;
 pub use debounce::Debounce;
 pub use depletion::Depletion;
 pub use median::Median;
+pub use shape::deadband;
 pub use smoothing::Smoother;
 pub use surge::Surge;
 pub use thermostat::Thermostat;
