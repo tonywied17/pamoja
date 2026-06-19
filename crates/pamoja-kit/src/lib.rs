@@ -17,6 +17,10 @@
 //!   hysteresis).
 //! - [`Depletion`] - warn before a falling level runs out (linear extrapolation).
 //! - [`Surge`] - warn when a reading changes dangerously fast (first difference).
+//! - [`Window`] - keep a rolling window of recent readings and read their spread
+//!   (min, max, range, mean, population variance).
+//! - [`units`] - convert a reading to the unit a person reads (Celsius and Fahrenheit,
+//!   pascals to hPa/kPa/psi, ratio and percent).
 //! - [`Geofence`] - warn when a tracked point leaves a safe area (great-circle
 //!   distance). Behind the default `geo` feature, which pulls in `libm` for the
 //!   trigonometry; disable it to keep the crate dependency-free.
@@ -44,6 +48,9 @@ mod depletion;
 mod smoothing;
 mod surge;
 mod thermostat;
+mod window;
+
+pub mod units;
 
 #[cfg(feature = "geo")]
 mod geo;
@@ -53,6 +60,7 @@ pub use depletion::Depletion;
 pub use smoothing::Smoother;
 pub use surge::Surge;
 pub use thermostat::Thermostat;
+pub use window::Window;
 
 #[cfg(feature = "geo")]
 pub use geo::{Boundary, Coordinate, Geofence};
