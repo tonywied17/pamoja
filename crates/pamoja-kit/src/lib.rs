@@ -12,11 +12,14 @@
 //! The first helpers cover the jobs the cookbook leans on most:
 //!
 //! - [`Smoother`] - smooth a noisy reading (exponential moving average).
+//! - [`Median`] - reject spikes with a rolling median (robust to a lone bad reading).
+//! - [`Debounce`] - clean a chattering on/off signal into one event (counter debounce).
 //! - [`Calibration`] - turn a raw reading into real units (two-point linear map).
 //! - [`Thermostat`] - keep a reading near a setpoint (on/off control with
 //!   hysteresis).
 //! - [`Depletion`] - warn before a falling level runs out (linear extrapolation).
 //! - [`Surge`] - warn when a reading changes dangerously fast (first difference).
+//! - [`Trend`] - tell whether a value is rising or falling and how fast (least-squares slope).
 //! - [`Window`] - keep a rolling window of recent readings and read their spread
 //!   (min, max, range, mean, population variance).
 //! - [`units`] - convert a reading to the unit a person reads (Celsius and Fahrenheit,
@@ -44,10 +47,13 @@
 //! ```
 
 mod calibration;
+mod debounce;
 mod depletion;
+mod median;
 mod smoothing;
 mod surge;
 mod thermostat;
+mod trend;
 mod window;
 
 pub mod units;
@@ -56,10 +62,13 @@ pub mod units;
 mod geo;
 
 pub use calibration::Calibration;
+pub use debounce::Debounce;
 pub use depletion::Depletion;
+pub use median::Median;
 pub use smoothing::Smoother;
 pub use surge::Surge;
 pub use thermostat::Thermostat;
+pub use trend::Trend;
 pub use window::Window;
 
 #[cfg(feature = "geo")]
