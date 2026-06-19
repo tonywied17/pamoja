@@ -23,6 +23,7 @@ members = [
     "crates/pamoja-routing",
     "crates/pamoja-can",
     "crates/pamoja-serial",
+    "crates/pamoja-gpio",
     "crates/pamoja-bus",
     "crates/xtask",
     "examples",

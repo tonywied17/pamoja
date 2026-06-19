@@ -58,6 +58,7 @@ const RELEASE_ORDER: &[&str] = &[
     "pamoja-routing",
     "pamoja-can",
     "pamoja-serial",
+    "pamoja-gpio",
 ];
 
 /// Seconds to wait before retrying a crate that crates.io throttled. The
