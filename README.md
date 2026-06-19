@@ -76,7 +76,7 @@ today.
 | `pamoja-can` | field I/O | CAN 2.0 and CAN-FD frames (11- and 29-bit IDs) plus J1939 decode and compose for trucks, tractors, and gensets. |
 | `pamoja-serial` | field I/O | SLIP (RFC 1055) and COBS byte-stuffing with streaming frame decoders, so a raw UART byte stream carries discrete packets to motor controllers, GPS, and LiDAR. |
 | `pamoja-gpio` | field I/O | On-board bus logic: I2C 7- and 10-bit address frames (NXP UM10204) with reserved-range checks, the four SPI clock modes, and active-high/active-low GPIO pins. |
-| `pamoja-kit` | ergonomics | Plain-language helpers that name the goal over the math: smooth, calibrate, keep, warn, and geofence. |
+| `pamoja-kit` | ergonomics | Plain-language helpers that name the goal over the math: smooth, calibrate, keep, warn, geofence, rolling-window stats, and real-world unit conversions. |
 | `pamoja-profile` | ergonomics | Named, ready-to-run device profiles from plain data or a JSON manifest; assembled and testable with no hardware. |
 | `pamoja-ffi` | bindings | The curated C ABI over the core and MQTT, with a `cbindgen`-generated, drift-checked `pamoja.h`. |
 
