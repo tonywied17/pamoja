@@ -9,6 +9,7 @@
 //! the node, then drive [`spin_once`](Ros2Node::spin_once) in a loop (commonly on its own thread)
 //! while the sensors and actuators are used from async tasks.
 
+use std::future::Future;
 use std::pin::Pin;
 use std::time::Duration;
 
@@ -142,6 +143,50 @@ impl Ros2Node {
         Ok(RosClient { client })
     }
 
+    /// Creates a client for an action on a name.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - the action name.
+    ///
+    /// # Returns
+    ///
+    /// A [`RosActionClient`] for the action type `T`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Transport`](pamoja_core::Error::Transport) if the client cannot be created.
+    pub fn action_client<T: r2r::WrappedActionTypeSupport + 'static>(
+        &mut self,
+        name: &str,
+    ) -> Result<RosActionClient<T>> {
+        let client = self.node.create_action_client::<T>(name).map_err(map_err)?;
+        Ok(RosActionClient { client })
+    }
+
+    /// Offers an action server on a name, exposed as a stream of incoming goals.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - the action name.
+    ///
+    /// # Returns
+    ///
+    /// A [`RosActionServer`] yielding goal requests for the action type `T`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Transport`](pamoja_core::Error::Transport) if the server cannot be created.
+    pub fn action_server<T: r2r::WrappedActionTypeSupport + Send + 'static>(
+        &mut self,
+        name: &str,
+    ) -> Result<RosActionServer<T>> {
+        let goals = self.node.create_action_server::<T>(name).map_err(map_err)?;
+        Ok(RosActionServer {
+            goals: Box::pin(goals),
+        })
+    }
+
     /// Spins the node once, processing ready ROS 2 work and feeding the subscriptions.
     ///
     /// # Arguments
@@ -241,6 +286,119 @@ impl<S: r2r::WrappedServiceTypeSupport + 'static> RosClient<S> {
             .map_err(map_err)?
             .await
             .map_err(map_err)
+    }
+}
+
+/// A ROS 2 action client: sends goals to a long-running task and awaits their results.
+pub struct RosActionClient<T>
+where
+    T: r2r::WrappedActionTypeSupport,
+{
+    client: r2r::ActionClient<T>,
+}
+
+impl<T: r2r::WrappedActionTypeSupport + 'static> RosActionClient<T> {
+    /// Waits until an action server for this action is available.
+    ///
+    /// # Returns
+    ///
+    /// `Ok(())` once a matching server has been discovered.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Transport`](pamoja_core::Error::Transport) if availability cannot be queried.
+    pub async fn ready(&self) -> Result<()> {
+        r2r::Node::is_available(&self.client)
+            .map_err(map_err)?
+            .await
+            .map_err(map_err)
+    }
+
+    /// Sends a goal and returns a handle to its feedback stream and eventual result.
+    ///
+    /// # Arguments
+    ///
+    /// * `goal` - the goal message.
+    ///
+    /// # Returns
+    ///
+    /// A [`RosGoal`] tracking the accepted goal.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Transport`](pamoja_core::Error::Transport) if the goal cannot be sent or is
+    /// rejected by the server.
+    pub async fn send_goal(&self, goal: T::Goal) -> Result<RosGoal<T>>
+    where
+        T::Result: Send + 'static,
+        T::Feedback: Send + 'static,
+    {
+        let (_handle, result, feedback) = self
+            .client
+            .send_goal_request(goal)
+            .map_err(map_err)?
+            .await
+            .map_err(map_err)?;
+        let result = Box::pin(async move {
+            let (_status, value) = result.await.map_err(map_err)?;
+            Ok(value)
+        });
+        Ok(RosGoal {
+            result,
+            feedback: Box::pin(feedback),
+        })
+    }
+}
+
+/// A handle to an accepted action goal: its feedback stream and its eventual result.
+pub struct RosGoal<T>
+where
+    T: r2r::WrappedActionTypeSupport,
+{
+    result: Pin<Box<dyn Future<Output = Result<T::Result>> + Send>>,
+    feedback: Pin<Box<dyn Stream<Item = T::Feedback> + Send>>,
+}
+
+impl<T: r2r::WrappedActionTypeSupport> RosGoal<T> {
+    /// Awaits the next feedback message from the server.
+    ///
+    /// # Returns
+    ///
+    /// `Some(feedback)` for the next update, or `None` once feedback has ended.
+    pub async fn next_feedback(&mut self) -> Option<T::Feedback> {
+        self.feedback.next().await
+    }
+
+    /// Awaits the goal's final result.
+    ///
+    /// # Returns
+    ///
+    /// The result message.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::Transport`](pamoja_core::Error::Transport) if the goal fails or is aborted.
+    pub async fn result(self) -> Result<T::Result> {
+        self.result.await
+    }
+}
+
+/// A ROS 2 action server: a stream of incoming goals to accept and fulfil.
+pub struct RosActionServer<T>
+where
+    T: r2r::WrappedActionTypeSupport,
+{
+    goals: Pin<Box<dyn Stream<Item = r2r::ActionServerGoalRequest<T>> + Send>>,
+}
+
+impl<T: r2r::WrappedActionTypeSupport + 'static> RosActionServer<T> {
+    /// Awaits the next incoming goal request, to be accepted with its `accept` method.
+    ///
+    /// # Returns
+    ///
+    /// `Some(request)` for the next goal, or `None` once the server has ended.
+    pub async fn next_goal(&mut self) -> Option<r2r::ActionServerGoalRequest<T>> {
+        self.goals.next().await
     }
 }
 
@@ -393,6 +551,61 @@ mod tests {
         assert_eq!(response.message, "ok");
 
         let _ = server.await;
+        let _ = spinner.join();
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn fibonacci_action_round_trips() {
+        use r2r::example_interfaces::action::Fibonacci;
+        use std::time::Duration;
+
+        let mut node = Ros2Node::new("pamoja_action_test", "").unwrap();
+        let mut server = node
+            .action_server::<Fibonacci::Action>("/pamoja_fib")
+            .unwrap();
+        let client = node
+            .action_client::<Fibonacci::Action>("/pamoja_fib")
+            .unwrap();
+
+        let spinner = std::thread::spawn(move || {
+            for _ in 0..400 {
+                node.spin_once(Duration::from_millis(50));
+            }
+        });
+
+        // The server accepts one goal, publishes a feedback update, and returns a fixed sequence.
+        let server_task = tokio::spawn(async move {
+            if let Some(request) = server.next_goal().await {
+                if let Ok((mut goal, _cancel)) = request.accept() {
+                    let _ = goal.publish_feedback(Fibonacci::Feedback {
+                        sequence: vec![0, 1],
+                    });
+                    let _ = goal.succeed(Fibonacci::Result {
+                        sequence: vec![0, 1, 1, 2, 3, 5],
+                    });
+                }
+            }
+        });
+
+        tokio::time::timeout(Duration::from_secs(10), client.ready())
+            .await
+            .expect("the action server should become available")
+            .unwrap();
+        let goal = tokio::time::timeout(
+            Duration::from_secs(10),
+            client.send_goal(Fibonacci::Goal { order: 5 }),
+        )
+        .await
+        .expect("the goal should be accepted")
+        .unwrap();
+        let result = tokio::time::timeout(Duration::from_secs(10), goal.result())
+            .await
+            .expect("the result should arrive")
+            .unwrap();
+
+        assert_eq!(result.sequence, vec![0, 1, 1, 2, 3, 5]);
+
+        let _ = server_task.await;
         let _ = spinner.join();
     }
 

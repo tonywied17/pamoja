@@ -10,6 +10,7 @@ FROM ros:jazzy
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ros-jazzy-rmw-zenoh-cpp \
+        ros-jazzy-example-interfaces \
         build-essential \
         pkg-config \
         libclang-dev \
