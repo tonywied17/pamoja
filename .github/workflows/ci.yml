@@ -76,7 +76,9 @@ jobs:
           key: ${{ runner.os }}-ros-cargo-${{ hashFiles('**/Cargo.toml') }}
 
       - name: Test the Zenoh transport and the ROS 2 bridge
+        shell: bash
         run: |
+          source "$HOME/.cargo/env"
           source /opt/ros/jazzy/setup.bash
           cargo test -p pamoja-zenoh --features runtime
           cargo test -p pamoja-ros2 --features bridge
