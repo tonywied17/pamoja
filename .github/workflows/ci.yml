@@ -62,7 +62,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends \
-            ros-jazzy-rmw-zenoh-cpp build-essential pkg-config libclang-dev clang curl ca-certificates
+            ros-jazzy-rmw-zenoh-cpp ros-jazzy-example-interfaces build-essential pkg-config libclang-dev clang curl ca-certificates
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
 
@@ -73,7 +73,9 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-ros-cargo-${{ hashFiles('**/Cargo.toml') }}
+          # The v2 suffix busts the cache after adding example_interfaces, so r2r rebuilds and
+          # regenerates its message bindings against the newly installed ROS 2 packages.
+          key: ${{ runner.os }}-ros-cargo-v2-${{ hashFiles('**/Cargo.toml') }}
 
       - name: Test the Zenoh transport and the ROS 2 bridge
         shell: bash
