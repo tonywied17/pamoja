@@ -1,0 +1,46 @@
+#![cfg_attr(not(test), no_std)]
+
+//! ROS 2 bridge logic for the pamoja SDK.
+//!
+//! Bridging a ROS 2 robot onto the pamoja device model means speaking ROS 2's wire conventions
+//! exactly: the rules a topic or service name must obey, how that name maps onto the middleware,
+//! how a message type is named and hashed, the Zenoh key a `rmw_zenoh` peer expects, and how a
+//! message is serialized as CDR. Each is precise, specified, and a classic place for a from-memory
+//! bug, so it lives here as checked logic anchored to the ROS 2 and OMG specifications, ahead of
+//! the live `r2r`/Zenoh bridge that carries the bytes.
+//!
+//! The modules are:
+//!
+//! - [`name`] - validate ROS 2 topic and service names and map them to DDS topic names with the
+//!   `rt`/`rq`/`rr` prefixes, plus the `%`-mangling `rmw_zenoh` uses in liveliness tokens.
+//! - [`typehash`] - parse and format the `RIHS01` type hash (REP-2011) and turn a ROS type like
+//!   `std_msgs/msg/String` into its DDS type name `std_msgs::msg::dds_::String_`.
+//! - [`key`] - assemble the `rmw_zenoh` key expression `<domain>/<name>/<type>/<hash>` a Zenoh peer
+//!   subscribes to, validated as a Zenoh key expression through [`pamoja_zenoh`].
+//! - [`msg`] - encode and decode messages as CDR (the OMG Common Data Representation, the format
+//!   DDS and `rmw_zenoh` put on the wire), starting with the geometry messages a robot is driven by.
+//!
+//! The live bridge (ROS 2 nodes, topics, services, and actions over `r2r`, and the Zenoh session)
+//! arrives with the networked layer, built and tested in the ROS 2 container.
+//!
+//! # Examples
+//!
+//! ```
+//! use pamoja_ros2::msg::{Twist, Vector3};
+//! use pamoja_ros2::name::{dds_topic, EntityKind};
+//!
+//! // A fully-qualified topic maps onto its DDS topic name.
+//! assert_eq!(dds_topic("/cmd_vel", EntityKind::Topic).as_deref(), Some("rt/cmd_vel"));
+//!
+//! // A command velocity round-trips through CDR.
+//! let cmd = Twist { linear: Vector3::new(0.5, 0.0, 0.0), angular: Vector3::new(0.0, 0.0, 0.2) };
+//! let bytes = cmd.to_cdr();
+//! assert_eq!(Twist::from_cdr(&bytes), Some(cmd));
+//! ```
+
+extern crate alloc;
+
+pub mod key;
+pub mod msg;
+pub mod name;
+pub mod typehash;

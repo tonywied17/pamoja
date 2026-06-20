@@ -1,0 +1,12 @@
+{
+  "name": "pamoja-ros2",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "workspaceFolder": "/work",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/work,type=bind,consistency=cached",
+  "remoteEnv": {
+    "CARGO_TARGET_DIR": "/tmp/target"
+  },
+  "postCreateCommand": "rustc --version && bash -lc 'source /opt/ros/jazzy/setup.bash; echo ROS_DISTRO=$ROS_DISTRO'"
+}

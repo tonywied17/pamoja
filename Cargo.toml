@@ -25,6 +25,8 @@ members = [
     "crates/pamoja-serial",
     "crates/pamoja-gpio",
     "crates/pamoja-bus",
+    "crates/pamoja-zenoh",
+    "crates/pamoja-ros2",
     "crates/xtask",
     "examples",
 ]
@@ -45,6 +47,8 @@ authors = ["tonywied17"]
 [workspace.dependencies]
 pamoja-core = { path = "crates/pamoja-core", version = "0.1.8" }
 pamoja-mqtt = { path = "crates/pamoja-mqtt", version = "0.1.8" }
+pamoja-kit = { path = "crates/pamoja-kit", version = "0.1.8" }
+pamoja-zenoh = { path = "crates/pamoja-zenoh", version = "0.1.8" }
 
 [workspace.lints.rust]
 missing_docs = "deny"

@@ -1,0 +1,12 @@
+[package]
+name = "pamoja-zenoh"
+description = "Zenoh key-expression logic for the pamoja SDK: validity, canonical form, and matching of the chunk-based key-expression language (the `*`, `**`, and `$*` wildcards), no_std and allocation-light. The pure-logic half ahead of the Zenoh transport."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true

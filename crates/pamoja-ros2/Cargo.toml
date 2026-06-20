@@ -1,0 +1,15 @@
+[package]
+name = "pamoja-ros2"
+description = "ROS 2 bridge logic for the pamoja SDK: topic/service name validation and DDS mapping, RIHS01 type-hash and DDS type-name handling, rmw_zenoh key-expression assembly, and CDR message encoding, no_std and allocation-light. The pure-logic half ahead of the live r2r/Zenoh bridge."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+pamoja-zenoh = { workspace = true }
+
+[lints]
+workspace = true

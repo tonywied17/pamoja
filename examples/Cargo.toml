@@ -45,6 +45,10 @@ path = "lora_budget.rs"
 name = "conformance"
 path = "conformance.rs"
 
+[[example]]
+name = "robot_waypoint"
+path = "robot_waypoint.rs"
+
 [[test]]
 name = "conformance"
 path = "tests/conformance.rs"
@@ -56,6 +60,8 @@ path = "tests/degraded_link.rs"
 [dependencies]
 pamoja-core = { workspace = true }
 pamoja-codec = { path = "../crates/pamoja-codec" }
+pamoja-kit = { path = "../crates/pamoja-kit" }
+pamoja-ros2 = { path = "../crates/pamoja-ros2" }
 pamoja-sync = { path = "../crates/pamoja-sync" }
 pamoja-loopback = { path = "../crates/pamoja-loopback" }
 pamoja-power = { path = "../crates/pamoja-power" }

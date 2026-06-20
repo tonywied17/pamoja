@@ -30,14 +30,24 @@
 //!   (min, max, range, mean, population variance).
 //! - [`units`] - convert a reading to the unit a person reads (Celsius and Fahrenheit,
 //!   pascals to hPa/kPa/psi, ratio and percent).
-//! - [`DiffDrive`] - convert between a robot's motion and its two wheel speeds.
+//! - [`DiffDrive`], [`Ackermann`], [`SkidSteer`], [`Mecanum`] - wheel kinematics for the common
+//!   differential, car-like, skid-steer, and omnidirectional chassis (behind `robotics`).
+//! - [`Odometry`] - dead-reckon a [`Pose`] from a body motion or wheel deltas, exact-arc.
+//! - [`WaypointFollower`] / [`obstacle_stop`] - steer toward a waypoint and stop for an obstacle
+//!   (behind `robotics` and `geo`).
+//! - [`SafetyGate`] - the gate every motion command passes through: emergency [`EStop`], deadman
+//!   [`Watchdog`], and bounded motion ([`Limits`]).
+//! - [`ServoMap`] / [`Esc`] / [`Quadrature`] / [`QuadratureScale`] - servo and ESC pulse widths
+//!   and quadrature-encoder decoding.
+//! - [`Twist`] / [`Pose`] - the shared body-velocity and world-pose types the robotics helpers use.
 //! - [`Coordinate`] / [`Geofence`] - great-circle distance and bearing, and leaving a safe
 //!   area (behind the default `geo` feature).
 //! - [`imu`] - roll and pitch from a three-axis accelerometer (behind the `imu` feature).
 //! - [`weather`] - the dew point from temperature and humidity (behind the `weather` feature).
 //!
-//! The `geo`, `imu`, and `weather` features each pull in `libm` for `no_std` float math and
-//! can be turned off on the most constrained targets.
+//! The `geo`, `imu`, `weather`, and `robotics` features each pull in `libm` for `no_std` float
+//! math and can be turned off on the most constrained targets; the waypoint guidance needs both
+//! `robotics` and `geo`.
 //!
 //! The crate is `no_std` and allocation-free, so the same helpers run on a
 //! microcontroller and on a server.
@@ -85,6 +95,19 @@ pub mod imu;
 #[cfg(feature = "weather")]
 pub mod weather;
 
+#[cfg(feature = "robotics")]
+mod chassis;
+#[cfg(feature = "robotics")]
+mod drivers;
+#[cfg(feature = "robotics")]
+mod motion;
+#[cfg(all(feature = "robotics", feature = "geo"))]
+mod navigate;
+#[cfg(feature = "robotics")]
+mod odometry;
+#[cfg(feature = "robotics")]
+mod safety;
+
 pub use anomaly::Anomaly;
 pub use calibration::Calibration;
 pub use complementary::Complementary;
@@ -104,3 +127,16 @@ pub use window::Window;
 
 #[cfg(feature = "geo")]
 pub use geo::{Boundary, Coordinate, Geofence};
+
+#[cfg(feature = "robotics")]
+pub use chassis::{Ackermann, Mecanum, SkidSteer, WheelSpeeds};
+#[cfg(feature = "robotics")]
+pub use drivers::{Esc, Quadrature, QuadratureScale, ServoMap};
+#[cfg(feature = "robotics")]
+pub use motion::{Pose, Twist};
+#[cfg(all(feature = "robotics", feature = "geo"))]
+pub use navigate::{obstacle_stop, Guidance, WaypointFollower};
+#[cfg(feature = "robotics")]
+pub use odometry::Odometry;
+#[cfg(feature = "robotics")]
+pub use safety::{EStop, Limits, SafetyGate, Watchdog};

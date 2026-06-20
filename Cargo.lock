@@ -1441,10 +1441,12 @@ dependencies = [
  "pamoja-audit",
  "pamoja-codec",
  "pamoja-core",
+ "pamoja-kit",
  "pamoja-loopback",
  "pamoja-lora",
  "pamoja-power",
  "pamoja-profile",
+ "pamoja-ros2",
  "pamoja-security",
  "pamoja-sim",
  "pamoja-sync",
@@ -1540,6 +1542,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "pamoja-ros2"
+version = "0.1.8"
+dependencies = [
+ "pamoja-zenoh",
+]
+
+[[package]]
 name = "pamoja-routing"
 version = "0.1.8"
 
@@ -1576,6 +1585,10 @@ dependencies = [
 
 [[package]]
 name = "pamoja-telemetry"
+version = "0.1.8"
+
+[[package]]
+name = "pamoja-zenoh"
 version = "0.1.8"
 
 [[package]]

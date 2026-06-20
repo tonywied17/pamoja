@@ -52,11 +52,31 @@ impl Ramp {
     ///
     /// The value after one limited step, equal to `target` once within a step of it.
     pub fn update(&mut self, target: f32) -> f32 {
+        let step = self.max_step;
+        self.update_capped(target, step)
+    }
+
+    /// Moves toward `target` by at most `max_step` this update, overriding the fixed rate.
+    ///
+    /// This is the variable-rate cousin of [`update`](Ramp::update): a bounded-acceleration
+    /// limiter passes `accel * dt` as the step so the change allowed each update scales with
+    /// the time since the last one, rather than the constant step fixed at construction.
+    ///
+    /// # Arguments
+    ///
+    /// * `target` - the value being approached.
+    /// * `max_step` - the largest change allowed this update; its magnitude is used.
+    ///
+    /// # Returns
+    ///
+    /// The value after one limited step, equal to `target` once within `max_step` of it.
+    pub fn update_capped(&mut self, target: f32, max_step: f32) -> f32 {
+        let step = magnitude(max_step);
         let delta = target - self.value;
-        if delta > self.max_step {
-            self.value += self.max_step;
-        } else if delta < -self.max_step {
-            self.value -= self.max_step;
+        if delta > step {
+            self.value += step;
+        } else if delta < -step {
+            self.value -= step;
         } else {
             self.value = target;
         }
@@ -120,5 +140,15 @@ mod tests {
         let mut ramp = Ramp::new(0.0, 1.0);
         ramp.set(100.0);
         assert_eq!(ramp.value(), 100.0);
+    }
+
+    #[test]
+    fn update_capped_overrides_the_fixed_rate() {
+        // The construction step is 1.0, but each call here may move up to 0.25.
+        let mut ramp = Ramp::new(0.0, 1.0);
+        assert_eq!(ramp.update_capped(5.0, 0.25), 0.25);
+        assert_eq!(ramp.update_capped(5.0, 0.25), 0.5);
+        // A negative cap is treated as its magnitude.
+        assert_eq!(ramp.update_capped(5.0, -0.5), 1.0);
     }
 }

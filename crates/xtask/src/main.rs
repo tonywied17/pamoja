@@ -29,7 +29,14 @@ const TASKS: &[(&str, &str)] = &[
         "release",
         "publish the workspace crates to crates.io in dependency order",
     ),
+    (
+        "ros",
+        "build the ROS 2 + Zenoh dev container and run the bridge tests inside it",
+    ),
 ];
+
+/// The tag for the ROS 2 + Zenoh dev image built from `.devcontainer/Dockerfile`.
+const ROS_IMAGE: &str = "pamoja-ros2-dev";
 
 /// Publishable crates in dependency order: a crate never appears before one it
 /// depends on, so each is resolvable on crates.io by the time a dependent is
@@ -59,6 +66,8 @@ const RELEASE_ORDER: &[&str] = &[
     "pamoja-can",
     "pamoja-serial",
     "pamoja-gpio",
+    "pamoja-zenoh",
+    "pamoja-ros2",
 ];
 
 /// Seconds to wait before retrying a crate that crates.io throttled. The
@@ -79,6 +88,10 @@ fn main() -> ExitCode {
 
     if task == "release" {
         return release(&args.collect::<Vec<_>>());
+    }
+
+    if task == "ros" {
+        return ros(&args.collect::<Vec<_>>());
     }
 
     match TASKS.iter().find(|(name, _)| *name == task) {
@@ -176,6 +189,78 @@ fn publish(crate_name: &str, dry_run: bool, retry_secs: u64) -> bool {
 
     eprintln!("gave up on {crate_name} after {MAX_ATTEMPTS} attempts");
     false
+}
+
+/// Build the ROS 2 + Zenoh dev image and run the bridge crates' tests inside it. The host has no
+/// ROS 2, so this is how `pamoja-ros2` and `pamoja-zenoh` are exercised on a real ROS 2 + Zenoh
+/// install. Any extra `args` are appended to the in-container `cargo test`, for example
+/// `--features bridge` once the live layer lands. Requires Docker Desktop.
+fn ros(args: &[String]) -> ExitCode {
+    let repo = match std::env::current_dir() {
+        Ok(dir) => dir,
+        Err(err) => {
+            eprintln!("xtask ros: cannot determine the working directory: {err}");
+            return ExitCode::FAILURE;
+        }
+    };
+
+    if !run(Command::new("docker").arg("--version")) {
+        eprintln!("xtask ros: Docker is required (Docker Desktop); install it and retry.");
+        return ExitCode::FAILURE;
+    }
+
+    println!("xtask ros: building the {ROS_IMAGE} image from .devcontainer\n");
+    let built = run(Command::new("docker").args([
+        "build",
+        "-t",
+        ROS_IMAGE,
+        "-f",
+        ".devcontainer/Dockerfile",
+        ".devcontainer",
+    ]));
+    if !built {
+        eprintln!("xtask ros: image build failed");
+        return ExitCode::FAILURE;
+    }
+
+    let extra = if args.is_empty() {
+        String::new()
+    } else {
+        format!(" {}", args.join(" "))
+    };
+    // Source ROS 2 so the bridge layer can find the client libraries, run the crate tests, and
+    // confirm the Zenoh RMW is installed for the live path.
+    let script = format!(
+        "set -e; \
+         source /opt/ros/jazzy/setup.bash; \
+         echo \"ROS_DISTRO=$ROS_DISTRO\"; rustc --version; \
+         cargo test -p pamoja-zenoh -p pamoja-ros2{extra}; \
+         (ros2 pkg list | grep -q rmw_zenoh_cpp && echo 'rmw_zenoh: present') \
+            || echo 'rmw_zenoh: MISSING'"
+    );
+    let mount = format!("{}:/work", repo.display());
+
+    println!("\nxtask ros: running the bridge tests in the container\n");
+    let passed = run(Command::new("docker").args([
+        "run", "--rm", "-v", &mount, "-w", "/work", ROS_IMAGE, "bash", "-lc", &script,
+    ]));
+    if passed {
+        ExitCode::SUCCESS
+    } else {
+        eprintln!("xtask ros: tests failed");
+        ExitCode::FAILURE
+    }
+}
+
+/// Run a command, streaming its output, and report whether it succeeded.
+fn run(command: &mut Command) -> bool {
+    match command.status() {
+        Ok(status) => status.success(),
+        Err(err) => {
+            eprintln!("could not run {:?}: {err}", command.get_program());
+            false
+        }
+    }
 }
 
 fn help() {
