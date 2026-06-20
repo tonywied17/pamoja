@@ -8,5 +8,18 @@ license.workspace = true
 repository.workspace = true
 authors.workspace = true
 
+[features]
+# The live Zenoh transport. Off by default so the key-expression logic stays `no_std`
+# and normal CI never pulls the (std-only) zenoh stack; on, it adds `ZenohTransport`.
+runtime = ["dep:zenoh", "dep:tokio", "dep:pamoja-core"]
+
+[dependencies]
+pamoja-core = { workspace = true, optional = true }
+zenoh = { version = "1.5", optional = true }
+tokio = { version = "1", features = ["rt", "sync", "macros", "time"], optional = true }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
+
 [lints]
 workspace = true

@@ -223,26 +223,51 @@ fn ros(args: &[String]) -> ExitCode {
         return ExitCode::FAILURE;
     }
 
-    let extra = if args.is_empty() {
-        String::new()
+    // With no extra args, run the pure-logic tests and then both live feature suites; with extra
+    // args, run exactly those against the two crates so the task is also a general escape hatch.
+    let tests = if args.is_empty() {
+        "cargo test -p pamoja-zenoh -p pamoja-ros2; \
+         cargo test -p pamoja-zenoh --features runtime; \
+         cargo test -p pamoja-ros2 --features bridge"
+            .to_string()
     } else {
-        format!(" {}", args.join(" "))
+        format!(
+            "cargo test -p pamoja-zenoh -p pamoja-ros2 {}",
+            args.join(" ")
+        )
     };
-    // Source ROS 2 so the bridge layer can find the client libraries, run the crate tests, and
-    // confirm the Zenoh RMW is installed for the live path.
+    // Source ROS 2 so the bridge layer can find the client libraries, confirm the Zenoh RMW is
+    // installed for the live path, then run the tests.
     let script = format!(
         "set -e; \
          source /opt/ros/jazzy/setup.bash; \
          echo \"ROS_DISTRO=$ROS_DISTRO\"; rustc --version; \
-         cargo test -p pamoja-zenoh -p pamoja-ros2{extra}; \
          (ros2 pkg list | grep -q rmw_zenoh_cpp && echo 'rmw_zenoh: present') \
-            || echo 'rmw_zenoh: MISSING'"
+            || echo 'rmw_zenoh: MISSING'; \
+         {tests}"
     );
     let mount = format!("{}:/work", repo.display());
 
     println!("\nxtask ros: running the bridge tests in the container\n");
+    // Persistent volumes cache the cargo registry and the Linux build, so repeat runs are fast and
+    // the container's artifacts never collide with the Windows `target/`.
     let passed = run(Command::new("docker").args([
-        "run", "--rm", "-v", &mount, "-w", "/work", ROS_IMAGE, "bash", "-lc", &script,
+        "run",
+        "--rm",
+        "-v",
+        &mount,
+        "-v",
+        "pamoja-cargo-registry:/usr/local/cargo/registry",
+        "-v",
+        "pamoja-cargo-git:/usr/local/cargo/git",
+        "-v",
+        "pamoja-ros-target:/tmp/target",
+        "-w",
+        "/work",
+        ROS_IMAGE,
+        "bash",
+        "-lc",
+        &script,
     ]));
     if passed {
         ExitCode::SUCCESS
