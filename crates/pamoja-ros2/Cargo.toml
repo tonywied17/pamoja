@@ -13,7 +13,7 @@ authors.workspace = true
 # normal CI never needs a ROS 2 toolchain; on, it adds the `bridge` module. Building it
 # requires a sourced ROS 2 install (r2r generates message bindings at build time), so it
 # is built and tested in the ros:jazzy container.
-bridge = ["dep:r2r", "dep:tokio", "dep:futures", "dep:pamoja-core"]
+bridge = ["dep:r2r", "dep:tokio", "dep:futures", "dep:pamoja-core", "pamoja-zenoh/runtime"]
 
 [dependencies]
 pamoja-zenoh = { workspace = true }

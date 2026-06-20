@@ -32,6 +32,8 @@
 //!   pascals to hPa/kPa/psi, ratio and percent).
 //! - [`DiffDrive`], [`Ackermann`], [`SkidSteer`], [`Mecanum`] - wheel kinematics for the common
 //!   differential, car-like, skid-steer, and omnidirectional chassis (behind `robotics`).
+//! - [`TwoLinkArm`] / [`forward_kinematics`] - manipulator kinematics: the planar two-link inverse,
+//!   and Denavit-Hartenberg forward kinematics for any serial arm.
 //! - [`Odometry`] - dead-reckon a [`Pose`] from a body motion or wheel deltas, exact-arc.
 //! - [`WaypointFollower`] / [`obstacle_stop`] - steer toward a waypoint and stop for an obstacle
 //!   (behind `robotics` and `geo`).
@@ -96,6 +98,8 @@ pub mod imu;
 pub mod weather;
 
 #[cfg(feature = "robotics")]
+mod arm;
+#[cfg(feature = "robotics")]
 mod chassis;
 #[cfg(feature = "robotics")]
 mod drivers;
@@ -128,6 +132,8 @@ pub use window::Window;
 #[cfg(feature = "geo")]
 pub use geo::{Boundary, Coordinate, Geofence};
 
+#[cfg(feature = "robotics")]
+pub use arm::{forward_kinematics, DhParameters, Elbow, Transform, TwoLinkArm};
 #[cfg(feature = "robotics")]
 pub use chassis::{Ackermann, Mecanum, SkidSteer, WheelSpeeds};
 #[cfg(feature = "robotics")]

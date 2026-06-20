@@ -17,6 +17,8 @@
 //! - [`DegradedLink`] - a [`Transport`](pamoja_core::Transport) decorator that
 //!   simulates a lossy and intermittent radio link, so offline-first store-and-
 //!   forward can be proven against a realistic bad network rather than assumed.
+//! - [`SimRobot`] - a hardware-free differential-drive robot driven by a `Twist` and read back as
+//!   a `Pose`, so a robot control loop can be developed and tested with no robot.
 //!
 //! # Examples
 //!
@@ -43,8 +45,10 @@
 
 mod actuator;
 mod link;
+mod robot;
 mod sensor;
 
 pub use actuator::{ActuatorLog, RecordingActuator};
 pub use link::DegradedLink;
+pub use robot::SimRobot;
 pub use sensor::{Replay, SimSensor};

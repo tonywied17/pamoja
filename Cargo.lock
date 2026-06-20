@@ -2377,6 +2377,7 @@ name = "pamoja-sim"
 version = "0.1.8"
 dependencies = [
  "pamoja-core",
+ "pamoja-kit",
  "pamoja-loopback",
  "tokio",
 ]

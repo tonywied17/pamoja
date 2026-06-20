@@ -226,9 +226,14 @@ fn ros(args: &[String]) -> ExitCode {
     // With no extra args, run the pure-logic tests and then both live feature suites; with extra
     // args, run exactly those against the two crates so the task is also a general escape hatch.
     let tests = if args.is_empty() {
+        // The pure-logic tests, then each live feature suite, then the rmw_zenoh cross-interop
+        // proof, which needs the Zenoh RMW and peer discovery and so is ignored by default.
         "cargo test -p pamoja-zenoh -p pamoja-ros2; \
          cargo test -p pamoja-zenoh --features runtime; \
-         cargo test -p pamoja-ros2 --features bridge"
+         cargo test -p pamoja-ros2 --features bridge; \
+         RMW_IMPLEMENTATION=rmw_zenoh_cpp ZENOH_ROUTER_CHECK_ATTEMPTS=-1 \
+         ZENOH_CONFIG_OVERRIDE='scouting/multicast/enabled=true' \
+         cargo test -p pamoja-ros2 --features bridge ros2_twist_is_received_over_zenoh -- --ignored"
             .to_string()
     } else {
         format!(
