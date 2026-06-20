@@ -1,6 +1,6 @@
 import { prefersReducedMotion } from './config.js';
 
-const ACCENT = { farm: '#1fa995', clinic: '#ffb627', water: '#36b6dd', conservation: '#46c97e', village: '#33c9a6', storm: '#f26a4b' };
+const ACCENT = { farm: '#1fa995', clinic: '#ffb627', water: '#36b6dd', conservation: '#46c97e', village: '#33c9a6', storm: '#f26a4b', robot: '#f26a4b', arm: '#ffb627', fleet: '#36b6dd' };
 
 const NS = 'http://www.w3.org/2000/svg';
 const el = (tag, cls, html) => { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
@@ -188,7 +188,247 @@ function tMesh(spec)
   };
 }
 
-const RENDER = { radial: tRadial, bar: tBar, kpi: tKpi, chip: tChip, spark: tSpark, wave: tWave, chain: tChain, mesh: tMesh };
+// Top-down rover: follows a waypoint path with carrot lookahead, integrates
+// odometry from its own motion, and holds when an obstacle is in the way. It
+// is the simulation - it writes v, omega, heading and odometry back into the
+// console state so the read-out tiles beside it show the rover's real values.
+function tRover(spec)
+{
+  const node = el('div', 'tile t-rover wide');
+  const W = 220, H = 120;
+  const WP = spec.path;
+  const OBS = spec.obstacle;
+  const PX2M = spec.scale || 6 / W;
+  const origin = WP[0];
+
+  const seg = [];
+  let total = 0;
+  for (let i = 0; i < WP.length - 1; i++)
+  {
+    const len = Math.hypot(WP[i + 1][0] - WP[i][0], WP[i + 1][1] - WP[i][1]);
+    seg.push({ at: total, len, a: WP[i], b: WP[i + 1] });
+    total += len;
+  }
+  const pointAt = (d) =>
+  {
+    d = clamp(d, 0, total);
+    let sg = seg[seg.length - 1];
+    for (const s2 of seg) { if (d <= s2.at + s2.len) { sg = s2; break; } }
+    const t = sg.len ? (d - sg.at) / sg.len : 0;
+    return { x: lerp(sg.a[0], sg.b[0], t), y: lerp(sg.a[1], sg.b[1], t), h: Math.atan2(sg.b[1] - sg.a[1], sg.b[0] - sg.a[0]) };
+  };
+
+  let grid = '';
+  for (let x = 22; x < W; x += 22) grid += `<line x1="${x}" y1="0" x2="${x}" y2="${H}"/>`;
+  for (let y = 24; y < H; y += 24) grid += `<line x1="0" y1="${y}" x2="${W}" y2="${y}"/>`;
+  const plan = WP.map((p, i) => `${i ? 'L' : 'M'}${p[0]},${p[1]}`).join(' ');
+  const wpDots = WP.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="${i === WP.length - 1 ? 4 : 2.6}" class="rv-wp${i === WP.length - 1 ? ' goal' : ''}"/>`).join('');
+  const obs = OBS ? `<circle cx="${OBS.x}" cy="${OBS.y}" r="${OBS.r}" class="rv-obs"/><circle cx="${OBS.x}" cy="${OBS.y}" r="2.4" class="rv-obs-c"/>` : '';
+  node.innerHTML = `
+    <div class="t-row"><span class="t-label">${spec.label}</span><span class="t-val mono rv-pose"></span></div>
+    <svg viewBox="0 0 ${W} ${H}" class="rover" preserveAspectRatio="xMidYMid meet">
+      <g class="rv-grid">${grid}</g>
+      <path d="${plan}" class="rv-plan"/>
+      ${obs}
+      <polyline class="rv-trail" points=""/>
+      ${wpDots}
+      <circle r="3.4" class="rv-carrot"/>
+      <g class="rv-bot"><path d="M7,0 L-5,-4.5 L-2,0 L-5,4.5 Z"/></g>
+    </svg>`;
+  const pose = node.querySelector('.rv-pose');
+  const trailEl = node.querySelector('.rv-trail');
+  const carrot = node.querySelector('.rv-carrot');
+  const bot = node.querySelector('.rv-bot');
+
+  let dist = 0, dir = 1, hold = 0, prevH = pointAt(0).h, lastWp = 0, prevNear = false, obsHold = 0;
+  const trail = [];
+  const base = spec.speed || 20;
+
+  return {
+    node,
+    update(s, dt)
+    {
+      const here = pointAt(dist);
+      const near = OBS ? Math.hypot(here.x - OBS.x, here.y - OBS.y) < OBS.r + 9 : false;
+      if (near && !prevNear) obsHold = 1.1;
+      prevNear = near;
+      if (obsHold > 0) obsHold = Math.max(0, obsHold - dt);
+      let v = near ? (obsHold > 0 ? 0 : base * 0.3) : base;
+      if (hold > 0) { hold = Math.max(0, hold - dt); v = 0; }
+      dist += dir * v * dt;
+      if (dir > 0 && dist >= total) { dist = total; dir = -1; hold = 1.0; }
+      else if (dir < 0 && dist <= 0) { dist = 0; dir = 1; hold = 1.0; }
+
+      const q = pointAt(dist);
+      const heading = q.h + (dir < 0 ? Math.PI : 0);
+      let dh = heading - prevH; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI;
+      prevH = heading;
+
+      s.v.vx = v * PX2M;
+      s.v.omega = dt > 0 ? lerp(s.v.omega || 0, dh / dt, 0.3) : (s.v.omega || 0);
+      s.v.odo = (s.v.odo || 0) + Math.abs(v * dt) * PX2M;
+      s.flags.near = near;
+
+      let wp = 0;
+      for (let i = 0; i < seg.length; i++) if (dist >= seg[i].at + seg[i].len * 0.5) wp = i + 1;
+      if (dir > 0 && wp !== lastWp) s.flags.wp = wp;
+      lastWp = wp;
+
+      const degRaw = heading * 180 / Math.PI;
+      const deg = ((degRaw % 360) + 360) % 360;
+      pose.textContent = `${((q.x - origin[0]) * PX2M).toFixed(1)}, ${((origin[1] - q.y) * PX2M).toFixed(1)} m · ${Math.round(deg)}°`;
+      bot.setAttribute('transform', `translate(${q.x.toFixed(2)},${q.y.toFixed(2)}) rotate(${degRaw.toFixed(1)})`);
+      bot.classList.toggle('slow', near);
+      const c = pointAt(dist + dir * 22);
+      carrot.setAttribute('cx', c.x.toFixed(2));
+      carrot.setAttribute('cy', c.y.toFixed(2));
+      trail.push(`${q.x.toFixed(1)},${q.y.toFixed(1)}`);
+      if (trail.length > 24) trail.shift();
+      trailEl.setAttribute('points', trail.join(' '));
+    },
+  };
+}
+
+// A live ROS 2 over Zenoh line: the real rmw_zenoh key for the message, plus a
+// status line and a meter on the right (a publish sequence number by default,
+// or whatever the spec wants - action feedback, peer count). The default Twist
+// byte count is the true wire size (4-byte CDR header + 6 x float64).
+function tBridge(spec)
+{
+  const node = el('div', 'tile t-bridge wide');
+  node.innerHTML = `
+    <div class="t-row"><span class="t-label">${spec.label}</span><span class="t-val mono br-seq"></span></div>
+    <div class="br-key">${spec.key}</div>
+    <div class="br-status">${spec.status}</div>`;
+  const meter = node.querySelector('.br-seq');
+  return {
+    node,
+    update(s) { meter.textContent = spec.meter ? spec.meter(s) : `seq ${(1400 + Math.floor(s.t * 10)).toLocaleString()}`; },
+  };
+}
+
+// Side-view two-link arm: it solves its own inverse kinematics to land the tip
+// on a moving pick/place target (elbow up or down), while forward kinematics
+// draw the linkage. Joint angles and reach are written back for the read-outs.
+function tArm(spec)
+{
+  const node = el('div', 'tile t-arm wide');
+  const W = 220, H = 120;
+  const B = spec.base || [70, 104];
+  const L1 = spec.l1 || 48, L2 = spec.l2 || 40, R = L1 + L2;
+  const WP = spec.targets;
+  const elbowSign = spec.elbow === 'down' ? -1 : 1;
+
+  const seg = [];
+  let total = 0;
+  for (let i = 0; i < WP.length - 1; i++)
+  {
+    const len = Math.hypot(WP[i + 1][0] - WP[i][0], WP[i + 1][1] - WP[i][1]);
+    seg.push({ at: total, len, a: WP[i], b: WP[i + 1] });
+    total += len;
+  }
+  const goalAt = (d) =>
+  {
+    d = total ? ((d % total) + total) % total : 0;
+    let sg = seg[seg.length - 1];
+    for (const s2 of seg) { if (d <= s2.at + s2.len) { sg = s2; break; } }
+    const t = sg.len ? (d - sg.at) / sg.len : 0;
+    return [lerp(sg.a[0], sg.b[0], t), lerp(sg.a[1], sg.b[1], t)];
+  };
+
+  let arc = '';
+  for (let a = 198; a <= 342; a += 6) { arc += `${a === 198 ? 'M' : 'L'}${(B[0] + R * Math.cos(a * Math.PI / 180)).toFixed(1)},${(B[1] + R * Math.sin(a * Math.PI / 180)).toFixed(1)}`; }
+  const tgts = WP.slice(0, -1).map((t) => `<circle cx="${t[0]}" cy="${t[1]}" r="2.6" class="arm-tgt"/>`).join('');
+  node.innerHTML = `
+    <div class="t-row"><span class="t-label">${spec.label}</span><span class="t-val mono arm-read"></span></div>
+    <svg viewBox="0 0 ${W} ${H}" class="arm" preserveAspectRatio="xMidYMid meet">
+      <path class="arm-reach" d="${arc}"/>
+      ${tgts}
+      <line class="arm-link arm-l1"/>
+      <line class="arm-link arm-l2"/>
+      <circle class="arm-goal" r="5.5"/>
+      <circle class="arm-base" cx="${B[0]}" cy="${B[1]}" r="4.5"/>
+      <circle class="arm-joint arm-elbow" r="3"/>
+      <circle class="arm-tip" r="3.6"/>
+    </svg>`;
+  const read = node.querySelector('.arm-read');
+  const l1 = node.querySelector('.arm-l1'), l2 = node.querySelector('.arm-l2');
+  const elbowEl = node.querySelector('.arm-elbow'), tipEl = node.querySelector('.arm-tip'), goalEl = node.querySelector('.arm-goal');
+  let d = 0;
+
+  return {
+    node,
+    update(s, dt)
+    {
+      d += (spec.speed || 26) * dt;
+      const goal = goalAt(d);
+      let grip = false;
+      for (const t of WP.slice(0, -1)) if (Math.hypot(goal[0] - t[0], goal[1] - t[1]) < 6) grip = true;
+
+      const gx = goal[0] - B[0], gy = B[1] - goal[1];
+      const reachable = Math.hypot(gx, gy) <= R - 0.5;
+      const r = clamp(Math.hypot(gx, gy), Math.abs(L1 - L2) + 0.5, R - 0.5);
+      const c2 = clamp((r * r - L1 * L1 - L2 * L2) / (2 * L1 * L2), -1, 1);
+      const th2 = elbowSign * Math.acos(c2);
+      const th1 = Math.atan2(gy, gx) - Math.atan2(L2 * Math.sin(th2), L1 + L2 * Math.cos(th2));
+      const ex = B[0] + L1 * Math.cos(th1), ey = B[1] - L1 * Math.sin(th1);
+      const tx = ex + L2 * Math.cos(th1 + th2), ty = ey - L2 * Math.sin(th1 + th2);
+
+      l1.setAttribute('x1', B[0]); l1.setAttribute('y1', B[1]); l1.setAttribute('x2', ex.toFixed(2)); l1.setAttribute('y2', ey.toFixed(2));
+      l2.setAttribute('x1', ex.toFixed(2)); l2.setAttribute('y1', ey.toFixed(2)); l2.setAttribute('x2', tx.toFixed(2)); l2.setAttribute('y2', ty.toFixed(2));
+      elbowEl.setAttribute('cx', ex.toFixed(2)); elbowEl.setAttribute('cy', ey.toFixed(2));
+      tipEl.setAttribute('cx', tx.toFixed(2)); tipEl.setAttribute('cy', ty.toFixed(2));
+      goalEl.setAttribute('cx', goal[0].toFixed(2)); goalEl.setAttribute('cy', goal[1].toFixed(2));
+      tipEl.classList.toggle('grip', grip);
+      goalEl.classList.toggle('reached', reachable);
+
+      const th1deg = th1 * 180 / Math.PI, th2deg = th2 * 180 / Math.PI;
+      s.v.th1 = th1deg; s.v.th2 = th2deg; s.v.reach = (r / R) * 100;
+      s.flags.grip = grip;
+      read.textContent = `θ1 ${Math.round(th1deg)}° · θ2 ${Math.round(th2deg)}° · elbow ${elbowSign > 0 ? 'up' : 'down'}`;
+    },
+  };
+}
+
+// Top-down fleet: a few robots each patrol their own loop around a routerless
+// hub, all reachable through one Zenoh key expression. Peer and rate counters
+// are written back for the read-outs.
+function tFleet(spec)
+{
+  const node = el('div', 'tile t-fleet wide');
+  const W = 220, H = 120;
+  const hub = spec.hub || [110, 60];
+  const bots = spec.bots;
+  const loops = bots.map((b) => `<circle cx="${b.cx}" cy="${b.cy}" r="${b.r}" class="fl-loop"/>`).join('');
+  const links = bots.map((b) => `<line x1="${hub[0]}" y1="${hub[1]}" x2="${b.cx}" y2="${b.cy}" class="fl-link"/>`).join('');
+  node.innerHTML = `
+    <div class="t-row"><span class="t-label">${spec.label}</span><span class="t-val mono fl-note">${bots.length} peers</span></div>
+    <svg viewBox="0 0 ${W} ${H}" class="fleet" preserveAspectRatio="xMidYMid meet">
+      ${loops}${links}
+      <g transform="translate(${hub[0]},${hub[1]})"><rect x="-6" y="-5" width="12" height="10" rx="2" class="fl-hub"/></g>
+      ${bots.map(() => '<g class="fl-bot"><path d="M6,0 L-4,-3.5 L-1.5,0 L-4,3.5 Z"/></g>').join('')}
+    </svg>`;
+  const botEls = [...node.querySelectorAll('.fl-bot')];
+  return {
+    node,
+    update(s)
+    {
+      botEls.forEach((g, i) =>
+      {
+        const b = bots[i];
+        const a = s.t * b.speed * b.dir + b.phase;
+        const x = b.cx + b.r * Math.cos(a), y = b.cy + b.r * Math.sin(a);
+        const hd = Math.atan2(b.dir * Math.cos(a), -b.dir * Math.sin(a)) * 180 / Math.PI;
+        g.setAttribute('transform', `translate(${x.toFixed(2)},${y.toFixed(2)}) rotate(${hd.toFixed(1)})`);
+      });
+      s.v.peers = bots.length;
+      s.v.rate = Math.round(28 + 4 * Math.sin(s.t * 0.8));
+      s.v.twins = spec.twins ?? 1;
+    },
+  };
+}
+
+const RENDER = { radial: tRadial, bar: tBar, kpi: tKpi, chip: tChip, spark: tSpark, wave: tWave, chain: tChain, mesh: tMesh, rover: tRover, bridge: tBridge, arm: tArm, fleet: tFleet };
 
 // ---- scenario specs ----------------------------------------------------
 function step(s, cycle, steps)
@@ -340,6 +580,87 @@ const SPECS = {
         { at: 2, msg: 'relaying via coastal mesh' },
         { at: 4, set: { queue: 4, carried: 31 }, msg: 'uplink ↑ one shared gateway (sat)' },
         { at: 7, set: { queue: 8, carried: 38 }, msg: 'carried 38 location reports' },
+      ]);
+    },
+  },
+  robot: {
+    id: 'rover · kit robotics', link: 'Zenoh', dbm: -54,
+    init: {},
+    tiles: [
+      { type: 'rover', label: 'waypoint patrol · top-down', path: [[26, 94], [58, 44], [104, 30], [150, 66], [192, 34]], obstacle: { x: 129, y: 49, r: 8.5 }, speed: 21 },
+      { type: 'kpi', label: 'linear · v', key: 'vx', unit: 'm/s', fmt: (v) => v.toFixed(2) },
+      { type: 'kpi', label: 'angular · ω', key: 'omega', unit: 'rad/s', fmt: (v) => v.toFixed(2) },
+      { type: 'kpi', label: 'odometry', key: 'odo', unit: 'm', fmt: (v) => v.toFixed(1) },
+      { type: 'chip', label: 'safety', state: (s) => (s.flags.near ? ['obstacle · hold', 'warn'] : ['armed', 'ok']) },
+      {
+        type: 'bridge', label: 'ROS 2 ⇄ Zenoh',
+        key: '0/cmd_vel/<b>geometry_msgs::msg::dds_::Twist_</b>/RIHS01_&hellip;',
+        status: 'Twist &rarr; CDR <b>52 B</b> &rarr; decoded <span class="ok">&check;</span> &middot; rmw_zenoh, routerless',
+      },
+    ],
+    script(s)
+    {
+      if (s.flags.wp && s.flags.wp !== s._wp) { s._wp = s.flags.wp; s.say(`waypoint ${s.flags.wp}/5 reached`); }
+      if (s.flags.near && !s._near) { s._near = true; s.say('obstacle 0.6 m ahead — holding'); }
+      if (!s.flags.near && s._near) { s._near = false; s.say('clear — resuming path'); }
+      step(s, 12, [
+        { at: 0, msg: 'route loaded · 5 waypoints' },
+        { at: 3, msg: 'cmd_vel → 0/cmd_vel/…Twist_' },
+        { at: 6, msg: 'watchdog ok · link 41 ms' },
+        { at: 9, msg: 'odometry fused · no GPS' },
+      ]);
+    },
+  },
+  arm: {
+    id: 'arm · kit robotics', link: 'ROS 2', dbm: -49,
+    init: {},
+    tiles: [
+      { type: 'arm', label: 'two-link arm · FK + IK', base: [70, 104], l1: 48, l2: 40, elbow: 'up', speed: 27, targets: [[140, 92], [140, 54], [30, 52], [95, 74], [140, 92]] },
+      { type: 'kpi', label: 'joint θ1', key: 'th1', unit: '°', fmt: (v) => Math.round(v) },
+      { type: 'kpi', label: 'joint θ2', key: 'th2', unit: '°', fmt: (v) => Math.round(v) },
+      { type: 'kpi', label: 'reach', key: 'reach', unit: '%', fmt: (v) => Math.round(v) },
+      { type: 'chip', label: 'gripper', state: (s) => (s.flags.grip ? ['closed', 'warn'] : ['open', 'ok']) },
+      {
+        type: 'bridge', label: 'ROS 2 action',
+        key: '0/<b>follow_joint_trajectory</b>/_action/feedback',
+        status: 'goal accepted &middot; analytic 2-link IK &middot; rmw_zenoh, routerless',
+        meter: (s) => `fb ${Math.floor((s.t * 14) % 100)}%`,
+      },
+    ],
+    script(s)
+    {
+      if (s.flags.grip && !s._grip) { s._grip = true; s.say('gripper closed · part acquired'); }
+      if (!s.flags.grip && s._grip) { s._grip = false; s.say('gripper open · part placed'); }
+      step(s, 12, [
+        { at: 0, msg: 'trajectory goal · 4 points' },
+        { at: 4, msg: 'IK solved · elbow up' },
+        { at: 8, msg: 'within joint limits' },
+      ]);
+    },
+  },
+  fleet: {
+    id: 'fleet · 3 robots', link: 'Zenoh', dbm: -57,
+    init: {},
+    tiles: [
+      { type: 'fleet', label: 'fleet · top-down', twins: 1, bots: [{ cx: 54, cy: 46, r: 16, phase: 0, speed: 0.9, dir: 1 }, { cx: 152, cy: 42, r: 14, phase: 2, speed: 1.1, dir: -1 }, { cx: 118, cy: 90, r: 18, phase: 4, speed: 0.8, dir: 1 }] },
+      { type: 'kpi', label: 'peers', key: 'peers', unit: '', fmt: (v) => Math.round(v) },
+      { type: 'kpi', label: 'cmd rate', key: 'rate', unit: '/s', fmt: (v) => Math.round(v) },
+      { type: 'kpi', label: 'sim twins', key: 'twins', unit: '/ 3', fmt: (v) => Math.round(v) },
+      { type: 'chip', label: 'coordination', state: () => ['in sync', 'ok'] },
+      {
+        type: 'bridge', label: 'Zenoh key expression',
+        key: '<b>*</b>/cmd_vel/geometry_msgs::msg::dds_::Twist_/<b>**</b>',
+        status: 'one subscriber &middot; 3 peers matched &middot; service set_mode <span class="ok">&check;</span>',
+        meter: (s) => `${Math.round(s.v.peers || 3)} peers`,
+      },
+    ],
+    script(s)
+    {
+      step(s, 12, [
+        { at: 0, msg: 'discovered 3 peers · routerless' },
+        { at: 3, msg: 'sub **/cmd_vel · keyexpr match' },
+        { at: 6, msg: 'service set_mode(AUTO) → 3 ✓' },
+        { at: 9, msg: 'twin + real robots · sim ok' },
       ]);
     },
   },

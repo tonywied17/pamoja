@@ -248,6 +248,22 @@ export const CRATES = [
     blurb:
       'Named, ready-to-run device profiles: pick a preset like an irrigation node or a water-point monitor, or load one from a shareable JSON manifest. The profile is plain data and the control policy is pure, so a whole node is testable with no hardware.',
   },
+  {
+    id: 'pamoja-zenoh',
+    name: 'pamoja-zenoh',
+    role: 'robotics',
+    color: 'coral',
+    blurb:
+      'A Zenoh transport with a full key-expression engine - validity, canonical form, and wildcard matching to the published rules - so fleets and robots share data over Zenoh behind the core Transport trait, with or without ROS 2.',
+  },
+  {
+    id: 'pamoja-ros2',
+    name: 'pamoja-ros2',
+    role: 'robotics',
+    color: 'coral',
+    blurb:
+      'A ROS 2 bridge - topics, services, and actions - that makes a robot appear as an ordinary pamoja device on the bus. Names, type hashes, and CDR messages follow the ROS 2 spec, and it interoperates with rmw_zenoh over plain Zenoh, routerless.',
+  },
 ];
 
 export const PLANNED_CRATES = [
@@ -308,14 +324,6 @@ export const PLANNED_CRATES = [
       'MAVLink for drones - mission, telemetry, and offboard control - modelled as an ordinary pamoja device and interoperable with PX4 and ArduPilot, so a survey flight is driven from the same API as any sensor.',
   },
   {
-    id: 'pamoja-ros2',
-    name: 'pamoja-ros2',
-    role: 'robotics · planned',
-    planned: true,
-    blurb:
-      'A ROS 2 and Zenoh bridge so a robot, its topics, and its services appear as ordinary pamoja devices on the event bus, drivable from any binding without leaving the SDK.',
-  },
-  {
     id: 'pamoja-sema',
     name: 'pamoja-sema',
     role: 'language · planned',
@@ -370,6 +378,36 @@ export const SCENARIO_CRATES = {
   village: ['pamoja-mesh', 'pamoja-routing', 'pamoja-lora', 'pamoja-sync', 'pamoja-codec'],
   storm: ['pamoja-mesh', 'pamoja-routing', 'pamoja-lorawan', 'pamoja-telemetry', 'pamoja-power'],
 };
+
+// The robotics showcase: three live examples behind a tab bar, each a distinct
+// domain that ships today. `id` matches a console spec in consoles.js and the
+// data-diorama figures in the markup; `accent` matches the console's accent.
+export const ROBOTS = [
+  {
+    id: 'robot', tab: 'Drive', sub: 'mobile rover', accent: 'coral', eyebrowClass: 'eyebrow-coral',
+    eyebrow: 'Mobile rover · waypoint patrol',
+    h3: 'Follow the path. Watch the wheels. Hold on obstacle.',
+    body:
+      'The rover chases a carrot along its route while odometry turns wheel motion into a live pose - no GPS. A watchdog and an obstacle stop cut motion in milliseconds, and every <code>cmd_vel</code> leaves as a ROS 2 Twist on a Zenoh key any robot on the fleet already understands.',
+    crates: ['pamoja-kit', 'pamoja-ros2', 'pamoja-zenoh', 'pamoja-sim'],
+  },
+  {
+    id: 'arm', tab: 'Manipulate', sub: 'robot arm', accent: 'amber', eyebrowClass: 'eyebrow-amber',
+    eyebrow: 'Robot arm · pick and place',
+    h3: 'Reach the point. Solve the angles. Respect the limits.',
+    body:
+      'A two-link arm solves its own inverse kinematics to land its tip on a moving target - elbow up or down - while forward kinematics draw the linkage and confirm the reach. The same arm takes a ROS 2 trajectory action from any controller on the bus.',
+    crates: ['pamoja-kit', 'pamoja-ros2'],
+  },
+  {
+    id: 'fleet', tab: 'Coordinate', sub: 'many robots', accent: 'sky', eyebrowClass: 'eyebrow-sky',
+    eyebrow: 'Fleet · one bus, many robots',
+    h3: 'Many robots. One key expression.',
+    body:
+      'A single Zenoh key expression subscribes to every robot\'s <code>cmd_vel</code> at once, routerless, and one service flips them all into a mode together. Each robot can be the real thing or a pure-software twin, so the whole fleet is testable with no hardware.',
+    crates: ['pamoja-zenoh', 'pamoja-ros2', 'pamoja-sim', 'pamoja-kit'],
+  },
+];
 
 export const LANGUAGES = [
   {
@@ -573,9 +611,11 @@ export const TRACKS = [
     id: 'robotics',
     title: 'Robotics & drones',
     accent: 'coral',
-    lead: 'Robots and drones modelled as ordinary pamoja devices, controlled from any language.',
+    lead: 'Drive it, dead-reckon where it is, follow a path, and keep it safe - a robot as an ordinary pamoja device, bridged to ROS 2 over Zenoh.',
     tags: [
-      { t: 'ROS 2 bridge', on: false }, { t: 'Zenoh', on: false }, { t: 'MAVLink', on: false },
+      { t: 'motion / kinematics', on: true }, { t: 'odometry', on: true }, { t: 'waypoint nav', on: true },
+      { t: 'safety (e-stop / watchdog)', on: true }, { t: 'arm FK / IK', on: true }, { t: 'ROS 2 bridge', on: true },
+      { t: 'Zenoh transport', on: true }, { t: 'robot sim', on: true }, { t: 'MAVLink', on: false },
     ],
   },
   {

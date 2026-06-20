@@ -54,7 +54,8 @@
       <span class="brand-word">pamoja</span>
     </a>
     <nav class="nav-links" id="nav-links">
-      <a href="#field">The field</a>
+      <a href="#field">Sensing</a>
+      <a href="#robotics">Robotics</a>
       <a href="#crates">Crates</a>
       <a href="#languages">Languages</a>
       <a href="#roadmap">Vision</a>
@@ -79,7 +80,7 @@
           clinics, and disaster zones that every other stack quietly leaves out.
         </p>
         <div class="hero-cta">
-          <a href="#field" class="btn btn-primary">See it in the field</a>
+          <a href="#field" class="btn btn-primary">See it in action</a>
           <a href="#back" class="btn btn-ghost">Back the mission</a>
         </div>
         <ul class="stat-row" id="stat-row" aria-label="at a glance"></ul>
@@ -99,11 +100,13 @@
       </div>
 
       <article class="panel" id="farm" data-scene="farm">
+        <div class="scene-head">
+          <p class="eyebrow eyebrow-teal">Smallholder farms &middot; East Africa</p>
+          <h2 class="scene-title">Water, only when the soil asks for it.</h2>
+        </div>
         <div class="scene-stage">
           <figure class="diorama" data-diorama="farm"></figure>
           <div class="card">
-            <p class="eyebrow eyebrow-teal">Smallholder farms &middot; East Africa</p>
-            <h2>Water, only when the soil asks for it.</h2>
             <p>
               A drip controller reads soil moisture from RS485 probes down a long
               cable, watches a well's level, and opens the valve only when it
@@ -116,11 +119,13 @@
       </article>
 
       <article class="panel" id="clinic" data-scene="clinic">
+        <div class="scene-head">
+          <p class="eyebrow eyebrow-amber">Rural clinics &middot; the last mile</p>
+          <h2 class="scene-title">A health post that keeps watch when no one can.</h2>
+        </div>
         <div class="scene-stage">
           <figure class="diorama" data-diorama="clinic"></figure>
           <div class="card">
-            <p class="eyebrow eyebrow-amber">Rural clinics &middot; the last mile</p>
-            <h2>A health post that keeps watch when no one can.</h2>
             <p>
               A solar-run clinic tracks the things it cannot afford to lose - the
               power to the ward, the oxygen on the shelf, the cold chain for
@@ -134,11 +139,13 @@
       </article>
 
       <article class="panel" id="water" data-scene="water">
+        <div class="scene-head">
+          <p class="eyebrow eyebrow-sky">Clean water &middot; every drop counted</p>
+          <h2 class="scene-title">The handpump that says when it is failing.</h2>
+        </div>
         <div class="scene-stage">
           <figure class="diorama" data-diorama="water"></figure>
           <div class="card">
-            <p class="eyebrow eyebrow-sky">Clean water &middot; every drop counted</p>
-            <h2>The handpump that says when it is failing.</h2>
             <p>
               A sensor on the well watches the water level and the flow through the
               pump, logging every draw, so a community - and the people who fund the
@@ -151,11 +158,13 @@
       </article>
 
       <article class="panel" id="conservation" data-scene="conservation">
+        <div class="scene-head">
+          <p class="eyebrow eyebrow-forest">Conservation &middot; eyes on the wild</p>
+          <h2 class="scene-title">Listening for the things that should not be there.</h2>
+        </div>
         <div class="scene-stage">
           <figure class="diorama" data-diorama="conservation"></figure>
           <div class="card">
-            <p class="eyebrow eyebrow-forest">Conservation &middot; eyes on the wild</p>
-            <h2>Listening for the things that should not be there.</h2>
             <p>
               Low-power nodes across a reserve relay the sound of a chainsaw or a
               shot, the level of a drying river, the movement at a waterhole - hop by
@@ -168,11 +177,13 @@
       </article>
 
       <article class="panel" id="village" data-scene="village">
+        <div class="scene-head">
+          <p class="eyebrow eyebrow-teal">Off-grid &middot; by design</p>
+          <h2 class="scene-title">No tower. The village is its own network.</h2>
+        </div>
         <div class="scene-stage">
           <figure class="diorama" data-diorama="village"></figure>
           <div class="card">
-            <p class="eyebrow eyebrow-teal">Off-grid &middot; by design</p>
-            <h2>No tower. The village is its own network.</h2>
             <p>
               Nodes form a mesh, each relaying for the next - flooding a message
               across the valley exactly once, then learning cheaper routes from the
@@ -185,11 +196,13 @@
       </article>
 
       <article class="panel panel-storm" id="storm" data-scene="storm">
+        <div class="scene-head">
+          <p class="eyebrow eyebrow-coral">When the grid goes dark</p>
+          <h2 class="scene-title">The storm takes the towers. The mesh keeps talking.</h2>
+        </div>
         <div class="scene-stage">
           <figure class="diorama" data-diorama="storm"></figure>
           <div class="card">
-            <p class="eyebrow eyebrow-coral">When the grid goes dark</p>
-            <h2>The storm takes the towers. The mesh keeps talking.</h2>
             <p>
               A typhoon makes landfall and the cell network goes with it. Along the
               coast, battery nodes relay hop by hop to a gateway that still holds a
@@ -200,6 +213,27 @@
           </div>
         </div>
       </article>
+    </section>
+
+    <!-- ROBOTICS -->
+    <section id="robotics" class="screen-tall" data-scene="robotics">
+      <div class="section-head">
+        <p class="eyebrow eyebrow-coral">Robotics &amp; drones</p>
+        <h2 class="section-title">The same SDK now drives the things that move.</h2>
+        <p class="section-lead">
+          A sensor reads the world; a robot acts on it. pamoja models a wheeled
+          rover, a robot arm, or a whole fleet as ordinary devices - drive them,
+          work out where they are, solve their motion, keep them safe, and bridge
+          them to ROS 2 over Zenoh, all from the same API.
+        </p>
+      </div>
+      <div class="robo-tabs" id="robo-tabs" role="tablist" aria-label="Robotics examples"></div>
+      <div class="scene-stage">
+        <figure class="diorama is-active" data-diorama="robot"></figure>
+        <figure class="diorama" data-diorama="arm"></figure>
+        <figure class="diorama" data-diorama="fleet"></figure>
+        <div class="card" id="robo-card"></div>
+      </div>
     </section>
 
     <!-- CRATES -->
@@ -219,6 +253,7 @@
         <button class="cf-btn" type="button" data-filter="roadmap" role="tab">Roadmap</button>
         <button class="cf-btn" type="button" data-filter="all" role="tab">All</button>
       </div>
+      <div class="crate-areas" id="crate-areas" role="tablist" aria-label="Filter crates by capability"></div>
 
       <div class="crate-bento" id="crate-bento"></div>
     </section>
@@ -258,20 +293,6 @@
         </p>
       </div>
       <div class="tracks" id="tracks"></div>
-
-      <aside class="roadmap-note">
-        <h3>How the link gets paid for</h3>
-        <p>
-          pamoja is free, MIT-licensed software - it does not run satellites, and
-          satellite data is never free. What pamoja does is make connectivity
-          <em>cheap enough to be free at the point of use</em>. Satellite and
-          cellular are the last, most expensive rung of the ladder, reached only
-          when local mesh and community gateways are gone. One sponsored gateway
-          carries a whole area's traffic, and every message is kept to tens of
-          bytes, so the cost is cents - and it is borne upstream by an NGO, an
-          agency, or a donated kit, never by the family on the ground.
-        </p>
-      </aside>
     </section>
 
     <!-- BACK IT -->
@@ -312,6 +333,20 @@
         </p>
       </div>
       <div class="tiers uplinks" id="uplinks"></div>
+
+      <aside class="uplink-note">
+        <h3>How the link gets paid for</h3>
+        <p>
+          pamoja is free, MIT-licensed software - it does not run satellites, and
+          satellite data is never free. What pamoja does is make connectivity
+          <em>cheap enough to be free at the point of use</em>. Satellite and
+          cellular are the last, most expensive rung of the ladder, reached only
+          when local mesh and community gateways are gone. One sponsored gateway
+          carries a whole area's traffic, and every message is kept to tens of
+          bytes, so the cost is cents - and it is borne upstream by an NGO, an
+          agency, or a donated kit, never by the family on the ground.
+        </p>
+      </aside>
 
       <div class="back-grid">
         <form id="pledge-form" class="pledge" novalidate>

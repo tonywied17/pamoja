@@ -1,7 +1,7 @@
 import
 {
   STATS, CRATES, PLANNED_CRATES, SCENARIO_CRATES, LANGUAGES, PLANNED_LANGS, TIERS, UPLINKS, TRACKS,
-  AREA_ORDER, areaOf, packagesFor,
+  ROBOTS, AREA_ORDER, areaOf, packagesFor,
 } from './data.js';
 import { prefersReducedMotion } from './config.js';
 import { mountConsoles } from './consoles.js';
@@ -89,11 +89,52 @@ function countUp()
 
 function buildScenarioChips()
 {
-  $$('.crate-chips').forEach((box) =>
+  $$('.crate-chips[data-crates]').forEach((box) =>
   {
     const list = SCENARIO_CRATES[box.dataset.crates] || [];
     list.forEach((id) => box.appendChild(el('span', 'crate-chip', chip(id))));
   });
+}
+
+function renderRoboCard(r)
+{
+  const card = $('#robo-card');
+  if (!card) return;
+  card.innerHTML = `<p class="eyebrow ${r.eyebrowClass}">${r.eyebrow}</p><h3>${r.h3}</h3><p>${r.body}</p>`;
+  const chips = el('div', 'crate-chips');
+  r.crates.forEach((id) => chips.appendChild(el('span', 'crate-chip', chip(id))));
+  card.appendChild(chips);
+}
+
+function wireRoboTabs()
+{
+  const tabsEl = $('#robo-tabs');
+  if (!tabsEl) return;
+  const figs = {};
+  $$('#robotics .diorama').forEach((f) => { figs[f.dataset.diorama] = f; });
+  const select = (r, btn) =>
+  {
+    $$('.robo-tab', tabsEl).forEach((b) =>
+    {
+      const on = b === btn;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    Object.values(figs).forEach((f) => f.classList.remove('is-active'));
+    if (figs[r.id]) figs[r.id].classList.add('is-active');
+    renderRoboCard(r);
+  };
+  ROBOTS.forEach((r, i) =>
+  {
+    const btn = el('button', 'robo-tab' + (i === 0 ? ' active' : ''));
+    btn.type = 'button';
+    btn.setAttribute('role', 'tab');
+    btn.dataset.accent = r.accent;
+    btn.innerHTML = `<b>${r.tab}</b><span>${r.sub}</span>`;
+    btn.addEventListener('click', () => select(r, btn));
+    tabsEl.appendChild(btn);
+  });
+  select(ROBOTS[0], $$('.robo-tab', tabsEl)[0]);
 }
 
 function pkgButtons(crate)
@@ -140,6 +181,7 @@ function buildBento()
     const card = el('article', 'bento-card' + (c.planned ? ' planned' : '') + span);
     card.dataset.accent = c.color || 'amber';
     card.dataset.kind = c.planned ? 'roadmap' : 'shipping';
+    card.dataset.area = areaOf(c.role);
     card.tabIndex = 0;
     card.innerHTML =
       `<div class="bc-face">`
@@ -200,30 +242,61 @@ function wireBento(board)
   });
 }
 
+const AREA_SHORT = {
+  'Core & data': 'Core', 'Messaging & radio': 'Messaging', 'Field I/O & sensors': 'Field I/O',
+  'Resilience & power': 'Resilience', 'Security & trust': 'Security', 'Ergonomics & reach': 'Ergonomics',
+  'Robotics & drones': 'Robotics',
+};
+
 function wireCrateFilter()
 {
   const filter = $('#crate-filter');
+  const areaWrap = $('#crate-areas');
   const board = $('#crate-bento');
   if (!filter || !board) return;
   const cards = $$('.bento-card', board);
-  const apply = (f) =>
+  const state = { status: 'shipping', area: 'all' };
+
+  const apply = () =>
   {
     $$('.cf-btn', filter).forEach((b) =>
     {
-      const on = b.dataset.filter === f;
+      const on = b.dataset.filter === state.status;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    if (areaWrap) $$('.cf-btn', areaWrap).forEach((b) =>
+    {
+      const on = b.dataset.area === state.area;
       b.classList.toggle('active', on);
       b.setAttribute('aria-selected', on ? 'true' : 'false');
     });
     cards.forEach((c) =>
     {
-      const show = f === 'all' || c.dataset.kind === f;
+      const show = (state.status === 'all' || c.dataset.kind === state.status)
+        && (state.area === 'all' || c.dataset.area === state.area);
       c.classList.remove('pinned');
       c.classList.toggle('hide', !show);
       if (show) { c.classList.remove('in'); void c.offsetWidth; c.classList.add('in'); }
     });
   };
-  $$('.cf-btn', filter).forEach((b) => b.addEventListener('click', () => apply(b.dataset.filter)));
-  apply('shipping');
+
+  if (areaWrap)
+  {
+    const present = AREA_ORDER.filter((a) => cards.some((c) => c.dataset.area === a));
+    const addChip = (val, label) =>
+    {
+      const b = el('button', 'cf-btn', label);
+      b.type = 'button'; b.dataset.area = val; b.setAttribute('role', 'tab');
+      b.addEventListener('click', () => { state.area = val; apply(); });
+      areaWrap.appendChild(b);
+    };
+    addChip('all', 'All areas');
+    present.forEach((a) => addChip(a, AREA_SHORT[a] || a));
+  }
+
+  $$('.cf-btn', filter).forEach((b) => b.addEventListener('click', () => { state.status = b.dataset.filter; apply(); }));
+  apply();
 }
 
 function wireNav()
@@ -435,6 +508,7 @@ export function initUI({ onScene })
 {
   buildStats();
   buildScenarioChips();
+  wireRoboTabs();
   mountConsoles();
   buildBento();
   wireCrateFilter();

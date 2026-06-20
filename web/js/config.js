@@ -74,6 +74,11 @@ export const SCENES = {
     distance: 2.75, height: 0.06,
     idleSpin: 0.8, theme: 'coral', dim: 0.6, storm: 1, focus: 'storm', arcsKey: 'storm',
   },
+  robotics: {
+    lat: 10, lon: 95, tilt: 0.1,
+    distance: 3.15, height: 0.04,
+    idleSpin: 2.6, theme: 'coral', dim: 0.62, storm: 0, focus: null, arcsKey: 'global',
+  },
   crates: {
     lat: 8, lon: -40, tilt: 0.05,
     distance: 4.6, height: 0.0,

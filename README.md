@@ -63,7 +63,7 @@ today.
 | `pamoja-sync` | resilience | Offline-first store-and-forward queues: in-memory, plus a crash-safe on-disk queue that survives power loss. |
 | `pamoja-bus` | core | An in-memory typed publish/subscribe event bus implementing the core `EventBus` trait. |
 | `pamoja-loopback` | testing | An in-process `Transport` with topic matching and a fault injector, exercising the full path with no broker. |
-| `pamoja-sim` | testing | Hardware-free simulators: noisy and replay sensors, a recording actuator, and a degraded-link transport. |
+| `pamoja-sim` | testing | Hardware-free simulators: noisy and replay sensors, a recording actuator, a degraded-link transport, and a simulated robot that turns velocity commands into a dead-reckoned pose. |
 | `pamoja-power` | energy | Duty cycling plus an energy-aware governor that stretches work as the battery drains and eases off while charging. |
 | `pamoja-security` | trust | ed25519 device identity: sign a device's telemetry and verify it, so a gateway can prove a reading is authentic. |
 | `pamoja-audit` | trust | A `no_std` tamper-evident, SHA-256 hash-chained log; altering, reordering, or dropping any record breaks verification. |
@@ -76,7 +76,9 @@ today.
 | `pamoja-can` | field I/O | CAN 2.0 and CAN-FD frames (11- and 29-bit IDs) plus J1939 decode and compose for trucks, tractors, and gensets. |
 | `pamoja-serial` | field I/O | SLIP (RFC 1055) and COBS byte-stuffing with streaming frame decoders, so a raw UART byte stream carries discrete packets to motor controllers, GPS, and LiDAR. |
 | `pamoja-gpio` | field I/O | On-board bus logic: I2C 7- and 10-bit address frames (NXP UM10204) with reserved-range checks, the four SPI clock modes, and active-high/active-low GPIO pins. |
-| `pamoja-kit` | ergonomics | Plain-language helpers that name the goal over the math: smoothing/filtering (EMA, median, Kalman, complementary, debounce), calibration, units and deadband shaping, PID and on/off control with ramping, trend/surge/depletion and anomaly prediction, rolling-window stats, differential-drive kinematics, and geo (distance/bearing/geofence), IMU tilt, and dew-point helpers. |
+| `pamoja-zenoh` | robotics | A Zenoh transport plus a key-expression engine (validity, canonical form, wildcard matching) so fleets and robots share data over Zenoh, with or without ROS 2. |
+| `pamoja-ros2` | robotics | A ROS 2 bridge - topics, services, and actions - with ROS 2 name, RIHS01 type-hash, and CDR handling plus rmw_zenoh key assembly, so a robot appears as an ordinary pamoja device; interoperates with rmw_zenoh, routerless. |
+| `pamoja-kit` | ergonomics | Plain-language helpers that name the goal over the math: smoothing/filtering (EMA, median, Kalman, complementary, debounce), calibration, units and deadband shaping, PID and on/off control with ramping, trend/surge/depletion and anomaly prediction, rolling-window stats, wheel kinematics (differential, Ackermann, skid-steer, mecanum), odometry, waypoint guidance and motion safety (e-stop, watchdog, limits), two-link arm forward/inverse kinematics, and geo (distance/bearing/geofence), IMU tilt, and dew-point helpers. |
 | `pamoja-profile` | ergonomics | Named, ready-to-run device profiles from plain data or a JSON manifest; assembled and testable with no hardware. |
 | `pamoja-ffi` | bindings | The curated C ABI over the core and MQTT, with a `cbindgen`-generated, drift-checked `pamoja.h`. |
 
@@ -185,11 +187,11 @@ Hardware and sensors. Serial (SLIP/COBS), CAN with J1939, and RS485/Modbus ship 
 
 Resilience and power. Offline-first store-and-forward and energy-aware duty cycling for solar and battery work today; next are local-first dashboards a device serves over its own hotspot, and data-mule sync for places with no link at all.
 
-Robotics and drones. A ROS2 and Zenoh bridge, then MAVLink for drones, modeled as ordinary pamoja devices.
+Robotics and drones. A ROS 2 bridge - topics, services, and actions - over a Zenoh transport ships today, interoperating with rmw_zenoh, routerless; the kit adds wheel kinematics, odometry, waypoint guidance, motion safety, and arm forward/inverse kinematics, and a simulated robot exercises it all with no hardware. MAVLink for drones is next, modeled as ordinary pamoja devices.
 
 Security. Memory safety by construction today, with ed25519 device identity and a tamper-evident, hash-chained audit log already shipping. Next: TLS 1.3 and DTLS, X.509 device identity, and signed OTA updates with verified rollback.
 
-Reach. Bindings beyond Node: Python, C#/.NET, Lua, WebAssembly, Kotlin, Swift, and Go. The plain-language helper layer (`pamoja-kit`) has its first slice today - keep a temperature, smooth a noisy reading, warn before a tank runs dry - each naming the goal over the math with the real algorithm one layer down; more helpers (calibration curves, geo, control) follow. And an offline-first community cookbook so the SDK reaches the people it is built for.
+Reach. Bindings beyond Node: Python, C#/.NET, Lua, WebAssembly, Kotlin, Swift, and Go. The plain-language helper layer (`pamoja-kit`) is broad today - smooth a noisy reading, hold a value with a PID, warn before a tank runs dry, steer by wheel kinematics - each naming the goal over the math with the real algorithm one layer down. And an offline-first community cookbook so the SDK reaches the people it is built for.
 
 ## Languages
 
