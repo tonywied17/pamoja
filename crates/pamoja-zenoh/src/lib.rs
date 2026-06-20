@@ -1,6 +1,6 @@
-#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(any(test, feature = "runtime")), no_std)]
 
-//! Zenoh key-expression logic for the pamoja SDK.
+//! Zenoh key-expression logic and transport for the pamoja SDK.
 //!
 //! Zenoh addresses data by key expressions: `/`-joined chunks with a small, exact wildcard
 //! language. Before any session is opened, a node has to know whether a key is well-formed, what
@@ -17,9 +17,10 @@
 //! - matching: [`matches`](keyexpr::matches) tests whether a concrete key is selected by a pattern,
 //!   the routing question a subscriber asks of every publication.
 //!
-//! Pattern-against-pattern intersection and inclusion, and the live `Transport` over a Zenoh
-//! session, arrive with the networked layer, where they are cross-checked against Zenoh's own
-//! implementation.
+//! With the `runtime` feature on, [`ZenohTransport`] adds the live half: it opens a Zenoh session
+//! and implements the core [`Transport`](pamoja_core::Transport), so Zenoh becomes the efficient
+//! edge-to-edge and fleet transport behind the same surface as every other link. Pattern-against-
+//! pattern intersection and inclusion arrive later, cross-checked against Zenoh's own implementation.
 //!
 //! # Examples
 //!
@@ -37,3 +38,9 @@
 extern crate alloc;
 
 pub mod keyexpr;
+
+#[cfg(feature = "runtime")]
+mod transport;
+
+#[cfg(feature = "runtime")]
+pub use transport::{Message, ZenohConfig, ZenohTransport};

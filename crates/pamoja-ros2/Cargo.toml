@@ -8,8 +8,22 @@ license.workspace = true
 repository.workspace = true
 authors.workspace = true
 
+[features]
+# The live ROS 2 bridge over r2r. Off by default so the spec-logic stays `no_std` and
+# normal CI never needs a ROS 2 toolchain; on, it adds the `bridge` module. Building it
+# requires a sourced ROS 2 install (r2r generates message bindings at build time), so it
+# is built and tested in the ros:jazzy container.
+bridge = ["dep:r2r", "dep:tokio", "dep:futures", "dep:pamoja-core"]
+
 [dependencies]
 pamoja-zenoh = { workspace = true }
+pamoja-core = { workspace = true, optional = true }
+r2r = { version = "0.9", optional = true }
+tokio = { version = "1", features = ["rt", "sync", "macros", "time"], optional = true }
+futures = { version = "0.3", optional = true }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
 
 [lints]
 workspace = true

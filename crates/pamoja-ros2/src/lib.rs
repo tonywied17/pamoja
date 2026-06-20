@@ -1,4 +1,4 @@
-#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(any(test, feature = "bridge")), no_std)]
 
 //! ROS 2 bridge logic for the pamoja SDK.
 //!
@@ -20,8 +20,11 @@
 //! - [`msg`] - encode and decode messages as CDR (the OMG Common Data Representation, the format
 //!   DDS and `rmw_zenoh` put on the wire), starting with the geometry messages a robot is driven by.
 //!
-//! The live bridge (ROS 2 nodes, topics, services, and actions over `r2r`, and the Zenoh session)
-//! arrives with the networked layer, built and tested in the ROS 2 container.
+//! With the `bridge` feature on, [`bridge`] adds the live layer: a [`bridge::Ros2Node`] over `r2r`
+//! whose publishers and subscribers are exposed as the core
+//! [`Actuator`](pamoja_core::Actuator) and [`Sensor`](pamoja_core::Sensor), so a ROS 2 robot drives
+//! like any other pamoja device. That layer needs a sourced ROS 2 install (r2r generates message
+//! bindings at build time), so it is built and tested in the ros:jazzy container.
 //!
 //! # Examples
 //!
@@ -44,3 +47,6 @@ pub mod key;
 pub mod msg;
 pub mod name;
 pub mod typehash;
+
+#[cfg(feature = "bridge")]
+pub mod bridge;
