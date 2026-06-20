@@ -1,8 +1,8 @@
 import
-  {
-    Group, Points, BufferGeometry, BufferAttribute, ShaderMaterial, AdditiveBlending,
-    Mesh, SphereGeometry, BackSide, Color, Vector3, MathUtils,
-  } from 'three';
+{
+  Group, Points, BufferGeometry, BufferAttribute, ShaderMaterial, AdditiveBlending,
+  Mesh, SphereGeometry, BackSide, Color, Vector3, MathUtils,
+} from 'three';
 import { GLOBE, C } from './config.js';
 import { vec3ToLatLon } from './geo.js';
 

@@ -132,9 +132,6 @@ function drawGeometry(ctx, geom, w, h)
       {
         const [lon, lat] = ring[i];
         const [px, py] = lonLatToPixel(lon, lat, w, h);
-        // A segment that jumps more than half the map crosses the antimeridian;
-        // start a new subpath instead of drawing a stray line clear across the
-        // canvas, which otherwise fills as a horizontal streak over open ocean.
         if (i === 0 || Math.abs(px - prevPx) > w / 2) ctx.moveTo(px, py);
         else ctx.lineTo(px, py);
         prevPx = px;
