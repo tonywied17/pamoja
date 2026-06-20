@@ -177,6 +177,14 @@ export const CRATES = [
       'SLIP (RFC 1055) and COBS byte-stuffing with streaming frame decoders, so a raw UART byte stream becomes discrete packets to a motor controller, a GPS, or a LiDAR. Validated against each spec\'s own reference vectors.',
   },
   {
+    id: 'pamoja-gpio',
+    name: 'pamoja-gpio',
+    role: 'field I/O',
+    color: 'teal',
+    blurb:
+      'On-board bus logic: I2C 7- and 10-bit address frames (NXP UM10204) with reserved-range checks, the four SPI clock modes, and active-high/active-low GPIO pins, so a node addresses the cheap breakout sensors and relays wired straight to it. no_std and allocation-free.',
+  },
+  {
     id: 'pamoja-security',
     name: 'pamoja-security',
     role: 'trust',
@@ -230,7 +238,7 @@ export const CRATES = [
     role: 'ergonomics',
     color: 'cream',
     blurb:
-      'The plain-language helper layer: keep a temperature, smooth a noisy reading, warn before a tank runs dry. Each names the goal over the math, with the real algorithm one layer down.',
+      'The plain-language helper layer: smooth or filter a noisy reading, hold a value with a PID, warn before a tank runs dry, read a trend or flag an anomaly, convert to real units, and steer by wheel kinematics, bearing, or accelerometer tilt. Each names the goal over the math, with the real algorithm one layer down.',
   },
   {
     id: 'pamoja-profile',
@@ -266,14 +274,6 @@ export const PLANNED_CRATES = [
     planned: true,
     blurb:
       'A Meshtastic bridge so pamoja meshes interoperate with the large off-grid LoRa-mesh community already deployed in the field, instead of starting a separate island.',
-  },
-  {
-    id: 'pamoja-gpio',
-    name: 'pamoja-gpio',
-    role: 'field I/O · planned',
-    planned: true,
-    blurb:
-      'GPIO, I2C and SPI for the cheap sensors and actuators wired straight to a microcontroller, behind the same Sensor and Actuator traits as every other driver.',
   },
   {
     id: 'pamoja-tls',
@@ -566,7 +566,7 @@ export const TRACKS = [
     lead: 'Talk to the cheap, salvageable parts the field already runs on, by name instead of by pin.',
     tags: [
       { t: 'Modbus / RS485', on: true }, { t: 'CAN / J1939', on: true }, { t: 'device profiles', on: true },
-      { t: 'serial (SLIP / COBS)', on: true }, { t: 'GPIO / I2C / SPI', on: false }, { t: 'driver catalog', on: false },
+      { t: 'serial (SLIP / COBS)', on: true }, { t: 'GPIO / I2C / SPI', on: true }, { t: 'driver catalog', on: false },
     ],
   },
   {
@@ -611,7 +611,7 @@ export const TRACKS = [
 ];
 
 export const STATS = [
-  { value: 22, label: 'capability crates', suffix: '' },
+  { value: 23, label: 'capability crates', suffix: '' },
   { value: 4, label: 'languages shipping', suffix: '' },
   { value: 256, label: 'KB of RAM, target floor', suffix: '' },
   { value: 0, label: 'cost to use, forever', prefix: '$', suffix: '' },
