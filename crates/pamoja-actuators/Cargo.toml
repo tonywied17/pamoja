@@ -1,0 +1,12 @@
+[package]
+name = "pamoja-actuators"
+description = "Concrete actuator drivers for pamoja: the command-encode half of common parts - the PCA9685 16-channel PWM/servo/LED controller (mode and prescale registers, the frequency-to-prescale formula, and 12-bit on/off channel words) and stepper-motor coil sequencing (wave, full-step, and half-step drive plus a step/direction position model) - turning a desired output into the bytes and steps a driver applies against the manufacturer datasheet, no_std and allocation-free. The command-encode half ahead of the bus driver."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true

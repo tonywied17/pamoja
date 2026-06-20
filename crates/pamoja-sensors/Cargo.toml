@@ -1,0 +1,12 @@
+[package]
+name = "pamoja-sensors"
+description = "Concrete sensor drivers for pamoja: the decode-and-configure half of common parts - BME280 temperature/pressure/humidity (Bosch compensation), DS18B20 1-Wire thermometer (datasheet temperature table + Maxim CRC-8), INA219 current/voltage/power monitor (TI calibration math), and ADS1115 ADC (config register and full-scale conversion) - each turning raw register bytes into physical readings exactly as the manufacturer datasheet specifies, no_std and allocation-free. The decode half ahead of the bus driver."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true

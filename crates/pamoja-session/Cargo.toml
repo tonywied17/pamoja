@@ -1,0 +1,22 @@
+[package]
+name = "pamoja-session"
+description = "Encrypted, authenticated sessions for pamoja: X25519 key agreement (RFC 7748) and HKDF-SHA256 (RFC 5869) derive a session key, then ChaCha20-Poly1305 (RFC 8439) protects each message with counter nonces and an anti-replay window, so two devices that know each other's keys share a confidential, tamper-evident link, no_std and allocation-free. The secured-channel half ahead of the rustls/DTLS driver."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+# The AEAD that protects each message: ChaCha20-Poly1305 is fast in software on
+# devices without AES hardware, which is most of the cheap hardware this targets.
+chacha20poly1305 = { version = "0.10", default-features = false }
+# X25519 for the key agreement, and HKDF-SHA256 to turn the raw shared secret
+# into a session key bound to the session salt and both public keys.
+x25519-dalek = { version = "2", default-features = false, features = ["static_secrets"] }
+hkdf = { version = "0.12", default-features = false }
+sha2 = { version = "0.10", default-features = false }
+
+[lints]
+workspace = true
