@@ -2245,11 +2245,11 @@ dependencies = [
 
 [[package]]
 name = "pamoja-actuators"
-version = "0.1.9"
+version = "0.1.10"
 
 [[package]]
 name = "pamoja-audit"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "pamoja-core",
  "pamoja-security",
@@ -2258,7 +2258,7 @@ dependencies = [
 
 [[package]]
 name = "pamoja-bus"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "pamoja-core",
  "tokio",
@@ -2266,11 +2266,11 @@ dependencies = [
 
 [[package]]
 name = "pamoja-can"
-version = "0.1.9"
+version = "0.1.10"
 
 [[package]]
 name = "pamoja-coap"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "coap-lite",
  "pamoja-core",
@@ -2279,7 +2279,7 @@ dependencies = [
 
 [[package]]
 name = "pamoja-codec"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "ciborium",
  "pamoja-core",
@@ -2290,11 +2290,11 @@ dependencies = [
 
 [[package]]
 name = "pamoja-core"
-version = "0.1.9"
+version = "0.1.10"
 
 [[package]]
 name = "pamoja-examples"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "pamoja-audit",
  "pamoja-codec",
@@ -2315,7 +2315,7 @@ dependencies = [
 
 [[package]]
 name = "pamoja-ffi"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "cbindgen",
  "pamoja-core",
@@ -2325,18 +2325,18 @@ dependencies = [
 
 [[package]]
 name = "pamoja-gpio"
-version = "0.1.9"
+version = "0.1.10"
 
 [[package]]
 name = "pamoja-kit"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "libm",
 ]
 
 [[package]]
 name = "pamoja-ladder"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "pamoja-core",
  "pamoja-loopback",
@@ -2346,7 +2346,7 @@ dependencies = [
 
 [[package]]
 name = "pamoja-loopback"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "pamoja-core",
  "tokio",
@@ -2354,26 +2354,26 @@ dependencies = [
 
 [[package]]
 name = "pamoja-lora"
-version = "0.1.9"
+version = "0.1.10"
 
 [[package]]
 name = "pamoja-lorawan"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "aes",
 ]
 
 [[package]]
 name = "pamoja-mesh"
-version = "0.1.9"
+version = "0.1.10"
 
 [[package]]
 name = "pamoja-modbus"
-version = "0.1.9"
+version = "0.1.10"
 
 [[package]]
 name = "pamoja-mqtt"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "pamoja-core",
  "rumqttc",
@@ -2383,11 +2383,11 @@ dependencies = [
 
 [[package]]
 name = "pamoja-power"
-version = "0.1.9"
+version = "0.1.10"
 
 [[package]]
 name = "pamoja-profile"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "pamoja-codec",
  "pamoja-core",
@@ -2401,7 +2401,7 @@ dependencies = [
 
 [[package]]
 name = "pamoja-ros2"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "futures",
  "pamoja-core",
@@ -2412,11 +2412,11 @@ dependencies = [
 
 [[package]]
 name = "pamoja-routing"
-version = "0.1.9"
+version = "0.1.10"
 
 [[package]]
 name = "pamoja-security"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "ed25519-dalek",
  "pamoja-core",
@@ -2424,15 +2424,15 @@ dependencies = [
 
 [[package]]
 name = "pamoja-sensors"
-version = "0.1.9"
+version = "0.1.10"
 
 [[package]]
 name = "pamoja-serial"
-version = "0.1.9"
+version = "0.1.10"
 
 [[package]]
 name = "pamoja-session"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "chacha20poly1305",
  "hkdf",
@@ -2442,7 +2442,7 @@ dependencies = [
 
 [[package]]
 name = "pamoja-sim"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "pamoja-core",
  "pamoja-kit",
@@ -2452,7 +2452,7 @@ dependencies = [
 
 [[package]]
 name = "pamoja-sync"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "pamoja-core",
  "pamoja-loopback",
@@ -2462,11 +2462,11 @@ dependencies = [
 
 [[package]]
 name = "pamoja-telemetry"
-version = "0.1.9"
+version = "0.1.10"
 
 [[package]]
 name = "pamoja-zenoh"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "pamoja-core",
  "tokio",
@@ -5314,7 +5314,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.1.9"
+version = "0.1.10"
 
 [[package]]
 name = "yaml-rust"
