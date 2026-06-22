@@ -23,32 +23,136 @@ const JS: &str = "application/javascript; charset=utf-8";
 // The bundle, embedded at compile time. `/` maps to the page shell. The order does not
 // matter; lookups are by exact path.
 const EMBEDDED: &[Asset] = &[
-    Asset { path: "/", content_type: HTML, bytes: include_bytes!("../web/index.html") },
-    Asset { path: "/global.css", content_type: CSS, bytes: include_bytes!("../web/global.css") },
-    Asset { path: "/zquery.min.js", content_type: JS, bytes: include_bytes!("../web/zquery.min.js") },
-    Asset { path: "/app/app.js", content_type: JS, bytes: include_bytes!("../web/app/app.js") },
-    Asset { path: "/app/store.js", content_type: JS, bytes: include_bytes!("../web/app/store.js") },
-    Asset { path: "/app/routes.js", content_type: JS, bytes: include_bytes!("../web/app/routes.js") },
-    Asset { path: "/app/feed.js", content_type: JS, bytes: include_bytes!("../web/app/feed.js") },
-    Asset { path: "/app/edits.js", content_type: JS, bytes: include_bytes!("../web/app/edits.js") },
-    Asset { path: "/app/nav.js", content_type: JS, bytes: include_bytes!("../web/app/nav.js") },
-    Asset { path: "/app/detail.js", content_type: JS, bytes: include_bytes!("../web/app/detail.js") },
-    Asset { path: "/app/i18n.js", content_type: JS, bytes: include_bytes!("../web/app/i18n.js") },
-    Asset { path: "/app/viz.js", content_type: JS, bytes: include_bytes!("../web/app/viz.js") },
-    Asset { path: "/app/components/top-bar.js", content_type: JS, bytes: include_bytes!("../web/app/components/top-bar.js") },
-    Asset { path: "/app/components/dashboard-page.js", content_type: JS, bytes: include_bytes!("../web/app/components/dashboard-page.js") },
-    Asset { path: "/app/components/sensor-modal.js", content_type: JS, bytes: include_bytes!("../web/app/components/sensor-modal.js") },
-    Asset { path: "/app/components/manage-modal.js", content_type: JS, bytes: include_bytes!("../web/app/components/manage-modal.js") },
-    Asset { path: "/app/components/group-modal.js", content_type: JS, bytes: include_bytes!("../web/app/components/group-modal.js") },
-    Asset { path: "/app/components/mesh-modal.js", content_type: JS, bytes: include_bytes!("../web/app/components/mesh-modal.js") },
-    Asset { path: "/app/components/network-view.js", content_type: JS, bytes: include_bytes!("../web/app/components/network-view.js") },
-    Asset { path: "/app/components/alarm-bar.js", content_type: JS, bytes: include_bytes!("../web/app/components/alarm-bar.js") },
-    Asset { path: "/app/i18n/en.js", content_type: JS, bytes: include_bytes!("../web/app/i18n/en.js") },
-    Asset { path: "/app/i18n/sw.js", content_type: JS, bytes: include_bytes!("../web/app/i18n/sw.js") },
-    Asset { path: "/app/i18n/ar.js", content_type: JS, bytes: include_bytes!("../web/app/i18n/ar.js") },
-    Asset { path: "/app/i18n/fr.js", content_type: JS, bytes: include_bytes!("../web/app/i18n/fr.js") },
-    Asset { path: "/app/i18n/pt.js", content_type: JS, bytes: include_bytes!("../web/app/i18n/pt.js") },
-    Asset { path: "/app/i18n/hi.js", content_type: JS, bytes: include_bytes!("../web/app/i18n/hi.js") },
+    Asset {
+        path: "/",
+        content_type: HTML,
+        bytes: include_bytes!("../web/index.html"),
+    },
+    Asset {
+        path: "/global.css",
+        content_type: CSS,
+        bytes: include_bytes!("../web/global.css"),
+    },
+    Asset {
+        path: "/zquery.min.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/zquery.min.js"),
+    },
+    Asset {
+        path: "/app/app.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/app.js"),
+    },
+    Asset {
+        path: "/app/store.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/store.js"),
+    },
+    Asset {
+        path: "/app/routes.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/routes.js"),
+    },
+    Asset {
+        path: "/app/feed.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/feed.js"),
+    },
+    Asset {
+        path: "/app/edits.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/edits.js"),
+    },
+    Asset {
+        path: "/app/nav.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/nav.js"),
+    },
+    Asset {
+        path: "/app/detail.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/detail.js"),
+    },
+    Asset {
+        path: "/app/i18n.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/i18n.js"),
+    },
+    Asset {
+        path: "/app/viz.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/viz.js"),
+    },
+    Asset {
+        path: "/app/components/top-bar.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/components/top-bar.js"),
+    },
+    Asset {
+        path: "/app/components/dashboard-page.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/components/dashboard-page.js"),
+    },
+    Asset {
+        path: "/app/components/sensor-modal.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/components/sensor-modal.js"),
+    },
+    Asset {
+        path: "/app/components/manage-modal.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/components/manage-modal.js"),
+    },
+    Asset {
+        path: "/app/components/group-modal.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/components/group-modal.js"),
+    },
+    Asset {
+        path: "/app/components/mesh-modal.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/components/mesh-modal.js"),
+    },
+    Asset {
+        path: "/app/components/network-view.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/components/network-view.js"),
+    },
+    Asset {
+        path: "/app/components/alarm-bar.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/components/alarm-bar.js"),
+    },
+    Asset {
+        path: "/app/i18n/en.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/i18n/en.js"),
+    },
+    Asset {
+        path: "/app/i18n/sw.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/i18n/sw.js"),
+    },
+    Asset {
+        path: "/app/i18n/ar.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/i18n/ar.js"),
+    },
+    Asset {
+        path: "/app/i18n/fr.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/i18n/fr.js"),
+    },
+    Asset {
+        path: "/app/i18n/pt.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/i18n/pt.js"),
+    },
+    Asset {
+        path: "/app/i18n/hi.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/i18n/hi.js"),
+    },
 ];
 
 // The MIME type for a file, by extension, for the directory (development) mode.

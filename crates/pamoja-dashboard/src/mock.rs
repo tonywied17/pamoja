@@ -10,7 +10,8 @@
 
 use crate::source::StateSource;
 use crate::state::{
-    EventLevel, EventRecord, Group, Link, LinkKind, Mode, Org, Reading, Sensor, State, Status, Trend,
+    EventLevel, EventRecord, Group, Link, LinkKind, Mode, Org, Reading, Sensor, State, Status,
+    Trend,
 };
 
 /// A reproducible condition injected into the fleet for the dashboard to render.
@@ -156,6 +157,7 @@ impl Mock {
     }
 
     // Builds a sensor, deriving status and trend from the value and band.
+    #[allow(clippy::too_many_arguments)]
     fn sensor(
         &mut self,
         id: &str,
@@ -224,9 +226,17 @@ impl Mock {
     fn chip_sensor(&self, id: &str, key: &str, state_code: &str, status: Status) -> Sensor {
         Sensor {
             id: id.to_owned(),
-            reading: Reading::new(key, if state_code.ends_with("open") { 1.0 } else { 0.0 }, "state")
-                .with_status(status)
-                .with_state(state_code),
+            reading: Reading::new(
+                key,
+                if state_code.ends_with("open") {
+                    1.0
+                } else {
+                    0.0
+                },
+                "state",
+            )
+            .with_status(status)
+            .with_state(state_code),
             battery: None,
             mode: Mode::Active,
             history: Vec::new(),
@@ -244,7 +254,9 @@ impl Mock {
     fn mesh_sensor(&self, id: &str, nodes: f32) -> Sensor {
         Sensor {
             id: id.to_owned(),
-            reading: Reading::new("mesh_relay", nodes, "state").with_status(Status::Ok).with_state("mesh.optimised"),
+            reading: Reading::new("mesh_relay", nodes, "state")
+                .with_status(Status::Ok)
+                .with_state("mesh.optimised"),
             battery: None,
             mode: Mode::Active,
             history: Vec::new(),
@@ -257,7 +269,14 @@ impl Mock {
         }
     }
 
-    fn group(&self, id: &str, name: &str, kind: LinkKind, strength: u8, sensors: Vec<Sensor>) -> Group {
+    fn group(
+        &self,
+        id: &str,
+        name: &str,
+        kind: LinkKind,
+        strength: u8,
+        sensors: Vec<Sensor>,
+    ) -> Group {
         let mut group = Group {
             id: id.to_owned(),
             name: name.to_owned(),
@@ -293,17 +312,67 @@ impl StateSource for Mock {
         let s = self.scenario;
 
         // Health authority: cold chain + ward power.
-        let fridge1 = self.sensor("fridge-1", "temperature", "celsius", 5.0, 0.5, (2.0, 8.0), None);
+        let fridge1 = self.sensor(
+            "fridge-1",
+            "temperature",
+            "celsius",
+            5.0,
+            0.5,
+            (2.0, 8.0),
+            None,
+        );
         let fridge2_base = if s == Scenario::Alarm { 11.0 } else { 4.6 };
-        let fridge2 = self.sensor("fridge-2", "temperature", "celsius", fridge2_base, 0.5, (2.0, 8.0), None);
-        let ward_humidity = self.sensor("ward-rh", "humidity", "percent", 48.0, 4.0, (30.0, 60.0), None);
-        let cold_chain = self.group("cold-chain", "Kano cold chain", LinkKind::Cellular, 3,
-            vec![fridge1, fridge2, ward_humidity]);
+        let fridge2 = self.sensor(
+            "fridge-2",
+            "temperature",
+            "celsius",
+            fridge2_base,
+            0.5,
+            (2.0, 8.0),
+            None,
+        );
+        let ward_humidity = self.sensor(
+            "ward-rh",
+            "humidity",
+            "percent",
+            48.0,
+            4.0,
+            (30.0, 60.0),
+            None,
+        );
+        let cold_chain = self.group(
+            "cold-chain",
+            "Kano cold chain",
+            LinkKind::Cellular,
+            3,
+            vec![fridge1, fridge2, ward_humidity],
+        );
 
-        let ward_power = self.sensor("ward-soc", "state_of_charge", "percent", 78.0, 6.0, (40.0, 100.0), Some(0.78));
-        let ward_load = self.sensor("ward-load", "load_power", "watt", 210.0, 40.0, (0.0, 600.0), None);
-        let maternity = self.group("maternity", "Maternity ward power", LinkKind::Wifi, 4,
-            vec![ward_power, ward_load]);
+        let ward_power = self.sensor(
+            "ward-soc",
+            "state_of_charge",
+            "percent",
+            78.0,
+            6.0,
+            (40.0, 100.0),
+            Some(0.78),
+        );
+        let ward_load = self.sensor(
+            "ward-load",
+            "load_power",
+            "watt",
+            210.0,
+            40.0,
+            (0.0, 600.0),
+            None,
+        );
+        let maternity = self.group(
+            "maternity",
+            "Maternity ward power",
+            LinkKind::Wifi,
+            4,
+            vec![ward_power, ward_load],
+        );
 
         let health = Org {
             id: "kano-health".to_owned(),
@@ -312,43 +381,163 @@ impl StateSource for Mock {
         };
 
         // Farmers co-op: silo, weather, solar, river.
-        let silo_top = self.sensor("silo-top", "grain_temp_top", "celsius", 22.0, 0.6, (0.0, 30.0), None);
-        let silo_mid = self.sensor("silo-mid", "grain_temp_lower", "celsius", 24.0, 0.6, (0.0, 30.0), None);
-        let silo_floor_base = if s == Scenario::SensorFault { -127.0 } else { 26.0 };
-        let silo_floor = self.sensor("silo-floor", "grain_temp_floor", "celsius", silo_floor_base, 0.6, (0.0, 30.0), None);
-        let silo_rh = self.sensor("silo-rh", "humidity", "percent", 58.0, 5.0, (0.0, 65.0), None);
-        let silo = self.group("silo-3", "Co-op silo 3", LinkKind::Lora, 2,
-            vec![silo_top, silo_mid, silo_floor, silo_rh]);
+        let silo_top = self.sensor(
+            "silo-top",
+            "grain_temp_top",
+            "celsius",
+            22.0,
+            0.6,
+            (0.0, 30.0),
+            None,
+        );
+        let silo_mid = self.sensor(
+            "silo-mid",
+            "grain_temp_lower",
+            "celsius",
+            24.0,
+            0.6,
+            (0.0, 30.0),
+            None,
+        );
+        let silo_floor_base = if s == Scenario::SensorFault {
+            -127.0
+        } else {
+            26.0
+        };
+        let silo_floor = self.sensor(
+            "silo-floor",
+            "grain_temp_floor",
+            "celsius",
+            silo_floor_base,
+            0.6,
+            (0.0, 30.0),
+            None,
+        );
+        let silo_rh = self.sensor(
+            "silo-rh",
+            "humidity",
+            "percent",
+            58.0,
+            5.0,
+            (0.0, 65.0),
+            None,
+        );
+        let silo = self.group(
+            "silo-3",
+            "Co-op silo 3",
+            LinkKind::Lora,
+            2,
+            vec![silo_top, silo_mid, silo_floor, silo_rh],
+        );
 
-        let w_temp = self.sensor("wx-temp", "temperature", "celsius", 18.0, 3.0, (3.0, 38.0), None);
-        let w_press = self.sensor("wx-press", "pressure", "hectopascal", 1009.0, 4.0, (980.0, 1040.0), None);
-        let w_wind = self.sensor("wx-wind", "wind_speed", "meter_per_second", 5.5, 2.5, (0.0, 20.0), None);
-        let w_lux = self.sensor("wx-lux", "illuminance", "lux", 42000.0, 12000.0, (0.0, 100000.0), None);
-        let weather = self.group("weather", "Village weather station", LinkKind::Lora, 3,
-            vec![w_temp, w_press, w_wind, w_lux]);
+        let w_temp = self.sensor(
+            "wx-temp",
+            "temperature",
+            "celsius",
+            18.0,
+            3.0,
+            (3.0, 38.0),
+            None,
+        );
+        let w_press = self.sensor(
+            "wx-press",
+            "pressure",
+            "hectopascal",
+            1009.0,
+            4.0,
+            (980.0, 1040.0),
+            None,
+        );
+        let w_wind = self.sensor(
+            "wx-wind",
+            "wind_speed",
+            "meter_per_second",
+            5.5,
+            2.5,
+            (0.0, 20.0),
+            None,
+        );
+        let w_lux = self.sensor(
+            "wx-lux",
+            "illuminance",
+            "lux",
+            42000.0,
+            12000.0,
+            (0.0, 100000.0),
+            None,
+        );
+        let weather = self.group(
+            "weather",
+            "Village weather station",
+            LinkKind::Lora,
+            3,
+            vec![w_temp, w_press, w_wind, w_lux],
+        );
 
         let solar_low = s == Scenario::LowBattery;
-        let pv = self.sensor("pv", "pv_power", "watt", if solar_low { 40.0 } else { 320.0 }, 50.0, (0.0, 400.0), None);
-        let soc = self.sensor("soc", "state_of_charge", "percent",
-            if solar_low { 12.0 } else { 66.0 }, 4.0, (20.0, 100.0),
-            Some(if solar_low { 0.12 } else { 0.66 }));
-        let vbatt = self.sensor("vbatt", "battery_voltage", "volt",
-            if solar_low { 11.6 } else { 12.9 }, 0.15, (11.8, 14.6),
-            Some(if solar_low { 0.12 } else { 0.66 }));
-        let solar = self.group("solar", "Off-grid solar microgrid", LinkKind::Ethernet, 4,
-            vec![pv, soc, vbatt]);
+        let pv = self.sensor(
+            "pv",
+            "pv_power",
+            "watt",
+            if solar_low { 40.0 } else { 320.0 },
+            50.0,
+            (0.0, 400.0),
+            None,
+        );
+        let soc = self.sensor(
+            "soc",
+            "state_of_charge",
+            "percent",
+            if solar_low { 12.0 } else { 66.0 },
+            4.0,
+            (20.0, 100.0),
+            Some(if solar_low { 0.12 } else { 0.66 }),
+        );
+        let vbatt = self.sensor(
+            "vbatt",
+            "battery_voltage",
+            "volt",
+            if solar_low { 11.6 } else { 12.9 },
+            0.15,
+            (11.8, 14.6),
+            Some(if solar_low { 0.12 } else { 0.66 }),
+        );
+        let solar = self.group(
+            "solar",
+            "Off-grid solar microgrid",
+            LinkKind::Ethernet,
+            4,
+            vec![pv, soc, vbatt],
+        );
 
-        let river_level = self.sensor("river-1", "river_level", "millimeter", 1800.0, 120.0, (0.0, 3000.0), Some(0.71));
-        let mut river = self.group("river", "River watch mesh", LinkKind::Mesh, 3, vec![river_level]);
+        let river_level = self.sensor(
+            "river-1",
+            "river_level",
+            "millimeter",
+            1800.0,
+            120.0,
+            (0.0, 3000.0),
+            Some(0.71),
+        );
+        let mut river = self.group(
+            "river",
+            "River watch mesh",
+            LinkKind::Mesh,
+            3,
+            vec![river_level],
+        );
         if s == Scenario::LinkLost {
             river.link.online = false;
             river.link.strength = 0;
-            river.sensors[0].events.insert(0, EventRecord {
-                level: EventLevel::Error,
-                code: "link.lost".to_owned(),
-                value: None,
-                age_secs: Some(40),
-            });
+            river.sensors[0].events.insert(
+                0,
+                EventRecord {
+                    level: EventLevel::Error,
+                    code: "link.lost".to_owned(),
+                    value: None,
+                    age_secs: Some(40),
+                },
+            );
             river.recompute_status();
         }
 
@@ -360,62 +549,227 @@ impl StateSource for Mock {
 
         // Pamoja Field Kits: bespoke kit/recipe groups for crucial-area deployments. The
         // farm node waters on soil moisture, so the drip valve opens when the soil is dry.
-        let soil = self.sensor("soil", "soil_moisture", "percent", 48.0, 9.0, (36.0, 100.0), None);
+        let soil = self.sensor(
+            "soil",
+            "soil_moisture",
+            "percent",
+            48.0,
+            9.0,
+            (36.0, 100.0),
+            None,
+        );
         let soil_dry = soil.reading.value < 40.0;
-        let well = self.sensor("well", "well_level", "percent", 64.0, 6.0, (20.0, 100.0), None);
-        let valve = self.chip_sensor("valve", "drip_valve",
-            if soil_dry { "state.open" } else { "state.closed" }, Status::Ok);
-        let farm_batt = self.sensor("farm-batt", "battery_voltage", "volt", 4.0, 0.18, (3.5, 4.3), Some(0.74));
-        let soil_trend = self.sensor("soil-trend", "soil_trend", "percent", 48.0, 11.0, (0.0, 100.0), None);
-        let farm = self.group("farm-node", "Farm node", LinkKind::Lora, 3,
-            vec![soil, well, valve, farm_batt, soil_trend]);
+        let well = self.sensor(
+            "well",
+            "well_level",
+            "percent",
+            64.0,
+            6.0,
+            (20.0, 100.0),
+            None,
+        );
+        let valve = self.chip_sensor(
+            "valve",
+            "drip_valve",
+            if soil_dry {
+                "state.open"
+            } else {
+                "state.closed"
+            },
+            Status::Ok,
+        );
+        let farm_batt = self.sensor(
+            "farm-batt",
+            "battery_voltage",
+            "volt",
+            4.0,
+            0.18,
+            (3.5, 4.3),
+            Some(0.74),
+        );
+        let soil_trend = self.sensor(
+            "soil-trend",
+            "soil_trend",
+            "percent",
+            48.0,
+            11.0,
+            (0.0, 100.0),
+            None,
+        );
+        let farm = self.group(
+            "farm-node",
+            "Farm node",
+            LinkKind::Lora,
+            3,
+            vec![soil, well, valve, farm_batt, soil_trend],
+        );
 
         // Health post: a cold-chain clinic kit on NB-IoT whose readings are written to a
         // tamper-evident, hash-chained log so a record cannot be altered after the fact.
-        let fridge = self.sensor("fridge", "fridge_temp", "celsius", 4.2, 1.2, (2.0, 8.0), None);
-        let ward_pwr = self.sensor("ward-pwr", "ward_power", "percent", 90.0, 5.0, (50.0, 100.0), None);
-        let oxygen = self.sensor("o2", "oxygen_stock", "percent", 72.0, 7.0, (30.0, 100.0), None);
+        let fridge = self.sensor(
+            "fridge",
+            "fridge_temp",
+            "celsius",
+            4.2,
+            1.2,
+            (2.0, 8.0),
+            None,
+        );
+        let ward_pwr = self.sensor(
+            "ward-pwr",
+            "ward_power",
+            "percent",
+            90.0,
+            5.0,
+            (50.0, 100.0),
+            None,
+        );
+        let oxygen = self.sensor(
+            "o2",
+            "oxygen_stock",
+            "percent",
+            72.0,
+            7.0,
+            (30.0, 100.0),
+            None,
+        );
         let uplink = self.chip_sensor("uplink", "uplink", "state.synced", Status::Ok);
         let tamper = Sensor {
             id: "tamper".to_owned(),
-            reading: Reading::new("tamper_log", 1041.0 + self.tick as f32, "record").with_status(Status::Ok),
+            reading: Reading::new("tamper_log", 1041.0 + self.tick as f32, "record")
+                .with_status(Status::Ok),
             battery: None,
             mode: Mode::Active,
             history: Vec::new(),
             events: vec![
-                EventRecord { level: EventLevel::Info, code: "log.signed".to_owned(), value: None, age_secs: Some(6) },
-                EventRecord { level: EventLevel::Info, code: "log.chained".to_owned(), value: None, age_secs: Some(22) },
+                EventRecord {
+                    level: EventLevel::Info,
+                    code: "log.signed".to_owned(),
+                    value: None,
+                    age_secs: Some(6),
+                },
+                EventRecord {
+                    level: EventLevel::Info,
+                    code: "log.chained".to_owned(),
+                    value: None,
+                    age_secs: Some(22),
+                },
             ],
         };
-        let health_post = self.group("health-post", "Health post", LinkKind::NbIot, 3,
-            vec![fridge, ward_pwr, oxygen, uplink, tamper]);
+        let health_post = self.group(
+            "health-post",
+            "Health post",
+            LinkKind::NbIot,
+            3,
+            vec![fridge, ward_pwr, oxygen, uplink, tamper],
+        );
 
         // Water point: a borehole/standpipe kit on LoRa - flow rate and tank level with a
         // pump-health read derived from pressure trend, plus a day-long flow trace.
-        let flow = self.sensor("flow", "flow_rate", "liter_per_minute", 9.0, 4.0, (0.0, 16.0), None);
-        let wp_well = self.sensor("wp-well", "well_level", "percent", 58.0, 7.0, (20.0, 100.0), None);
-        let tank = self.sensor("tank", "storage_tank", "percent", 64.0, 8.0, (20.0, 100.0), None);
+        let flow = self.sensor(
+            "flow",
+            "flow_rate",
+            "liter_per_minute",
+            9.0,
+            4.0,
+            (0.0, 16.0),
+            None,
+        );
+        let wp_well = self.sensor(
+            "wp-well",
+            "well_level",
+            "percent",
+            58.0,
+            7.0,
+            (20.0, 100.0),
+            None,
+        );
+        let tank = self.sensor(
+            "tank",
+            "storage_tank",
+            "percent",
+            64.0,
+            8.0,
+            (20.0, 100.0),
+            None,
+        );
         let pump = self.chip_sensor("pump", "pump_health", "state.nominal", Status::Ok);
-        let flow_trend = self.sensor("flow-trend", "flow_trend", "liter_per_minute", 9.0, 5.0, (0.0, 16.0), None);
-        let water_point = self.group("water-point", "Water point", LinkKind::Lora, 3,
-            vec![flow, wp_well, tank, pump, flow_trend]);
+        let flow_trend = self.sensor(
+            "flow-trend",
+            "flow_trend",
+            "liter_per_minute",
+            9.0,
+            5.0,
+            (0.0, 16.0),
+            None,
+        );
+        let water_point = self.group(
+            "water-point",
+            "Water point",
+            LinkKind::Lora,
+            3,
+            vec![flow, wp_well, tank, pump, flow_trend],
+        );
 
         // Ranger relay: a conservation mesh node that listens for threats (chainsaws,
         // gunshots) on an acoustic monitor and relays alerts to the ranger post.
-        let rr_river = self.sensor("rr-river", "river_level", "millimeter", 1700.0, 120.0, (0.0, 3000.0), None);
-        let rr_batt = self.sensor("rr-batt", "battery_level", "percent", 90.0, 5.0, (20.0, 100.0), Some(0.9));
+        let rr_river = self.sensor(
+            "rr-river",
+            "river_level",
+            "millimeter",
+            1700.0,
+            120.0,
+            (0.0, 3000.0),
+            None,
+        );
+        let rr_batt = self.sensor(
+            "rr-batt",
+            "battery_level",
+            "percent",
+            90.0,
+            5.0,
+            (20.0, 100.0),
+            Some(0.9),
+        );
         let relay = self.chip_sensor("relay", "relay_status", "state.online", Status::Ok);
-        let rr_temp = self.sensor("rr-temp", "ambient_temp", "celsius", 27.0, 4.0, (0.0, 45.0), None);
+        let rr_temp = self.sensor(
+            "rr-temp",
+            "ambient_temp",
+            "celsius",
+            27.0,
+            4.0,
+            (0.0, 45.0),
+            None,
+        );
         // Most of the time it is quiet ambient; briefly and periodically a chainsaw is
         // heard, spiking the monitor so the threat state is visible without any input. The
         // sound class drives the hot waveform; the node stays OK (it heard and relayed).
         let chainsaw = (self.tick % 40) < 3;
-        let mut acoustic = self.sensor("acoustic", "acoustic", "decibel",
-            if chainsaw { 84.0 } else { 41.0 }, 6.0, (0.0, 120.0), None);
-        acoustic.reading.state = Some(if chainsaw { "acoustic.abnormal" } else { "acoustic.ambient" }.to_owned());
+        let mut acoustic = self.sensor(
+            "acoustic",
+            "acoustic",
+            "decibel",
+            if chainsaw { 84.0 } else { 41.0 },
+            6.0,
+            (0.0, 120.0),
+            None,
+        );
+        acoustic.reading.state = Some(
+            if chainsaw {
+                "acoustic.abnormal"
+            } else {
+                "acoustic.ambient"
+            }
+            .to_owned(),
+        );
         let relay_mesh = self.mesh_sensor("relay-mesh", 5.0);
-        let ranger_relay = self.group("ranger-relay", "Ranger relay", LinkKind::Mesh, 3,
-            vec![rr_river, rr_batt, relay, rr_temp, acoustic, relay_mesh]);
+        let ranger_relay = self.group(
+            "ranger-relay",
+            "Ranger relay",
+            LinkKind::Mesh,
+            3,
+            vec![rr_river, rr_batt, relay, rr_temp, acoustic, relay_mesh],
+        );
 
         // Mesh node: a routing peer in the mesh - it draws its neighbour graph with live
         // packets and reports neighbours, hops to the gateway, routing state and traffic.
@@ -423,9 +777,22 @@ impl StateSource for Mock {
         let neighbours = self.sensor("neigh", "neighbours", "count", 5.0, 0.0, (1.0, 12.0), None);
         let hops = self.sensor("hops", "hops", "count", 3.0, 0.0, (1.0, 8.0), None);
         let routing = self.chip_sensor("routing", "routing", "mesh.optimised", Status::Ok);
-        let relayed = self.sensor("relayed", "messages_relayed", "count", 318.0 + self.tick as f32, 0.0, (0.0, 99999.0), None);
-        let mesh_node = self.group("mesh-node", "Mesh node", LinkKind::Mesh, 4,
-            vec![neighbour_mesh, neighbours, hops, routing, relayed]);
+        let relayed = self.sensor(
+            "relayed",
+            "messages_relayed",
+            "count",
+            318.0 + self.tick as f32,
+            0.0,
+            (0.0, 99999.0),
+            None,
+        );
+        let mesh_node = self.group(
+            "mesh-node",
+            "Mesh node",
+            LinkKind::Mesh,
+            4,
+            vec![neighbour_mesh, neighbours, hops, routing, relayed],
+        );
 
         let field_kits = Org {
             id: "pamoja-kits".to_owned(),
@@ -500,7 +867,10 @@ mod tests {
             .flat_map(|o| &o.groups)
             .find(|g| g.id == "cold-chain")
             .expect("cold chain group");
-        assert!(cold.sensors.iter().any(|s| s.reading.status == Status::Alarm));
+        assert!(cold
+            .sensors
+            .iter()
+            .any(|s| s.reading.status == Status::Alarm));
     }
 
     #[test]

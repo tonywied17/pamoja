@@ -394,7 +394,13 @@ mod tests {
         // transport-agnostic: this is exactly what a TLS transport would plug into.
         let mut conn = MemConn::new(b"GET /state HTTP/1.1\r\nHost: x\r\n\r\n");
         let source = Arc::new(Mutex::new(Mock::new(Scenario::Alarm)));
-        handle(&mut conn, source, Assets::Embedded, Duration::from_millis(0)).expect("handled");
+        handle(
+            &mut conn,
+            source,
+            Assets::Embedded,
+            Duration::from_millis(0),
+        )
+        .expect("handled");
         let written = String::from_utf8_lossy(&conn.output);
         assert!(written.contains("200 OK"));
         assert!(written.contains("\"status\":\"alarm\""));
@@ -404,7 +410,13 @@ mod tests {
     fn an_unknown_path_is_a_404() {
         let mut conn = MemConn::new(b"GET /nope HTTP/1.1\r\n\r\n");
         let source = Arc::new(Mutex::new(Mock::new(Scenario::Normal)));
-        handle(&mut conn, source, Assets::Embedded, Duration::from_millis(0)).expect("handled");
+        handle(
+            &mut conn,
+            source,
+            Assets::Embedded,
+            Duration::from_millis(0),
+        )
+        .expect("handled");
         assert!(String::from_utf8_lossy(&conn.output).contains("404 Not Found"));
     }
 

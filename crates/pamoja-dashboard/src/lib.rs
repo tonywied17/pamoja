@@ -50,7 +50,8 @@ pub use assets::Assets;
 pub use mock::{Mock, Scenario};
 pub use source::StateSource;
 pub use state::{
-    EventLevel, EventRecord, Group, Link, LinkKind, Mode, Org, Reading, Sensor, State, Status, Trend,
+    EventLevel, EventRecord, Group, Link, LinkKind, Mode, Org, Reading, Sensor, State, Status,
+    Trend,
 };
 
 #[cfg(feature = "serve")]
