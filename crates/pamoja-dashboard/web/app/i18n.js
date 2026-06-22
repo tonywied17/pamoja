@@ -14,7 +14,8 @@ const bundles = {};
 let fallback;
 
 /** Loads the English fallback and the active locale, then applies text direction. */
-export async function initI18n() {
+export async function initI18n()
+{
   fallback = bundles.en = (await import('./i18n/en.js')).default;
   const l = store.state.locale;
   if (!bundles[l]) bundles[l] = (await import('./i18n/' + l + '.js')).default;
@@ -22,7 +23,8 @@ export async function initI18n() {
 }
 
 /** Switches the active locale, loading its bundle if needed. */
-export async function setLocale(l) {
+export async function setLocale(l)
+{
   if (!LOCALES.includes(l)) return;
   if (!bundles[l]) bundles[l] = (await import('./i18n/' + l + '.js')).default;
   store.dispatch('setLocale', l);
@@ -39,7 +41,8 @@ export const nf = (v, o = {}) =>
 
 export const fmt = (v) => nf(v, { maximumFractionDigits: Math.abs(v) >= 100 ? 0 : 1 });
 
-export function ago(seconds) {
+export function ago(seconds)
+{
   const r = new Intl.RelativeTimeFormat(active().locale, { numeric: 'auto' });
   if (seconds < 60) return r.format(-seconds, 'second');
   if (seconds < 3600) return r.format(-Math.round(seconds / 60), 'minute');

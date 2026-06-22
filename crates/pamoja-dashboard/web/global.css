@@ -250,7 +250,7 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
   --accent: var(--ok);
   position: relative; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--tile);
   padding: 0.6rem 0.7rem 0.55rem; cursor: pointer; transition: border-color 0.2s var(--ease), transform 0.2s var(--ease);
-  display: flex; flex-direction: column; gap: 0.25rem; min-block-size: 104px;
+  display: flex; flex-direction: column; gap: 0.25rem; min-block-size: 114px;
 }
 .stile:hover { border-color: var(--line-2); transform: translateY(-2px); }
 .stile[data-status="warn"] { --accent: var(--warn); border-color: color-mix(in srgb, var(--warn) 36%, var(--line)); }

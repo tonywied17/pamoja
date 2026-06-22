@@ -17,7 +17,8 @@ import { openMeshOverlay } from './mesh-modal.js';
 // Sensors shown per page in the group view before it paginates.
 const PAGE = 6;
 
-function flat(f) {
+function flat(f)
+{
   const out = [];
   for (const o of f.orgs) for (const g of o.groups) out.push({ org: o, group: g });
   return out;
@@ -26,7 +27,8 @@ function flat(f) {
 $.component('group-modal', {
   state: { page: 0, pickerOpen: false },
 
-  mounted() {
+  mounted()
+  {
     this._un = store.subscribe(() => this.setState({}));
     this._eff = $.effect(() => { currentFleet(); this.setState({}); });
   },
@@ -34,32 +36,34 @@ $.component('group-modal', {
 
   close() { back(); },
   onOverlay(e) { if (e.target.classList.contains('modal-overlay')) back(); },
-  // Switching groups stays within this one overlay and returns to the first page; it also
-  // collapses the mobile location picker.
   swap(e) { const el = e.target.closest('[data-gid]'); if (el) { this.state.page = 0; this.state.pickerOpen = false; store.dispatch('setGroupView', el.dataset.gid); } },
   togglePicker() { this.setState({ pickerOpen: !this.state.pickerOpen }); },
   closePicker() { if (this.state.pickerOpen) this.setState({ pickerOpen: false }); },
   setPage(e) { const el = e.target.closest('[data-page]'); if (el) this.setState({ page: Number(el.dataset.page) }); },
-  onSensor(e) {
+  onSensor(e)
+  {
     const el = e.target.closest('[data-sid]'); if (!el) return;
     const sid = el.dataset.sid;
     const s = this.sensorBySid(sid);
     if (s && vizFor(s.reading.key, s.reading.unit) === 'mesh') { openMeshOverlay(sid); return; }
     open(() => store.dispatch('selectSensor', sid), () => store.dispatch('closeSensor'));
   },
-  sensorBySid(sid) {
+  sensorBySid(sid)
+  {
     const f = currentFleet(); if (!f) return null;
     const [gid, sd] = sid.split('/');
     for (const o of f.orgs) for (const g of o.groups) if (g.id === gid) return (g.sensors.find((x) => x.id === sd) || null);
     return null;
   },
 
-  card(group, s) {
+  card(group, s)
+  {
     const r = s.reading;
     const vk = vizFor(r.key, r.unit);
     const span = vk === 'chain' || vk === 'wave' || vk === 'mesh' ? ' span' : '';
     const head = `<div class="gv-top"><span class="gv-label">${esc(t('label.' + r.key))}</span><span class="pill" data-status="${r.status}">${t('status.' + r.status)}</span></div>`;
-    if (isDiscrete(r)) {
+    if (isDiscrete(r))
+    {
       const nodes = vk === 'mesh' ? group.sensors.filter((x) => vizFor(x.reading.key, x.reading.unit) !== 'mesh').length : undefined;
       return `<article class="gv-card${span}" data-status="${r.status}" data-sid="${group.id}/${s.id}" @click="onSensor" tabindex="0" role="button">
           ${head}<div class="gv-viz gv-viz-disc">${tileViz(s, true, nodes)}</div>
@@ -76,7 +80,8 @@ $.component('group-modal', {
       </article>`;
   },
 
-  render() {
+  render()
+  {
     const id = store.state.group;
     const f = currentFleet();
     if (!id || !f) return '<div hidden></div>';
@@ -86,7 +91,6 @@ $.component('group-modal', {
     const { org, group } = list[idx];
     const n = list.length;
 
-    // Reset to the first page whenever the viewed group changes from outside (alarm/network).
     if (this._lastId !== id) { this._lastId = id; this.state.page = 0; }
 
     const sensors = group.sensors;

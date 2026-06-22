@@ -37,27 +37,25 @@ const LINK_SPEC = {
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-// The network modal owns a single history substate. Its docked panels (inspect, sensor)
-// are plain store state, not history entries, so each panel's X closes exactly itself and
-// re-selecting a node never stacks duplicate entries. On Back/Esc this close fn unwinds
-// the newest open panel first (re-arming itself), and only closes the modal once no panel
-// is open - keeping Back, Escape, and the X buttons consistent.
-function closeNet() {
+function closeNet()
+{
   const st = store.state;
-  if (st.netSensor) { store.dispatch('clearNetSensor'); open(() => {}, closeNet); return; }
-  if (st.netInspect) { store.dispatch('clearNetInspect'); open(() => {}, closeNet); return; }
+  if (st.netSensor) { store.dispatch('clearNetSensor'); open(() => { }, closeNet); return; }
+  if (st.netInspect) { store.dispatch('clearNetInspect'); open(() => { }, closeNet); return; }
   store.dispatch('closeNetwork');
 }
 
 /** Opens the network overlay as a single substate (see closeNet for the unwind logic). */
-export function openNetworkOverlay() {
+export function openNetworkOverlay()
+{
   open(() => store.dispatch('openNetwork'), closeNet);
 }
 
 $.component('network-view', {
   state: { tab: 'topology', tick: 0 },
 
-  mounted() {
+  mounted()
+  {
     this._z = 1; this._px = 0; this._py = 0; this._drag = null;
     this._un = store.subscribe(() => this.setState({}));
     this._eff = $.effect(() => { currentFleet(); this.setState({}); });
@@ -67,7 +65,8 @@ $.component('network-view', {
     document.addEventListener('pointerup', this._up);
   },
   updated() { this.applyTransform(); stickLog(this._el); },
-  destroyed() {
+  destroyed()
+  {
     if (this._un) this._un();
     if (typeof this._eff === 'function') this._eff();
     document.removeEventListener('pointermove', this._move);
@@ -81,13 +80,10 @@ $.component('network-view', {
   onWheel(e) { e.preventDefault(); this._z = clamp(this._z * (e.deltaY < 0 ? 1.12 : 0.89), 0.5, 3); this.applyTransform(); },
   onDown(e) { if (e.button !== 0) return; if (e.target.closest('[data-sid]') || e.target.closest('[data-gid]')) return; this._drag = { x: e.clientX, y: e.clientY, px: this._px, py: this._py }; },
 
-  // The modal's X (and a backdrop click) close everything in one go: clear the store, then
-  // pop the single substate.
   close() { store.dispatch('closeNetwork'); back(); },
   onOverlay(e) { if (e.target.classList.contains('net-overlay')) this.close(); },
   setTab(tab) { this.state.tab = tab; this.resetView(); },
-  // Docked panels are plain store state (not history), so selecting a node just swaps the
-  // panel and each X closes exactly its own panel without touching the back stack.
+
   onLeaf(e) { const el = e.target.closest('[data-sid]'); if (el) store.dispatch('setNetSensor', el.dataset.sid); },
   onNode(e) { const el = e.target.closest('[data-gid]'); if (el) store.dispatch('setNetInspect', el.dataset.gid); },
   closeInspect() { store.dispatch('clearNetInspect'); },
@@ -95,8 +91,10 @@ $.component('network-view', {
 
   groupsOf(f) { const out = []; for (const o of f.orgs) for (const g of o.groups) out.push(g); return out; },
 
-  positions(groups, map) {
-    if (map) {
+  positions(groups, map)
+  {
+    if (map)
+    {
       const ax = 100, ay = 70, aw = W - 200, ah = H - 170;
       const at = (id) => MAP_POS[id] || [0.5, 0.5];
       const gpos = groups.map((g) => { const [nx, ny] = at(g.id); return { g, x: ax + nx * aw, y: ay + ny * ah, ang: 0 }; });
@@ -110,30 +108,29 @@ $.component('network-view', {
     return { hub, gpos };
   },
 
-  scene(f, map) {
+  scene(f, map)
+  {
     const groups = this.groupsOf(f);
-    // Which organization owns each group, shown under the node so the topology reads as
-    // grouped by owner (the link type is already conveyed by the edge colour + legend).
     const owner = {};
     for (const o of f.orgs) for (const gg of o.groups) owner[gg.id] = o.name;
     const { hub, gpos } = this.positions(groups, map);
     const backdrop = map ? this.mapBackdrop() : '';
     let edges = '', packets = '', nodes = '';
-    gpos.forEach((p, i) => {
+    gpos.forEach((p, i) =>
+    {
       const color = LINK_COLORS[p.g.link.kind] || '#38e1ff';
       const online = p.g.link.online;
       const path = `M${hub.x.toFixed(1)},${hub.y.toFixed(1)} L${p.x.toFixed(1)},${p.y.toFixed(1)}`;
-      // Packets carry the group's health: alarm/warn tint and faster cadence when in
-      // trouble, so a problem reads as "agitated red traffic" along the link.
       const st = p.g.status;
       const pkColor = st === 'alarm' ? 'var(--alarm)' : st === 'warn' ? 'var(--warn)' : color;
       const pkClass = st === 'alarm' ? 'net-pk hot' : 'net-pk';
       edges += `<line x1="${hub.x.toFixed(1)}" y1="${hub.y.toFixed(1)}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" class="net-edge ${online ? '' : 'down'}" data-status="${st}" style="stroke:${color}"/>`;
       if (online) { const dur = (st === 'alarm' ? 1.2 : st === 'warn' ? 1.8 : 2.4 + i * 0.2).toFixed(2); for (let k = 0; k < 2; k++) { const b = (k * dur / 2).toFixed(2); packets += `<circle r="3.6" class="${pkClass}" style="fill:${pkColor}" opacity="0"><animateMotion dur="${dur}s" begin="${b}s" repeatCount="indefinite" path="${path}"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.9;1" dur="${dur}s" begin="${b}s" repeatCount="indefinite"/></circle>`; } }
-      // Sensor leaves only on the topology view; the map shows sites, not every sensor.
-      if (!map) {
+      if (!map)
+      {
         const m = p.g.sensors.length || 1;
-        p.g.sensors.forEach((s, j) => {
+        p.g.sensors.forEach((s, j) =>
+        {
           const la = p.ang + (-0.55 + (m === 1 ? 0.275 : (j / (m - 1)) * 1.1));
           const lx = p.x + SR * Math.cos(la), ly = p.y + SR * Math.sin(la);
           nodes += `<line x1="${p.x.toFixed(1)}" y1="${p.y.toFixed(1)}" x2="${lx.toFixed(1)}" y2="${ly.toFixed(1)}" class="net-twig"/>`;
@@ -156,7 +153,8 @@ $.component('network-view', {
 
   // A stylized rural site backdrop for the map tab: contour rings, fields, a river and
   // a track, plus place labels. Purely decorative; it pans and zooms with the scene.
-  mapBackdrop() {
+  mapBackdrop()
+  {
     const ax = 100, ay = 70, aw = W - 200, ah = H - 170;
     const P = (nx, ny) => [+(ax + nx * aw).toFixed(1), +(ay + ny * ah).toFixed(1)];
     const hub = P(...MAP_POS.__gateway);
@@ -189,14 +187,16 @@ $.component('network-view', {
     return `<g class="net-bg">${grid}${water}${river}${forest}${fields}${contours}${roads}${compass}${scale}${places}</g>`;
   },
 
-  findSensor(f, sid) {
+  findSensor(f, sid)
+  {
     if (!sid) return null;
     const [gid, sid2] = sid.split('/');
     for (const o of f.orgs) for (const g of o.groups) { if (g.id !== gid) continue; const s = g.sensors.find((x) => x.id === sid2); if (s) return { org: o, group: g, sensor: s }; }
     return null;
   },
 
-  sensorPanel(f) {
+  sensorPanel(f)
+  {
     const found = this.findSensor(f, store.state.netSensor); if (!found) return '';
     const { group, sensor: s } = found;
     return `
@@ -207,7 +207,8 @@ $.component('network-view', {
       </div>`;
   },
 
-  inspectPanel(f) {
+  inspectPanel(f)
+  {
     const id = store.state.netInspect; if (!id) return '';
     const g = this.groupsOf(f).find((x) => x.id === id); if (!g) return '';
     const spec = LINK_SPEC[g.link.kind] || LINK_SPEC.lora;
@@ -234,13 +235,15 @@ $.component('network-view', {
       </div>`;
   },
 
-  onOpenGroup(e) {
+  onOpenGroup(e)
+  {
     const el = e.target.closest('[data-gid]'); if (!el) return;
     const gid = el.dataset.gid;
     open(() => store.dispatch('setGroupView', gid), () => store.dispatch('clearGroupView'));
   },
 
-  render() {
+  render()
+  {
     if (!store.state.network) return '<div hidden></div>';
     const f = currentFleet();
     if (!f) return '<div hidden></div>';

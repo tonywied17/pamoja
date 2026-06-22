@@ -7,12 +7,7 @@
 import { nf, fmt, t } from './i18n.js';
 
 export const LINK_NAMES = { lora: 'LoRa', wifi: 'Wi-Fi', cellular: 'Cellular', nbiot: 'NB-IoT', satellite: 'Satellite', ethernet: 'Ethernet', mesh: 'Mesh' };
-// A cool qualitative palette that avoids green/teal (reserved for ok/online), amber
-// (warn), and red/coral (alarm), so a link colour never reads as a health state. LoRa
-// is sky-blue (not the old yellow that looked like a warning); Ethernet is steel.
 export const LINK_COLORS = { lora: '#38bdf8', wifi: '#22d3ee', cellular: '#a855f7', nbiot: '#818cf8', satellite: '#fb923c', ethernet: '#94a3b8', mesh: '#ec4899' };
-// Nominal signal strength (RSSI in dBm) per link kind at mid strength; the same unit for
-// every link, adjusted by the bar count. Mirrors the network inspect panel's figures.
 export const LINK_RSSI = { lora: -112, wifi: -52, cellular: -84, nbiot: -102, satellite: -118, ethernet: -40, mesh: -96 };
 export const statusColor = (s) => `var(--${s === 'ok' ? 'ok' : s === 'warn' ? 'warn' : 'alarm'})`;
 export const trendArrow = (tr) => (tr === 'rising' ? '↑' : tr === 'falling' ? '↓' : '→');
@@ -20,27 +15,31 @@ export const trendArrow = (tr) => (tr === 'rising' ? '↑' : tr === 'falling' ? 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 export { esc };
 
-export function sparkPoints(history, w, h, pad = 3) {
+export function sparkPoints(history, w, h, pad = 3)
+{
   if (!history || history.length < 2) return null;
   const min = Math.min(...history), max = Math.max(...history), span = max - min || 1;
   const step = w / (history.length - 1);
   return history.map((v, i) => `${(i * step).toFixed(1)},${(h - pad - ((v - min) / span) * (h - pad * 2)).toFixed(1)}`).join(' ');
 }
 
-export function miniSpark(history) {
+export function miniSpark(history)
+{
   const pts = sparkPoints(history, 100, 26);
   if (!pts) return '<svg class="spark" viewBox="0 0 100 26" preserveAspectRatio="none"></svg>';
   return `<svg class="spark" viewBox="0 0 100 26" preserveAspectRatio="none">
     <polyline class="sp-area" points="0,26 ${pts} 100,26"/><polyline class="sp-line" points="${pts}"/></svg>`;
 }
 
-export function bars(strength, online) {
+export function bars(strength, online)
+{
   let h = '<span class="bars">';
   for (let i = 1; i <= 4; i++) h += `<i class="${online && i <= strength ? 'on' : ''}"></i>`;
   return h + '</span>';
 }
 
-export function conn(link) {
+export function conn(link)
+{
   const name = LINK_NAMES[link.kind] || link.kind;
   const color = LINK_COLORS[link.kind] || 'var(--cyan)';
   const dbm = link.online ? (LINK_RSSI[link.kind] ?? -90) + (link.strength - 2) * 6 : null;
@@ -48,7 +47,8 @@ export function conn(link) {
   return `<span class="conn ${link.online ? '' : 'off'}" style="--lc:${color}"><span class="conn-kind">${name}</span>${sig}${bars(link.strength, link.online)}</span>`;
 }
 
-export function detailGraph(history, band) {
+export function detailGraph(history, band)
+{
   const w = 320, h = 100, pad = 12;
   const pts = sparkPoints(history, w, h, pad);
   if (!pts) return `<div class="graph"></div>`;
@@ -57,9 +57,12 @@ export function detailGraph(history, band) {
   // Draw a safe-band limit only where it actually falls within the plotted range, so a
   // band far outside the data does not paint a flat box over the whole graph.
   let limits = '';
-  if (band) {
-    for (const edge of band) {
-      if (edge > min && edge < max) {
+  if (band)
+  {
+    for (const edge of band)
+    {
+      if (edge > min && edge < max)
+      {
         const ly = y(edge).toFixed(1);
         limits += `<line class="dg-limit" x1="0" y1="${ly}" x2="${w}" y2="${ly}"/><text class="dg-limit-t" x="${w - 4}" y="${(+ly - 3).toFixed(1)}" text-anchor="end">${nf(edge)}</text>`;
       }
@@ -78,7 +81,8 @@ export function detailGraph(history, band) {
   </div>`;
 }
 
-export function bannerRing(status) {
+export function bannerRing(status)
+{
   const color = `var(--${status === 'ok' ? 'ok' : status === 'warn' ? 'warn' : 'alarm'})`;
   const r = 26, c = 2 * Math.PI * r, frac = status === 'ok' ? 1 : status === 'warn' ? 0.66 : 0.4;
   const mark = status === 'ok'
@@ -105,10 +109,12 @@ const ends = (band, big, unit = '') => (big && band
   ? `<text class="vv-end" x="6" y="49">${nf(band[0])}</text><text class="vv-end" x="50" y="49" text-anchor="end">${nf(band[1])}</text>${unitSup(unit, 53, 9)}`
   : '');
 
-function radial(r, big) {
+function radial(r, big)
+{
   const v = r.value, band = r.band, rad = 20, c = 2 * Math.PI * rad, sweep = c * 0.75, f = fracOf(v, band);
   let ticks = '';
-  for (const p of [0, 0.25, 0.5, 0.75, 1]) {
+  for (const p of [0, 0.25, 0.5, 0.75, 1])
+  {
     const a = p * 270 * Math.PI / 180;
     ticks += `<line class="vv-tick" x1="${(28 + 15.5 * Math.cos(a)).toFixed(1)}" y1="${(28 + 15.5 * Math.sin(a)).toFixed(1)}" x2="${(28 + 21 * Math.cos(a)).toFixed(1)}" y2="${(28 + 21 * Math.sin(a)).toFixed(1)}"/>`;
   }
@@ -121,7 +127,8 @@ function radial(r, big) {
     </g>${center}${ends(band, big, t('unit.' + r.unit))}</svg>`;
 }
 
-function therm(r, big) {
+function therm(r, big)
+{
   const v = r.value, band = r.band, f = fracOf(v, band), top = 6, bottom = 34, h = bottom - top, mh = f * h;
   let ticks = '';
   for (const p of [0, 0.33, 0.66, 1]) ticks += `<line class="vv-tick" x1="18" y1="${(bottom - p * h).toFixed(1)}" x2="21" y2="${(bottom - p * h).toFixed(1)}"/>`;
@@ -133,7 +140,8 @@ function therm(r, big) {
     <circle class="vv-bulb" cx="13" cy="40" r="6.5"/>${lab}</svg>`;
 }
 
-function droplet(r, uid, big) {
+function droplet(r, uid, big)
+{
   const f = fracOf(r.value, r.band);
   const path = 'M22 6 C32 22 36 28 36 33 a14 14 0 1 1 -28 0 C8 28 12 22 22 6 Z';
   const pct = big ? `<text class="vv-num" x="22" y="36" text-anchor="middle">${Math.round(f * 100)}</text>` : '';
@@ -148,7 +156,8 @@ function droplet(r, uid, big) {
 
 // A battery cell: a segmented fill proportional to charge within the safe band, with a
 // charging bolt when the reading is rising. Distinct from the trend sparkline below it.
-function battery(r, uid) {
+function battery(r, uid)
+{
   const f = fracOf(r.value, r.band);
   const x0 = 9, innerW = 52;
   const segs = [1, 2, 3].map((i) => `<line class="bat-seg" x1="${(x0 + innerW * i / 4).toFixed(1)}" y1="12" x2="${(x0 + innerW * i / 4).toFixed(1)}" y2="34"/>`).join('');
@@ -162,7 +171,8 @@ function battery(r, uid) {
     </svg>`;
 }
 
-function dial(r, big) {
+function dial(r, big)
+{
   const v = r.value, band = r.band, f = fracOf(v, band), cx = 32, cy = 36, rad = 24;
   const a = Math.PI - f * Math.PI, nx = cx + Math.cos(a) * rad * 0.82, ny = cy - Math.sin(a) * rad * 0.82;
   let ticks = '';
@@ -177,9 +187,11 @@ function dial(r, big) {
 }
 
 // Shared 270-degree gauge ticks at centre (28,28), matching the radial gauge.
-function gaugeTicks() {
+function gaugeTicks()
+{
   let ticks = '';
-  for (const p of [0, 0.25, 0.5, 0.75, 1]) {
+  for (const p of [0, 0.25, 0.5, 0.75, 1])
+  {
     const a = p * 270 * Math.PI / 180;
     ticks += `<line class="vv-tick" x1="${(28 + 15.5 * Math.cos(a)).toFixed(1)}" y1="${(28 + 15.5 * Math.sin(a)).toFixed(1)}" x2="${(28 + 21 * Math.cos(a)).toFixed(1)}" y2="${(28 + 21 * Math.sin(a)).toFixed(1)}"/>`;
   }
@@ -188,7 +200,8 @@ function gaugeTicks() {
 
 // An anemometer: the value fills a 270-degree arc against its range (with band-end
 // labels when big), and the central rotor spins faster the stronger the wind.
-function wind(r, big) {
+function wind(r, big)
+{
   const v = r.value, band = r.band, rad = 20, c = 2 * Math.PI * rad, sweep = c * 0.75, f = fracOf(v, band);
   const arm = (deg) => { const a = deg * Math.PI / 180, x = 28 + 8 * Math.cos(a), y = 28 + 8 * Math.sin(a); return `<line class="vv-arm" x1="28" y1="28" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/><circle class="vv-cup" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.8"/>`; };
   return `<svg class="tv" viewBox="0 0 56 52">
@@ -203,7 +216,8 @@ function wind(r, big) {
 
 // A light gauge: illuminance fills a 270-degree arc against its range, and the central
 // sun's core grows and its corona brightens the more light there is.
-function sun(r, big) {
+function sun(r, big)
+{
   const v = r.value, band = r.band, rad = 20, c = 2 * Math.PI * rad, sweep = c * 0.75, f = fracOf(v, band);
   let rays = '';
   for (let i = 0; i < 8; i++) { const a = i * 45 * Math.PI / 180, x1 = 28 + 9 * Math.cos(a), y1 = 28 + 9 * Math.sin(a), x2 = 28 + 12.5 * Math.cos(a), y2 = 28 + 12.5 * Math.sin(a); rays += `<line class="vv-ray" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`; }
@@ -217,32 +231,26 @@ function sun(r, big) {
     <circle class="vv-core" cx="28" cy="28" r="${(4 + f * 4).toFixed(1)}"/>${ends(band, big, t('unit.' + r.unit))}</svg>`;
 }
 
-// True for a reading shown as its own bespoke glyph (chip/valve/chain/mesh/count) rather
-// than a numeric value + gauge, so the standard numeric read-out is suppressed for it.
-export function isDiscrete(r) {
+export function isDiscrete(r)
+{
   const k = vizFor(r.key, r.unit);
   return k === 'chip' || k === 'valve' || k === 'chain' || k === 'mesh' || k === 'count' || k === 'wave';
 }
 
-// A KPI: a single large figure (neighbours, hops, messages relayed). The value carries
-// the meaning; the tile's label says what it counts.
-function count(r, big) {
+function count(r, big)
+{
   return `<div class="cnt${big ? ' big' : ''}">${fmt(r.value)}</div>`;
 }
 
-// A neighbour-mesh schematic: peers around a gateway, links between them, and packets
-// travelling the links (SMIL). A "learning" routing state dashes the re-routed edge.
-// A neighbour-mesh schematic generated for the group's node count: that many peers staggered
-// left-to-right with a gateway on the right, links between neighbours and to the gateway, and
-// packets travelling to it (SMIL). The peer count comes from the group's real sensor count
-// when known (so it tracks adds/removes), else the reading value. "learning" dashes an edge.
-function mesh(r, big, nodeCount) {
+function mesh(r, big, nodeCount)
+{
   const W = 220, H = 112;
   const peers = Math.max(2, Math.min(7, nodeCount != null ? nodeCount : (Math.round(r && r.value) || 5)));
   const learning = !!(r && r.state && r.state.endsWith('learning'));
   const gw = peers;
   const pts = [];
-  for (let i = 0; i < peers; i++) {
+  for (let i = 0; i < peers; i++)
+  {
     const tt = peers === 1 ? 0.5 : i / (peers - 1);
     pts.push([26 + tt * (W - 82), H * 0.5 + (i % 2 ? -24 : 24)]);
   }
@@ -254,7 +262,8 @@ function mesh(r, big, nodeCount) {
   for (let i = 0; i < peers; i += 2) packets.push([i, gw]);
   if (!packets.length) packets.push([0, gw]);
   const linkSvg = links.map((l, i) => `<line x1="${pts[l[0]][0].toFixed(1)}" y1="${pts[l[0]][1].toFixed(1)}" x2="${pts[l[1]][0].toFixed(1)}" y2="${pts[l[1]][1].toFixed(1)}" class="msh-link${learning && i === links.length - 1 ? ' weak' : ''}"/>`).join('');
-  const pkSvg = packets.map((p, i) => {
+  const pkSvg = packets.map((p, i) =>
+  {
     const path = p.map((k, j) => `${j ? 'L' : 'M'}${pts[k][0].toFixed(1)},${pts[k][1].toFixed(1)}`).join(' ');
     const dur = (2.2 + i * 0.5).toFixed(2), b = (i * 0.6).toFixed(2);
     return `<circle r="3" class="msh-pk" opacity="0"><animateMotion dur="${dur}s" begin="${b}s" repeatCount="indefinite" path="${path}"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.88;1" dur="${dur}s" begin="${b}s" repeatCount="indefinite"/></circle>`;
@@ -267,36 +276,33 @@ function mesh(r, big, nodeCount) {
 // as a real signal, not a bouncing equaliser) under a uniform pulse - there is no per-bar
 // phase, so a re-render never snaps it sideways. Ambient is a gentle wave; a threat (any
 // non-ambient class, e.g. chainsaw/gunshot) flips it hot: tall jagged spikes, faster, red.
-function wave(r, big) {
+function wave(r, big)
+{
   const n = big ? 40 : 28;
   const threat = r.status !== 'ok' || (r.state && !r.state.endsWith('ambient'));
   let bars = '';
-  for (let i = 0; i < n; i++) {
-    // Fixed waveform envelope (a real signal shape, not a flat row) plus an independent
-    // per-bar phase so each bar bounces on its own. Both are derived from the index only,
-    // so the bar markup never changes between renders - the tile is static, so nothing
-    // restarts or jerks; the hot state is a parent class that only re-colours and speeds.
+  for (let i = 0; i < n; i++)
+  {
     const env = 0.34 + 0.4 * Math.abs(Math.sin(i * 0.5)) + 0.22 * Math.abs(Math.sin(i * 1.3 + 0.7));
     const h = Math.max(0.16, Math.min(1, env));
     const delay = (-((i * 0.37) % 1.1)).toFixed(2);
     bars += `<i style="--h:${h.toFixed(2)};animation-delay:${delay}s"></i>`;
   }
   const tag = r.state ? t(r.state) : t('acoustic.ambient');
-  // A representative bearing/distance when a spike is heard (mock telemetry); kept fixed
-  // so it does not change the markup tick-to-tick.
   const loc = threat ? '<span class="wv-loc">≈ 2.1 km · NE</span>' : '';
   return `<div class="wv${threat ? ' hot' : ''}${big ? ' big' : ''}"><div class="wv-bars" aria-hidden="true">${bars}</div><span class="wv-tag">${esc(tag)}</span>${loc}</div>`;
 }
 
 // The tamper-evident log: a row of hash-chained blocks (newest emphasised) and the count
-// of sealed records. The block hashes derive from the count, so the head block changes as
-// records are signed - a live "nothing can be altered after the fact" cue.
-function chain(r, big) {
+// of sealed records.
+function chain(r, big)
+{
   const count = Math.round(r.value);
   const n = big ? 6 : 4;
   const hex = (k) => (((Math.abs(k) * 2654435761) >>> 0) % 0x10000).toString(16).padStart(4, '0');
   let row = '';
-  for (let i = n - 1; i >= 0; i--) {
+  for (let i = n - 1; i >= 0; i--)
+  {
     row += `<span class="chn-blk${i === 0 ? ' new' : ''}">#${hex(count - i)}</span>`;
     if (i) row += '<span class="chn-arr">→</span>';
   }
@@ -306,21 +312,16 @@ function chain(r, big) {
   </div>`;
 }
 
-// A labelled status chip for a discrete reading. The dot follows the reading's health;
-// an "open"/active state fills the chip in the accent colour, an idle state stays muted.
-// A "live/healthy" state (open, on, synced, online, up, nominal) fills the chip in the
-// accent colour; an idle one (closed, off) stays muted; warn/alarm states take over.
 const ON_STATE = /(open|on|synced|online|up|nominal|active|ready|optimised|optimized)$/;
-function chip(r, big) {
+function chip(r, big)
+{
   const txt = r.state ? t(r.state) : t('status.' + r.status);
   const on = r.state && ON_STATE.test(r.state) ? '1' : '0';
   return `<div class="vchip${big ? ' big' : ''}" data-status="${r.status}" data-on="${on}"><span class="vchip-dot"></span>${esc(txt)}</div>`;
 }
 
-function barViz(v, band, big, unit = '') {
-  // A level reads from 0 to the band's top (or 1.4x the value with no band), so the fill
-  // tracks the real proportion instead of a padded range, and the safe-band low edge is
-  // marked on the track.
+function barViz(v, band, big, unit = '')
+{
   const max = band ? band[1] : (v * 1.4 || 1);
   const f = Math.max(0, Math.min(1, v / (max || 1)));
   const ticks = band ? `<span class="vb-tick" style="inset-inline-start:${(Math.max(0, Math.min(1, band[0] / (max || 1))) * 100).toFixed(1)}%"></span>` : '';
@@ -330,7 +331,8 @@ function barViz(v, band, big, unit = '') {
 
 // A drip valve: a pipe with a lever that lies along the flow when open (drops fall) and
 // turns across it when closed. The state label sits under the glyph.
-function valve(r, big) {
+function valve(r, big)
+{
   const open = !!(r.state && (r.state.endsWith('open') || r.state.endsWith('on')));
   const drops = open ? '<circle class="vlv-drop d1" cx="28" cy="33" r="2.1"/><circle class="vlv-drop d2" cx="28" cy="33" r="2.1"/>' : '';
   return `<div class="vlv${big ? ' big' : ''}" data-on="${open ? 1 : 0}">
@@ -347,7 +349,8 @@ function valve(r, big) {
 
 // A richer sparkline for the expanded view: a thin (non-scaling) line over an area,
 // with a baseline, sample dots, an emphasized current point, and min/max labels.
-function bigSpark(history) {
+function bigSpark(history)
+{
   const w = 300, h = 116, pad = 14;
   if (!history || history.length < 2) return `<svg class="bspark" viewBox="0 0 ${w} ${h}"></svg>`;
   const min = Math.min(...history), max = Math.max(...history), span = max - min || 1;
@@ -368,18 +371,21 @@ function bigSpark(history) {
 // The expanded view for a sparkline sensor: a per-sample bar histogram, so it reads as a
 // distinct "recent samples" panel rather than a second copy of the History line below it.
 // The most recent bar is emphasised, and the band edges (if any) shade as a target zone.
-function bigBars(history, band) {
+function bigBars(history, band)
+{
   const w = 300, h = 120, pad = 12;
   if (!history || history.length < 2) return `<svg class="bbars" viewBox="0 0 ${w} ${h}"></svg>`;
   const min = Math.min(...history), max = Math.max(...history), span = max - min || 1;
   const n = history.length, slot = (w - pad * 2) / n, bw = slot * 0.6;
   const y = (v) => h - pad - ((v - min) / span) * (h - pad * 2);
   let zone = '';
-  if (band) {
+  if (band)
+  {
     const lo = Math.max(0, Math.min(1, (band[0] - min) / span)), hi = Math.max(0, Math.min(1, (band[1] - min) / span));
     if (hi > 0 && lo < 1) { const yt = y(min + hi * span), yb = y(min + lo * span); zone = `<rect class="bbar-zone" x="0" y="${yt.toFixed(1)}" width="${w}" height="${Math.max(0, yb - yt).toFixed(1)}"/>`; }
   }
-  const bars = history.map((v, i) => {
+  const bars = history.map((v, i) =>
+  {
     const by = y(v), bh = h - pad - by, x = pad + i * slot + (slot - bw) / 2;
     return `<rect class="bbar${i === n - 1 ? ' last' : ''}" x="${x.toFixed(1)}" y="${by.toFixed(1)}" width="${bw.toFixed(1)}" height="${(bh + 1.5).toFixed(1)}" rx="1.2"/>`;
   }).join('');
@@ -392,7 +398,8 @@ function bigBars(history, band) {
 }
 
 /** Picks the visualization kind for a reading from its unit and key. */
-export function vizFor(key, unit) {
+export function vizFor(key, unit)
+{
   if (key === 'mesh_relay' || key === 'neighbour_mesh' || key === 'relay_mesh') return 'mesh';
   if (key === 'tamper_log') return 'chain';
   if (key === 'drip_valve') return 'valve';
@@ -413,11 +420,13 @@ export function vizFor(key, unit) {
 }
 
 /** Renders the chosen visualization for a sensor, sized by `big`. */
-export function tileViz(s, big = false, nodes) {
+export function tileViz(s, big = false, nodes)
+{
   const r = s.reading;
   const uid = (big ? 'b' : 't') + (s.id || r.key).replace(/[^a-z0-9]/gi, '');
   let inner, full = false, disc = false;
-  switch (vizFor(r.key, r.unit)) {
+  switch (vizFor(r.key, r.unit))
+  {
     case 'therm': inner = therm(r, big); break;
     case 'droplet': inner = droplet(r, uid, big); break;
     case 'radial': inner = radial(r, big); break;

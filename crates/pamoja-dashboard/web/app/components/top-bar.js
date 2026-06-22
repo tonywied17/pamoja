@@ -19,7 +19,8 @@ const CHEVRON = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="curre
 $.component('top-bar', {
   state: { localeOpen: false, scenarioOpen: false },
 
-  mounted() {
+  mounted()
+  {
     this._un = store.subscribe(() => this.setState({}));
     this._eff = $.effect(() => { currentFleet(); this.setState({}); });
   },
@@ -27,8 +28,6 @@ $.component('top-bar', {
 
   toggleLocale() { this.state.scenarioOpen = false; this.state.localeOpen = !this.state.localeOpen; },
   toggleScenario() { this.state.localeOpen = false; this.state.scenarioOpen = !this.state.scenarioOpen; },
-  // Each dropdown closes only itself, so clicking an option inside one is never treated
-  // as an outside-click by the other (which would close it before the option registers).
   closeLocale() { this.state.localeOpen = false; },
   closeScenario() { this.state.scenarioOpen = false; },
 
@@ -36,13 +35,15 @@ $.component('top-bar', {
   pickScenario(s) { this.state.scenarioOpen = false; store.dispatch('setScenario', s); },
   openNetwork() { openNetworkOverlay(); },
   openAlarms() { open(() => store.dispatch('openAlarms'), () => store.dispatch('closeAlarms')); },
-  toggleTheme() {
+  toggleTheme()
+  {
     const next = store.state.theme === 'night' ? 'day' : 'night';
     store.dispatch('setTheme', next);
     document.documentElement.dataset.theme = next;
   },
 
-  render() {
+  render()
+  {
     const s = this.state;
     const alarmCount = problems(currentFleet()).length;
     const locales = LOCALES.map((l) => `<li class="dd-option" aria-selected="${l === store.state.locale}" @click="pickLocale('${l}')">${esc(localeName(l))}</li>`).join('');

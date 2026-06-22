@@ -10,12 +10,14 @@ import { open, back } from '../nav.js';
 import { t, nf, fmt } from '../i18n.js';
 import { esc } from '../viz.js';
 
-// Collects all non-ok sensors in the fleet, alarms before warnings.
-export function problems(f) {
+export function problems(f)
+{
   const out = [];
   if (!f) return out;
-  for (const o of f.orgs) for (const g of o.groups) {
-    for (const s of g.sensors) {
+  for (const o of f.orgs) for (const g of o.groups)
+  {
+    for (const s of g.sensors)
+    {
       if (s.reading.status !== 'ok') out.push({ org: o, group: g, sensor: s });
     }
     if (!g.link.online) out.push({ org: o, group: g, link: true });
@@ -26,34 +28,41 @@ export function problems(f) {
 $.component('alarm-bar', {
   state: { tick: 0 },
 
-  mounted() {
+  mounted()
+  {
     this._un = store.subscribe(() => this.setState({}));
     this._eff = $.effect(() => { currentFleet(); this.setState({}); });
   },
-  destroyed() {
+  destroyed()
+  {
     if (this._un) this._un();
     if (typeof this._eff === 'function') this._eff();
   },
 
   close() { back(); },
   onOverlay(e) { if (e.target.classList.contains('drawer-scrim')) back(); },
-  // Each action layers over the drawer; Back returns here, then closes the drawer.
-  onGoSensor(e) {
+
+  onGoSensor(e)
+  {
     const el = e.target.closest('[data-sid]'); if (!el) return;
     open(() => store.dispatch('selectSensor', el.dataset.sid), () => store.dispatch('closeSensor'));
   },
-  onGoGroup(e) {
+  onGoGroup(e)
+  {
     const el = e.target.closest('[data-gid]'); if (!el) return;
     const gid = el.dataset.gid;
     open(() => store.dispatch('setGroupView', gid), () => store.dispatch('clearGroupView'));
   },
 
-  render() {
+  render()
+  {
     if (!store.state.alarms) return '<div hidden></div>';
     const list = problems(currentFleet());
     const groupBtn = (gid) => `<button class="al-btn" data-gid="${gid}" @click="onGoGroup">${t('ui.group')}</button>`;
-    const rows = list.length ? list.map((p) => {
-      if (p.link) {
+    const rows = list.length ? list.map((p) =>
+    {
+      if (p.link)
+      {
         return `<div class="al-row" data-level="error">
           <span class="al-dot" data-level="error"></span>
           <span class="al-text"><span class="al-name">${t('event.link.lost')}</span><span class="al-meta">${esc(p.org.name)} · ${esc(p.group.name)}</span></span>

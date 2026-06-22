@@ -16,25 +16,27 @@ const W = 900, H = 560;
 const SPEED = { lora: '5 kbps', wifi: '24 Mbps', cellular: '1.4 Mbps', nbiot: '62 kbps', satellite: '128 kbps', ethernet: '100 Mbps', mesh: '42 kbps' };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-function findGroup(f, gid) {
+function findGroup(f, gid)
+{
   for (const o of f.orgs) for (const g of o.groups) if (g.id === gid) return { org: o, group: g };
   return null;
 }
 
-// One history substate for the modal; the node inspector is plain store state. On Back/Esc
-// this closes the open inspector first (re-arming), then the modal - like the network map.
-function closeMesh() {
-  if (store.state.meshNode) { store.dispatch('clearMeshNode'); open(() => {}, closeMesh); return; }
+function closeMesh()
+{
+  if (store.state.meshNode) { store.dispatch('clearMeshNode'); open(() => { }, closeMesh); return; }
   store.dispatch('closeMeshView');
 }
 
 /** Opens the mesh map overlay for a sensor id (gid/sid). */
-export function openMeshOverlay(sid) {
+export function openMeshOverlay(sid)
+{
   open(() => store.dispatch('openMeshView', sid), closeMesh);
 }
 
 $.component('mesh-modal', {
-  mounted() {
+  mounted()
+  {
     this._z = 1; this._px = 0; this._py = 0; this._drag = null;
     this._un = store.subscribe(() => this.setState({}));
     this._eff = $.effect(() => { currentFleet(); this.setState({}); });
@@ -44,7 +46,8 @@ $.component('mesh-modal', {
     document.addEventListener('pointerup', this._up);
   },
   updated() { this.applyTransform(); },
-  destroyed() {
+  destroyed()
+  {
     if (this._un) this._un();
     if (typeof this._eff === 'function') this._eff();
     document.removeEventListener('pointermove', this._move);
@@ -57,28 +60,27 @@ $.component('mesh-modal', {
   resetView() { this._z = 1; this._px = 0; this._py = 0; this.applyTransform(); },
   onWheel(e) { e.preventDefault(); this._z = clamp(this._z * (e.deltaY < 0 ? 1.12 : 0.89), 0.5, 3); this.applyTransform(); },
   onDown(e) { if (e.button !== 0) return; if (e.target.closest('[data-node]')) return; this._drag = { x: e.clientX, y: e.clientY, px: this._px, py: this._py }; },
-
-  // Modal X / backdrop close everything; node clicks are plain store state (no history).
   close() { store.dispatch('closeMeshView'); back(); },
   onOverlay(e) { if (e.target.classList.contains('net-overlay')) this.close(); },
   onNode(e) { const el = e.target.closest('[data-node]'); if (el) store.dispatch('setMeshNode', el.dataset.node); },
   closeNode() { store.dispatch('clearMeshNode'); },
-  viewSensor(e) {
+  viewSensor(e)
+  {
     const el = e.target.closest('[data-sid]'); if (!el) return;
     open(() => store.dispatch('selectSensor', el.dataset.sid), () => store.dispatch('closeSensor'));
   },
 
-  topology(group) {
+  topology(group)
+  {
     const cx = W * 0.5, cy = H * 0.54;
     const hub = { key: 'hub', role: 'hub', x: cx, y: cy, name: group.name, status: group.status, link: group.link, group };
     const gw = { key: 'gw', role: 'gateway', x: cx, y: H * 0.13, status: 'ok' };
     const nodes = [gw, hub];
-    // The mesh sensor itself is not a node; show the group's real sensors around the hub.
     const sensors = (group.sensors || []).filter((s) => vizFor(s.reading.key, s.reading.unit) !== 'mesh');
     const n = sensors.length || 1;
-    // Span a ring with a clear cone at the top, so the hub -> gateway path is never crossed.
     const gap = 0.62;
-    sensors.forEach((s, i) => {
+    sensors.forEach((s, i) =>
+    {
       const tt = n === 1 ? 0.5 : i / (n - 1);
       const a = (-Math.PI / 2 + gap) + tt * (2 * Math.PI - 2 * gap);
       const jit = 0.92 + 0.08 * Math.abs(Math.sin(i * 2.7));
@@ -97,19 +99,23 @@ $.component('mesh-modal', {
     return { nodes, links, packets, pos };
   },
 
-  inspector(group, node) {
+  inspector(group, node)
+  {
     if (!node) return '';
     const dbm = (LINK_RSSI[group.link.kind] ?? -90) + (group.link.strength - 2) * 6;
     const row = (k, v) => `<div class="ins-row"><span>${k}</span><b>${v}</b></div>`;
     let title, sub, body, foot = '';
-    if (node.role === 'gateway') {
+    if (node.role === 'gateway')
+    {
       title = t('ui.gateway'); sub = LINK_NAMES[group.link.kind] || group.link.kind;
       body = row(t('ui.link'), t('ui.online')) + row(t('ui.throughput'), SPEED[group.link.kind] || '-') + row(t('ui.latency'), '12 ms');
-    } else if (node.role === 'hub') {
+    } else if (node.role === 'hub')
+    {
       title = group.name; sub = `${LINK_NAMES[group.link.kind] || group.link.kind} · ${t('status.' + group.status)}`;
       const sCount = group.sensors.filter((s) => vizFor(s.reading.key, s.reading.unit) !== 'mesh').length;
       body = row(t('ui.signal'), `${dbm} dBm`) + row(t('ui.throughput'), SPEED[group.link.kind] || '-') + row(t('ui.sensors'), nf(sCount));
-    } else {
+    } else
+    {
       const r = node.sensor.reading;
       const reading = isDiscrete(r) ? (r.state ? t(r.state) : t('status.' + r.status)) : `${fmt(r.value)} ${t('unit.' + r.unit)}`;
       const traffic = Math.round(3 + (node.sensor.id.length % 5) + (r.status === 'alarm' ? 9 : 0));
@@ -124,7 +130,8 @@ $.component('mesh-modal', {
       </div>`;
   },
 
-  render() {
+  render()
+  {
     const id = store.state.meshView;
     if (!id) return '<div hidden></div>';
     const f = currentFleet();
@@ -138,12 +145,14 @@ $.component('mesh-modal', {
     const sCount = nodes.filter((nd) => nd.role === 'sensor').length;
 
     const linkSvg = links.map((l) => `<line x1="${pos[l[0]].x.toFixed(1)}" y1="${pos[l[0]].y.toFixed(1)}" x2="${pos[l[1]].x.toFixed(1)}" y2="${pos[l[1]].y.toFixed(1)}" class="mm-link"/>`).join('');
-    const pkSvg = packets.map((p, i) => {
+    const pkSvg = packets.map((p, i) =>
+    {
       const path = p.map((k, j) => `${j ? 'L' : 'M'}${pos[k].x.toFixed(1)},${pos[k].y.toFixed(1)}`).join(' ');
       const dur = (2.4 + i * 0.4).toFixed(2), b = (i * 0.5).toFixed(2);
       return `<circle r="3.4" class="mm-pk" opacity="0"><animateMotion dur="${dur}s" begin="${b}s" repeatCount="indefinite" path="${path}"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.88;1" dur="${dur}s" begin="${b}s" repeatCount="indefinite"/></circle>`;
     }).join('');
-    const nodeSvg = nodes.map((nd) => {
+    const nodeSvg = nodes.map((nd) =>
+    {
       const r = nd.role === 'gateway' ? 16 : nd.role === 'hub' ? 18 : 10;
       const cls = `mm-node ${nd.role}${sel === nd.key ? ' sel' : ''}`;
       const glyph = nd.role === 'gateway' ? `<text class="mm-gly" x="${nd.x.toFixed(1)}" y="${(nd.y + 4).toFixed(1)}" text-anchor="middle">⌂</text>` : '';

@@ -17,10 +17,12 @@ $.component('manage-modal', {
   destroyed() { if (this._un) this._un(); },
 
   // Reset the form whenever a new create dialog opens.
-  sync() {
+  sync()
+  {
     const c = store.state.create;
     const id = c ? c.mode + (c.orgId || c.groupId) : null;
-    if (id !== this.state.last) {
+    if (id !== this.state.last)
+    {
       this.state.last = id;
       this.state.name = '';
       this.state.value = '';
@@ -34,7 +36,8 @@ $.component('manage-modal', {
   setKind(k) { this.state.sensorKind = k; },
 
   // Mesh-only sensors (the mesh map) appear only when the target group is on a mesh link.
-  presetsFor(groupId) {
+  presetsFor(groupId)
+  {
     const f = currentFleet();
     let kind = null;
     if (f) for (const o of f.orgs) for (const g of o.groups) if (g.id === groupId) kind = g.link.kind;
@@ -43,18 +46,22 @@ $.component('manage-modal', {
   cancel() { back(); },
   onOverlay(e) { if (e.target.classList.contains('modal-overlay')) back(); },
 
-  submit() {
+  submit()
+  {
     const c = store.state.create; if (!c) return;
-    if (c.mode === 'group') {
+    if (c.mode === 'group')
+    {
       store.dispatch('addGroup', makeGroup(c.orgId, this.state.name.trim() || t('ui.newGroup'), this.state.linkKind));
-    } else {
+    } else
+    {
       const v = parseFloat(this.state.value);
       store.dispatch('addSensor', makeSensor(c.groupId, this.state.sensorKind, Number.isFinite(v) ? v : NaN));
     }
     back();
   },
 
-  render() {
+  render()
+  {
     const c = store.state.create;
     if (!c) return '<div hidden></div>';
     const s = this.state;

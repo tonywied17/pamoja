@@ -25,17 +25,15 @@ document.documentElement.dataset.theme = store.state.theme;
 const router = $.router({ routes, mode: 'hash', fallback: 'dashboard-page' });
 connectFeed();
 
-// The offline indicator follows the stream's connection state.
-$.effect(() => {
+$.effect(() =>
+{
   const tag = document.getElementById('offline-tag');
   if (tag) { tag.hidden = connected.value; tag.textContent = t('ui.disconnected'); }
 });
 
-// Render gate: reveal the page only once it is mounted and the first snapshot is in, so
-// the first paint is the finished UI rather than an empty shell. A fallback timer reveals
-// regardless, so a slow or absent device link can never leave the splash up forever.
 let mounted = false, revealed = false;
-function reveal() {
+function reveal()
+{
   if (revealed || !mounted || fleet.value == null) return;
   revealed = true;
   const boot = document.getElementById('boot');
@@ -44,33 +42,33 @@ function reveal() {
 $.effect(() => { fleet.value; reveal(); });
 setTimeout(() => { revealed = true; const b = document.getElementById('boot'); if (b) { b.classList.add('gone'); setTimeout(() => b.remove(), 600); } }, 1500);
 
-$.ready(() => {
+$.ready(() =>
+{
   initNav(router);
   $.mountAll();
   mounted = true;
   reveal();
   document.addEventListener('pointermove', parallax);
-  // One global Escape unwinds the overlay stack (closing the topmost overlay).
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') back(); });
 });
 
 // --- parallax tilt on the group cards -------------------------------------
-// The hovered element's tilt is re-applied every frame from a stored target, so when a
-// re-render's morph strips the inline --rx/--ry (they are not in the rendered HTML) the
-// tilt is restored on the next frame instead of flashing flat.
 let hoverEl = null, amt = 5, glow = false, tx = 0, ty = 0, mx = 50, loop = 0;
-function clearHover() {
+function clearHover()
+{
   if (hoverEl) { hoverEl.style.removeProperty('--rx'); hoverEl.style.removeProperty('--ry'); }
   hoverEl = null;
 }
-function applyTilt() {
+function applyTilt()
+{
   if (!hoverEl) { loop = 0; return; }
   hoverEl.style.setProperty('--rx', tx.toFixed(2) + 'deg');
   hoverEl.style.setProperty('--ry', ty.toFixed(2) + 'deg');
   if (glow) hoverEl.style.setProperty('--mx', mx.toFixed(0) + '%');
   loop = requestAnimationFrame(applyTilt);
 }
-function parallax(e) {
+function parallax(e)
+{
   const t = e.target.closest ? e.target : null;
   const modal = t && t.closest('.modal');
   const card = !modal && t ? t.closest('.gcard') : null;

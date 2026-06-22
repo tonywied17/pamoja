@@ -51,7 +51,8 @@ export const LINK_KINDS = ['lora', 'wifi', 'cellular', 'satellite', 'ethernet', 
 
 export const uid = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 
-export function statusFor(value, band) {
+export function statusFor(value, band)
+{
   if (!band) return 'ok';
   const [lo, hi] = band, margin = (hi - lo) * 0.18;
   if (value < lo - margin || value > hi + margin) return 'alarm';
@@ -63,18 +64,21 @@ const worst = (a, b) => (['ok', 'warn', 'alarm'].indexOf(a) >= ['ok', 'warn', 'a
 
 // Sorts items by a saved order of ids; anything not in the order keeps its relative
 // position after the ordered ones (stable sort), so new items append cleanly.
-function applyOrder(items, order, idOf) {
+function applyOrder(items, order, idOf)
+{
   if (!order || !order.length) return items;
   const idx = new Map(order.map((id, i) => [id, i]));
   return items.slice().sort((a, b) => (idx.has(idOf(a)) ? idx.get(idOf(a)) : 1e9) - (idx.has(idOf(b)) ? idx.get(idOf(b)) : 1e9));
 }
 
 /** Builds a fresh custom sensor for a group (numeric, discrete-state, or chain log). */
-export function makeSensor(groupId, presetId, value) {
+export function makeSensor(groupId, presetId, value)
+{
   const p = SENSOR_PRESETS.find((x) => x.id === presetId) || SENSOR_PRESETS[0];
   const base = { id: uid('s'), groupId, battery: null, mode: 'active', events: [], custom: true };
   // A discrete sensor (valve, uplink) carries a state code instead of a numeric reading.
-  if (p.state) {
+  if (p.state)
+  {
     return { ...base, reading: { key: p.key, value: p.value || 0, unit: p.unit || 'state', status: 'ok', state: p.state }, history: [] };
   }
   const v = Number.isFinite(value) ? value : (p.band ? (p.band[0] + p.band[1]) / 2 : (p.value ?? 0));
@@ -86,21 +90,25 @@ export function makeSensor(groupId, presetId, value) {
 }
 
 /** Builds a fresh custom group for an org. */
-export function makeGroup(orgId, name, kind) {
+export function makeGroup(orgId, name, kind)
+{
   return { id: uid('g'), orgId, name: name || 'New group', link: { kind: kind || 'lora', strength: 3, online: true }, status: 'ok', sensors: [], custom: true };
 }
 
 /** Applies the store's edits to a raw fleet snapshot, returning a new fleet. */
-export function applyEdits(raw, edits) {
+export function applyEdits(raw, edits)
+{
   if (!raw) return raw;
   const rmG = new Set(edits.rmGroups), rmS = new Set(edits.rmSensors);
   const gOrder = edits.groupOrder || {}, sOrder = edits.sensorOrder || {};
   let fleetStatus = 'ok';
-  const orgs = raw.orgs.map((o) => {
+  const orgs = raw.orgs.map((o) =>
+  {
     let groups = o.groups.filter((g) => !rmG.has(g.id)).map((g) => ({ ...g }));
     groups = groups.concat(edits.addGroups.filter((ag) => ag.orgId === o.id));
     groups = applyOrder(groups, gOrder[o.id], (g) => g.id);
-    groups = groups.map((g) => {
+    groups = groups.map((g) =>
+    {
       let sensors = (g.sensors || []).filter((s) => !rmS.has(g.id + '/' + s.id));
       sensors = sensors.concat(edits.addSensors.filter((s) => s.groupId === g.id));
       sensors = applyOrder(sensors, sOrder[g.id], (s) => s.id);

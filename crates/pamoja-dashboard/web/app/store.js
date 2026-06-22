@@ -49,13 +49,15 @@ export const store = $.store('app', {
     closeCreate(state) { state.create = null; },
 
     addGroup(state, g) { state.edits.addGroups.push(g); $.storage.set('edits', state.edits); },
-    removeGroup(state, id) {
+    removeGroup(state, id)
+    {
       state.edits.addGroups = state.edits.addGroups.filter((x) => x.id !== id);
       if (!state.edits.rmGroups.includes(id)) state.edits.rmGroups.push(id);
       $.storage.set('edits', state.edits);
     },
     addSensor(state, s) { state.edits.addSensors.push(s); $.storage.set('edits', state.edits); },
-    removeSensor(state, key) {
+    removeSensor(state, key)
+    {
       state.edits.addSensors = state.edits.addSensors.filter((x) => x.groupId + '/' + x.id !== key);
       if (!state.edits.rmSensors.includes(key)) state.edits.rmSensors.push(key);
       $.storage.set('edits', state.edits);

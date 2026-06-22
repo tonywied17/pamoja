@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="dark light" />
     <title>pamoja</title>
-    <!-- Relative base so the page works served from the device root or any subpath
-         (e.g. a GitHub Pages project subfolder). -->
     <base href="./" />
-    <!-- Apply the saved theme before first paint so the boot splash never flashes the
-         wrong theme (zQuery stores it JSON-encoded under "theme"). -->
     <script>
       try { var _t = JSON.parse(localStorage.getItem('theme')); if (_t === 'night' || _t === 'day') document.documentElement.dataset.theme = _t; } catch (e) {}
     </script>

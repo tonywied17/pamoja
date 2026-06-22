@@ -15,10 +15,12 @@ let router;
 const stack = [];
 
 /** Wires the substate listener. Call once with the router after it is created. */
-export function initNav(r) {
+export function initNav(r)
+{
   router = r || ($.getRouter && $.getRouter());
   if (!router) return;
-  router.onSubstate(() => {
+  router.onSubstate(() =>
+  {
     if (!stack.length) return false; // no overlay open: let normal route navigation happen
     const close = stack.pop();
     if (close) close();
@@ -27,13 +29,15 @@ export function initNav(r) {
 }
 
 /** Opens an overlay: runs `openFn`, records `closeFn`, and pushes a history entry. */
-export function open(openFn, closeFn) {
+export function open(openFn, closeFn)
+{
   openFn();
   stack.push(closeFn);
   if (router) router.pushSubstate('ov');
 }
 
 /** Closes the topmost overlay by going back one history entry. */
-export function back() {
+export function back()
+{
   if (stack.length) history.back();
 }

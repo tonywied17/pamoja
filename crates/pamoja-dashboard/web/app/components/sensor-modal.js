@@ -13,7 +13,8 @@ import { t } from '../i18n.js';
 import { conn, esc } from '../viz.js';
 
 $.component('sensor-modal', {
-  mounted() {
+  mounted()
+  {
     this._un = store.subscribe(() => this.setState({}));
     this._eff = $.effect(() => { currentFleet(); this.setState({}); });
   },
@@ -23,7 +24,8 @@ $.component('sensor-modal', {
   close() { back(); },
   onOverlay(e) { if (e.target.classList.contains('modal-overlay')) back(); },
 
-  find() {
+  find()
+  {
     const sel = store.state.selected; const f = currentFleet();
     if (!sel || !f) return null;
     const [gid, sid] = sel.split('/');
@@ -31,7 +33,8 @@ $.component('sensor-modal', {
     return null;
   },
 
-  render() {
+  render()
+  {
     const found = this.find();
     if (!found) return '<div hidden></div>';
     const { org, group, sensor: s } = found;
