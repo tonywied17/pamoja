@@ -13,18 +13,18 @@ import { currentFleet } from '../edits.js';
 import { conn, tileViz, bannerRing, trendArrow, isDiscrete, vizFor, esc } from '../viz.js';
 import { openMeshOverlay } from './mesh-modal.js';
 
-// The mesh preview draws one node per real sensor in the group (the mesh sensor itself is
-// not a node), so it tracks sensors being added or removed.
-function meshPeerCount(g) {
+function meshPeerCount(g)
+{
   return g.sensors.filter((x) => vizFor(x.reading.key, x.reading.unit) !== 'mesh').length;
 }
 
-// A mesh sensor opens its interactive map modal rather than the generic detail modal.
-function isMeshSensor(sid) {
+function isMeshSensor(sid)
+{
   const f = currentFleet();
   if (!f) return false;
   const [gid, sd] = sid.split('/');
-  for (const o of f.orgs) for (const g of o.groups) if (g.id === gid) {
+  for (const o of f.orgs) for (const g of o.groups) if (g.id === gid)
+  {
     const s = g.sensors.find((x) => x.id === sd);
     return !!s && vizFor(s.reading.key, s.reading.unit) === 'mesh';
   }
@@ -34,24 +34,59 @@ function isMeshSensor(sid) {
 $.component('dashboard-page', {
   state: { tick: 0 },
 
-  mounted() {
-    // Live updates are suppressed while a drag is in progress (this._drag set), so the DOM
-    // stays stable under the pointer and the reorder is not fought by a re-render.
+  mounted()
+  {
+    this._place = {};
     this._stop = $.effect(() => { currentFleet(); if (!this._drag) this.setState({}); });
     this._un = store.subscribe(() => { if (!this._drag) this.setState({}); });
+    this._ro = new ResizeObserver(() => this.scheduleLayout());
     this.bindDrag();
   },
-  destroyed() {
+  updated()
+  {
+    const grid = this._el && this._el.querySelector('.groups');
+    if (!grid) return;
+    if (!grid._obs) { grid._obs = true; this._ro.observe(grid); }
+    grid.querySelectorAll('.gcard').forEach((c) => { if (!c._obs) { c._obs = true; this._ro.observe(c); } });
+  },
+  destroyed()
+  {
     if (typeof this._stop === 'function') this._stop();
     if (this._un) this._un();
+    if (this._ro) this._ro.disconnect();
+    if (this._raf) cancelAnimationFrame(this._raf);
   },
 
-  // Drag-to-rearrange (manage mode): reorder group cards within an org, or sensor tiles
-  // within a group. Delegated on the persistent root; live reorder via insertBefore; the
-  // final order is read from the DOM and persisted to the store edits on drop.
-  bindDrag() {
+  scheduleLayout() { if (!this._raf) this._raf = requestAnimationFrame(() => this.layout()); },
+
+  /** Masonry: place each card at column i%cols, stacked at that column's running bottom (row-major, no gaps). Placement is cached so render() re-emits it inline, since the morph strips JS-set styles. */
+  layout()
+  {
+    this._raf = 0;
+    const grid = this._el && this._el.querySelector('.groups');
+    if (!grid) return;
+    const cards = [...grid.children].filter((c) => c.classList.contains('gcard'));
+    if (!cards.length) return;
+    const gap = 18;
+    const cols = Math.max(1, getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length);
+    const colBottom = new Array(cols).fill(1);
+    cards.forEach((c, i) =>
+    {
+      const col = i % cols;
+      const h = Math.max(1, Math.ceil(c.offsetHeight));
+      const row = colBottom[col];
+      c.style.gridColumn = String(col + 1);
+      c.style.gridRow = row + ' / span ' + h;
+      colBottom[col] = row + h + gap;
+      this._place[c.dataset.gid || '__add'] = { c: col + 1, r: row, s: h };
+    });
+  },
+
+  bindDrag()
+  {
     const root = this._el;
-    root.addEventListener('dragstart', (e) => {
+    root.addEventListener('dragstart', (e) =>
+    {
       const el = e.target.closest('[draggable="true"]');
       if (!el) return;
       const group = el.classList.contains('gcard');
@@ -60,43 +95,48 @@ $.component('dashboard-page', {
       e.dataTransfer.effectAllowed = 'move';
       try { e.dataTransfer.setData('text/plain', ''); } catch (err) { /* Safari */ }
     });
-    root.addEventListener('dragover', (e) => {
+    root.addEventListener('dragover', (e) =>
+    {
       if (!this._drag) return;
       e.preventDefault();
       const over = e.target.closest(this._drag.sel);
       if (!over || over === this._drag.el || over.parentNode !== this._drag.container) return;
-      // Insert before or after the card under the pointer based on which side of it the
-      // pointer is on, so the drop lands where you aim instead of always snapping under.
       const rect = over.getBoundingClientRect();
       const before = (e.clientX - rect.left) < rect.width / 2;
       const ref = before ? over : over.nextSibling;
-      if (ref !== this._drag.el) { this._drag.container.insertBefore(this._drag.el, ref); }
+      if (ref !== this._drag.el) { this._drag.container.insertBefore(this._drag.el, ref); if (this._drag.group) this.scheduleLayout(); }
     });
     root.addEventListener('drop', (e) => { if (this._drag) e.preventDefault(); });
     root.addEventListener('dragend', () => this.endDrag());
   },
 
-  endDrag() {
+  endDrag()
+  {
     if (!this._drag) return;
     const { el, container, group } = this._drag;
     el.classList.remove('dragging');
     this._drag = null;
-    if (group) {
+    if (group)
+    {
       const ids = [...container.querySelectorAll(':scope > .gcard[data-gid]')].map((c) => c.dataset.gid);
       const org = this.selectedOrg(currentFleet());
       if (org) store.dispatch('reorderGroups', { orgId: org.id, ids });
-    } else {
+    } else
+    {
       const card = container.closest('.gcard');
       const gid = card && card.dataset.gid;
-      if (gid) {
+      if (gid)
+      {
         const ids = [...container.querySelectorAll(':scope > .stile[data-sid]')].map((c) => c.dataset.sid.split('/')[1]);
         store.dispatch('reorderSensors', { gid, ids });
       }
     }
     this.setState({});
+    this.scheduleLayout();
   },
 
-  onSensor(e) {
+  onSensor(e)
+  {
     if (e.target.closest('.tile-rm')) return;
     const el = e.target.closest('[data-sid]'); if (!el) return;
     const sid = el.dataset.sid;
@@ -109,23 +149,28 @@ $.component('dashboard-page', {
   onAddSensor(e) { const el = e.target.closest('[data-gid]'); if (el) { const gid = el.dataset.gid; open(() => store.dispatch('openCreate', { mode: 'sensor', groupId: gid }), () => store.dispatch('closeCreate')); } },
   onAddGroup(e) { const el = e.target.closest('[data-oid]'); if (el) { const oid = el.dataset.oid; open(() => store.dispatch('openCreate', { mode: 'group', orgId: oid }), () => store.dispatch('closeCreate')); } },
 
-  selectedOrg(f) {
+  selectedOrg(f)
+  {
     const orgs = f.orgs || [];
     const id = this.props.$params && this.props.$params.id;
     return orgs.find((o) => o.id === id) || orgs[0] || null;
   },
 
-  render() {
+  render()
+  {
     const f = currentFleet();
-    if (!f) {
+    if (!f)
+    {
       return `<div class="shell"><section class="banner"><div class="banner-text"><span class="banner-eyebrow">${t('ui.status')}</span><h1 class="banner-title">${t('ui.connecting')}</h1></div></section></div>`;
     }
     return `<div class="shell">${this.banner(f)}${this.orgtabs(f)}${this.groups(f)}</div>`;
   },
 
-  banner(f) {
+  banner(f)
+  {
     let groups = 0, sensors = 0, alarms = 0, warns = 0;
-    for (const o of f.orgs) for (const g of o.groups) {
+    for (const o of f.orgs) for (const g of o.groups)
+    {
       groups++;
       for (const s of g.sensors) { sensors++; if (s.reading.status === 'alarm') alarms++; else if (s.reading.status === 'warn') warns++; }
     }
@@ -145,7 +190,8 @@ $.component('dashboard-page', {
       </section>`;
   },
 
-  orgtabs(f) {
+  orgtabs(f)
+  {
     const sel = this.selectedOrg(f);
     return `<div class="orgtabs" role="tablist">
       ${f.orgs.map((o) => `<a class="orgtab" role="tab" aria-selected="${sel && o.id === sel.id}" z-link="/org/${o.id}">
@@ -156,19 +202,25 @@ $.component('dashboard-page', {
 
   onManage() { store.dispatch('toggleEditing'); },
 
-  groups(f) {
+  groups(f)
+  {
     const org = this.selectedOrg(f);
     if (!org) return '';
     const editing = store.state.editing;
-    const add = editing ? `<button class="gcard add-card" data-oid="${org.id}" z-key="__add" @click="onAddGroup"><span class="add-plus">+</span> ${t('ui.addGroup')}</button>` : '';
+    const ap = (this._place || {}).__add;
+    const astyle = ap ? `grid-column:${ap.c};grid-row:${ap.r} / span ${ap.s}` : 'grid-row:auto / span 170';
+    const add = editing ? `<button class="gcard add-card" data-oid="${org.id}" z-key="__add" @click="onAddGroup" style="${astyle}"><span class="add-plus">+</span> ${t('ui.addGroup')}</button>` : '';
     return `<div class="groups">${org.groups.map((g) => this.groupCard(g, editing)).join('')}${add}</div>`;
   },
 
-  groupCard(g, editing) {
+  groupCard(g, editing)
+  {
     const rm = editing ? `<button class="icon-btn danger" data-gid="${g.id}" @click="onRemoveGroup" aria-label="${esc(t('ui.remove'))}">✕</button>` : '';
     const addS = editing ? `<button class="stile add-tile" data-gid="${g.id}" z-key="__addtile" @click="onAddSensor"><span class="add-plus">+</span><span>${t('ui.addSensor')}</span></button>` : '';
+    const p = this._place && this._place[g.id];
+    const style = p ? `grid-column:${p.c};grid-row:${p.r} / span ${p.s}` : 'grid-row:auto / span 320';
     return `
-      <article class="gcard" data-status="${g.status}" data-gid="${g.id}" z-key="${g.id}"${editing ? ' draggable="true"' : ''}>
+      <article class="gcard" data-status="${g.status}" data-gid="${g.id}" z-key="${g.id}" style="${style}"${editing ? ' draggable="true"' : ''}>
         <div class="ghead">
           <div class="gtitle-wrap">
             <div class="gtitle">${esc(g.name)}</div>
@@ -187,7 +239,8 @@ $.component('dashboard-page', {
       </article>`;
   },
 
-  sensorTile(g, s, editing) {
+  sensorTile(g, s, editing)
+  {
     const r = s.reading;
     const sid = g.id + '/' + s.id;
     const battery = s.battery != null ? `<span class="sbatt">${nf(s.battery, { style: 'percent', maximumFractionDigits: 0 })}</span>` : '';

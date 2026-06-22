@@ -44,7 +44,6 @@
 [data-theme="day"]
 {
   color-scheme: light;
-  /* Darker accents so cyan/violet text and bars stay readable on a light background. */
   --cyan: #0b7e9c;
   --violet: #5b4bc4;
   --bg-0: #e9edf6;
@@ -83,8 +82,6 @@ body
   overflow-x: hidden;
 }
 
-/* A static, theme-coloured ambient gradient. One composited layer - no canvas, no
-   per-frame paint, nothing to glitch on resize. */
 #space-bg {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background:
@@ -95,8 +92,6 @@ body
 }
 body > * { position: relative; z-index: 1; }
 top-bar, .outlet { display: block; }
-/* #space-bg keeps z-index:0 from its own id rule (higher specificity), staying behind.
-   These type rules have equal specificity to `body > *` and come later, so they win. */
 top-bar { z-index: 50; }
 alarm-bar { z-index: 220; }
 network-view { z-index: 230; }
@@ -107,8 +102,6 @@ sensor-modal { z-index: 250; }
 
 h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-spacing: -0.01em; }
 
-/* Boot gate: an opaque splash that holds until the app is mounted and the first fleet
-   snapshot is in, then fades to reveal a fully-rendered page (no flash of empty UI). */
 #boot { position: fixed; inset: 0; z-index: 900; display: grid; place-items: center; background: var(--bg-0); transition: opacity 0.5s var(--ease); }
 #boot.gone { opacity: 0; pointer-events: none; }
 .boot-mark { position: relative; inline-size: 56px; block-size: 56px; border-radius: 16px; background: conic-gradient(from 140deg, var(--cyan), var(--violet), var(--teal), var(--cyan)); box-shadow: var(--glow) color-mix(in srgb, var(--cyan) 60%, transparent); animation: bootpulse 1.3s ease-in-out infinite; }
@@ -209,11 +202,7 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .orgtab .count { font-family: var(--mono); font-size: 0.72rem; opacity: 0.7; }
 
 /* ---------- Groups grid ---------- */
-/* Masonry: each card spans a number of fine 1px rows equal to its measured height (set in
-   JS and cached into the rendered markup, so a re-render never collapses the grid - which
-   would reset the scroll). Reading order and adding are preserved. */
-/* Row-major grid; cards in the same row stretch to a shared height for a consistent look. */
-.groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 372px), 1fr)); gap: clamp(0.9rem, 2vw, 1.3rem); align-items: stretch; }
+.groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 372px), 1fr)); grid-auto-rows: 1px; row-gap: 0; column-gap: clamp(0.9rem, 2vw, 1.3rem); align-items: start; }
 .gcard[draggable="true"], .stile[draggable="true"] { cursor: grab; }
 .gcard.dragging, .stile.dragging { opacity: 0.4; cursor: grabbing; }
 
@@ -381,8 +370,7 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .chn.big .chn-blk { font-size: 0.85rem; padding: 0.35rem 0.7rem; }
 .chn.big .chn-count { font-size: 1.6rem; }
 
-/* Acoustic monitor: fixed-envelope waveform under a uniform pulse (no per-bar phase, so a
-   re-render never snaps it sideways); a threat makes it red, faster and wider-swinging. */
+/* Acoustic monitor. */
 .wv { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; inline-size: 100%; padding-block-end: 0.1rem; }
 .wv-bars { display: flex; align-items: flex-end; justify-content: center; gap: 3px; inline-size: 100%; block-size: 50px; }
 .wv-bars i { flex: 1 1 0; max-inline-size: 6px; block-size: calc(var(--h, 0.5) * 100%); border-radius: 2px; transform-origin: bottom; background: color-mix(in srgb, var(--accent) 75%, transparent); animation: eq 1.1s ease-in-out infinite; }
@@ -450,8 +438,6 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .modal-hero { display: flex; align-items: center; gap: clamp(1rem, 3vw, 1.8rem); padding: 1.1rem 0.25rem 1.2rem; flex-wrap: wrap; }
 .modal-hero .tv-wrap.big { flex: none; inline-size: 190px; margin: 0; }
 .modal-hero .tv-wrap.big.full { flex: 1; min-inline-size: 240px; block-size: auto; }
-/* Fixed width so a changing value/arrow in the readout beside it can never reflow the
-   waveform (which would make it jerk). */
 .modal-hero .tv-wrap.disc { flex: none; inline-size: min(58%, 360px); }
 .modal-readout { display: flex; align-items: baseline; gap: 0.3rem; }
 .modal-readout b { font-family: var(--mono); font-size: clamp(2rem, 7vw, 3rem); font-weight: 700; line-height: 1; }
@@ -467,8 +453,6 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .ins-open:hover { border-color: var(--cyan); }
 .gv-modal { inline-size: min(1040px, 96vw); }
 .gv-head { display: flex; align-items: center; gap: 0.8rem; margin-block-end: 0.7rem; }
-/* Location switcher: a vertical org/group rail beside the sensors on desktop; on narrow
-   viewports it collapses into a single grouped picker button that drops a panel down. */
 .gv-main { display: flex; gap: 1.1rem; align-items: flex-start; }
 .gv-nav { flex: none; inline-size: 210px; }
 .gv-picker { display: none; }
@@ -508,9 +492,6 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .gv-card[data-status="alarm"] { --accent: var(--alarm); border-color: color-mix(in srgb, var(--alarm) 50%, var(--line)); }
 .gv-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .gv-label { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
-/* Every numeric/spark/bar viz occupies the same fixed height, so the value and stat rows
-   below it land at the same place on every card; discrete glyphs (chip/valve/chain) keep
-   sizing to their own content. */
 .gv-viz { display: grid; place-items: center; min-block-size: 84px; }
 .gv-viz:not(.gv-viz-disc) { block-size: 96px; }
 .gv-viz .tv-wrap.big { block-size: 84px; }
@@ -622,8 +603,6 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .net-twig { stroke: var(--line-2); stroke-width: 1; opacity: 0.6; }
 .net-pk { filter: drop-shadow(0 0 5px currentColor); }
 .net-pk.hot { filter: drop-shadow(0 0 8px currentColor); animation: blink 0.7s steps(2) infinite; }
-/* Decorative SVG (labels, place names, the map backdrop) must not eat clicks meant
-   for the sensor leaves and group nodes underneath them. */
 .net-label, .net-sub, .net-place, .net-river-t, .net-comp-t, .net-bg, .net-scale text { pointer-events: none; }
 .net-leaf, .net-node, .net-gn, .net-gn-ring, .net-badge { pointer-events: auto; }
 .net-leaf { stroke: var(--bg-0); stroke-width: 2; cursor: pointer; transition: r 0.15s var(--ease); }
