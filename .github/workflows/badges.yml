@@ -32,7 +32,7 @@ jobs:
 
       - name: Generate status badges
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
         run: node .github/scripts/generate-badges.mjs
 
       - name: Commit refreshed badges

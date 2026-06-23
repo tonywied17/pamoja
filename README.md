@@ -4,10 +4,10 @@
 
 **One memory-safe Rust core. Every language. For the devices that change lives.**
 
-<a href="https://crates.io/crates/pamoja-core"><img height="22" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/crates.svg?v=b3ddb672"></a>
-&nbsp;<a href="https://www.npmjs.com/package/@pamoja/core"><img height="22" alt="npm" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/npm.svg?v=f5a171bf"></a>
-&nbsp;<a href="https://pypi.org/project/pamoja-core/"><img height="22" alt="PyPI" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/pypi.svg?v=fd892585"></a>
-&nbsp;<a href="https://www.nuget.org/packages/Pamoja.Core"><img height="22" alt="NuGet" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/nuget.svg?v=acff9284"></a>
+<a href="https://crates.io/users/tonywied17"><img height="22" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/crates.svg?v=b3ddb672"></a>
+&nbsp;<a href="https://www.npmjs.com/org/pamoja"><img height="22" alt="npm" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/npm.svg?v=f5a171bf"></a>
+&nbsp;<a href="https://pypi.org/user/tonywied17/"><img height="22" alt="PyPI" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/pypi.svg?v=fd892585"></a>
+&nbsp;<a href="https://www.nuget.org/profiles/tonywied17"><img height="22" alt="NuGet" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/nuget.svg?v=acff9284"></a>
 &nbsp;<a href="https://github.com/molexxxx/pamoja/actions/workflows/ci.yml"><img height="22" alt="CI" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/ci.svg?v=e2e1c4f5"></a>
 &nbsp;<a href="LICENSE-MIT"><img height="22" alt="license MIT" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/license.svg?v=9ff27022"></a>
 

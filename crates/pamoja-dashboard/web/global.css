@@ -67,7 +67,9 @@
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html { -webkit-text-size-adjust: 100%; scrollbar-gutter: stable both-edges; }
+/* Paint the root explicitly so the reserved scrollbar gutters are themed too, instead of
+   falling back to the UA canvas colour (which follows color-scheme and switches with a lag). */
+html { -webkit-text-size-adjust: 100%; scrollbar-gutter: stable both-edges; background: var(--bg-0); }
 
 body
 {
@@ -198,17 +200,24 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
   .deck-label { display: none; }
   .deck-seg { padding-inline: 0.6rem; }
 }
-/* On phones the brand takes the first row on its own and the icon deck drops to a tidy,
-   right-aligned second row, so it never overflows the viewport. */
-@media (max-width: 430px)
+/* On phones the deck condenses - dividers drop, segments tighten, the brand sheds its
+   subtitle - so brand + deck stay on one row. If a very narrow screen still can't fit both,
+   the deck wraps to its own right-aligned row (it never overflows). */
+@media (max-width: 560px)
 {
-  .topbar { row-gap: 0.7rem; justify-content: flex-end; }
-  .brand { flex: 1 1 100%; }
-  .deck { margin-inline-start: 0; }
-}
-@media (max-width: 360px)
-{
-  .deck-seg { padding-inline: 0.5rem; gap: 0.3rem; }
+  /* Reclaim the desktop 95vw inset and the reserved scrollbar gutters (phones use overlay
+     scrollbars) so the condensed brand + deck fit on a single row. */
+  html { scrollbar-gutter: auto; }
+  .topbar, .shell { max-inline-size: 100%; }
+  .topbar { row-gap: 0.6rem; gap: 0.5rem; padding-inline: 0.85rem; }
+  .shell { padding-inline: 0.85rem; }
+  .brand { gap: 0.55rem; }
+  .brand-sub { display: none; }
+  .deck-div, .deck-code { display: none; }
+  .deck { gap: 0; padding: 3px; }
+  .deck-seg { padding-inline: 0.45rem; gap: 0.25rem; }
+  .deck-seg .ic { inline-size: 16px; block-size: 16px; }
+  .deck-seg .chev { margin-inline-start: -0.15rem; }
 }
 
 .dd-menu
@@ -616,6 +625,16 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .manage-btn .ic { inline-size: 16px; block-size: 16px; flex: none; }
 .manage-btn:hover { color: var(--text); border-color: color-mix(in srgb, var(--cyan) 45%, var(--line-2)); transform: translateY(-1px); }
 .manage-btn.on { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 50%, transparent); background: color-mix(in srgb, var(--cyan) 14%, transparent); }
+/* On phones the org switcher and Manage share one row: the switcher flexes (its name
+   ellipsises) and Manage collapses to its icon, so the bar never spills onto a new line. */
+@media (max-width: 560px)
+{
+  .orgbar { flex-wrap: nowrap; gap: 0.6rem; }
+  .orgsel { flex: 1; min-inline-size: 0; }
+  .orgsel-btn { inline-size: 100%; min-inline-size: 0; padding-inline: 0.85rem; }
+  .manage-btn { gap: 0; padding: 0.5rem; }
+  .manage-btn span { display: none; }
+}
 .icon-btn { inline-size: 26px; block-size: 26px; flex: none; border-radius: 8px; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--muted); font-size: 0.8rem; line-height: 1; cursor: pointer; }
 .icon-btn.danger:hover { border-color: var(--alarm); color: var(--alarm); }
 .tile-rm { position: absolute; inset-block-start: 5px; inset-inline-end: 5px; inline-size: 20px; block-size: 20px; border-radius: 6px; border: 1px solid var(--line-2); background: color-mix(in srgb, var(--bg-0) 70%, transparent); color: var(--muted); font-size: 0.7rem; line-height: 1; cursor: pointer; z-index: 2; }
@@ -641,8 +660,9 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .seg.primary { border-color: transparent; color: #05121f; background: linear-gradient(120deg, var(--cyan), var(--teal)); }
 
 /* ---------- Network mesh map ---------- */
-.net-overlay { position: fixed; inset: 0; display: grid; place-items: center; padding: clamp(0.6rem, 2vw, 1.5rem); background: rgba(4, 7, 16, 0.78); backdrop-filter: blur(8px); animation: ov 0.18s var(--ease); }
-.net-panel { inline-size: min(1340px, 96vw); max-block-size: 94dvh; overflow: hidden; border-radius: var(--r-lg); border: 1px solid var(--line-2); background: var(--panel); box-shadow: var(--shadow), inset 0 1px 0 var(--hi); padding: clamp(1rem, 2.5vw, 1.5rem); display: flex; flex-direction: column; animation: pop 0.22s var(--ease); }
+.net-overlay { position: fixed; inset: 0; display: grid; place-items: center; padding: clamp(0.8rem, 3vw, 1.5rem); background: rgba(4, 7, 16, 0.78); backdrop-filter: blur(8px); animation: ov 0.18s var(--ease); }
+/* Width fills the padded overlay box so the margins are always symmetric (no left-bias). */
+.net-panel { inline-size: min(1340px, 100%); max-block-size: 92dvh; overflow: hidden; border-radius: var(--r-lg); border: 1px solid var(--line-2); background: var(--panel); box-shadow: var(--shadow), inset 0 1px 0 var(--hi); padding: clamp(0.9rem, 2.5vw, 1.5rem); display: flex; flex-direction: column; animation: pop 0.22s var(--ease); }
 .net-head { display: flex; align-items: flex-start; gap: 0.8rem; }
 .net-title { font-family: var(--display); font-size: clamp(1.2rem, 3vw, 1.6rem); }
 .net-subtitle { font-size: 0.8rem; color: var(--muted); margin-block-start: 0.25rem; }
