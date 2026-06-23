@@ -1,20 +1,15 @@
 <div align="center">
 
-<img src="assets/pamoja-logo.svg" alt="pamoja" width="620">
+<img src="assets/pamoja-logo.svg" alt="pamoja" width="560">
 
 **One memory-safe Rust core. Every language. For the devices that change lives.**
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-iot-dark.svg"><img height="26" alt="IoT" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-iot-light.svg"></picture>
-&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-robotics-drones-dark.svg"><img height="26" alt="robotics &amp; drones" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-robotics-drones-light.svg"></picture>
-&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-edge-first-dark.svg"><img height="26" alt="edge-first" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-edge-first-light.svg"></picture>
-&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-offline-first-dark.svg"><img height="26" alt="offline-first" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-offline-first-light.svg"></picture>
-&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-rust-core-dark.svg"><img height="26" alt="Rust core" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-rust-core-light.svg"></picture>
-
-<a href="https://crates.io/users/tonywied17"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-crates.svg"></a>
-&nbsp;<a href="https://www.npmjs.com/org/pamoja"><img height="28" alt="npm" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-npm.svg"></a>
-&nbsp;<a href="https://pypi.org/user/tonywied17/"><img height="28" alt="PyPI" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-pypi.svg"></a>
-&nbsp;<a href="https://www.nuget.org/profiles/tonywied17"><img height="28" alt="NuGet" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-nuget.svg"></a>
-&nbsp;<a href="LICENSE-MIT"><img height="28" alt="MIT license" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-license.svg"></a>
+[![CI](https://img.shields.io/github/actions/workflow/status/molexxxx/pamoja/ci.yml?branch=main&style=flat&logo=githubactions&logoColor=white&label=CI&labelColor=11161f)](https://github.com/molexxxx/pamoja/actions/workflows/ci.yml)
+[![crates.io](https://img.shields.io/crates/v/pamoja-core?style=flat&logo=rust&logoColor=white&label=crates.io&color=1fd3b0&labelColor=11161f)](https://crates.io/crates/pamoja-core)
+[![npm](https://img.shields.io/npm/v/%40pamoja%2Fcore?style=flat&logo=npm&logoColor=white&label=npm&color=1fd3b0&labelColor=11161f)](https://www.npmjs.com/package/@pamoja/core)
+[![PyPI](https://img.shields.io/pypi/v/pamoja-core?style=flat&logo=pypi&logoColor=white&label=PyPI&color=1fd3b0&labelColor=11161f)](https://pypi.org/project/pamoja-core/)
+[![NuGet](https://img.shields.io/nuget/v/Pamoja.Core?style=flat&logo=nuget&logoColor=white&label=NuGet&color=1fd3b0&labelColor=11161f)](https://www.nuget.org/packages/Pamoja.Core)
+[![License: MIT](https://img.shields.io/badge/license-MIT-1fd3b0?style=flat&labelColor=11161f)](LICENSE-MIT)
 
 <a href="https://pamoja.molex.cloud"><img height="34" alt="website" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-website.svg"></a>
 &nbsp;<a href="https://pamoja.molex.cloud/dashboard"><img height="34" alt="dashboard demo" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-dashboard.svg"></a>
