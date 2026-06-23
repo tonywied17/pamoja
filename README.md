@@ -4,12 +4,12 @@
 
 **One memory-safe Rust core. Every language. For the devices that change lives.**
 
-[![CI](https://img.shields.io/github/actions/workflow/status/molexxxx/pamoja/ci.yml?branch=main&style=flat&logo=githubactions&logoColor=white&label=CI&labelColor=11161f)](https://github.com/molexxxx/pamoja/actions/workflows/ci.yml)
-[![crates.io](https://img.shields.io/crates/v/pamoja-core?style=flat&logo=rust&logoColor=white&label=crates.io&color=1fd3b0&labelColor=11161f)](https://crates.io/crates/pamoja-core)
-[![npm](https://img.shields.io/npm/v/%40pamoja%2Fcore?style=flat&logo=npm&logoColor=white&label=npm&color=1fd3b0&labelColor=11161f)](https://www.npmjs.com/package/@pamoja/core)
-[![PyPI](https://img.shields.io/pypi/v/pamoja-core?style=flat&logo=pypi&logoColor=white&label=PyPI&color=1fd3b0&labelColor=11161f)](https://pypi.org/project/pamoja-core/)
-[![NuGet](https://img.shields.io/nuget/v/Pamoja.Core?style=flat&logo=nuget&logoColor=white&label=NuGet&color=1fd3b0&labelColor=11161f)](https://www.nuget.org/packages/Pamoja.Core)
-[![License: MIT](https://img.shields.io/badge/license-MIT-1fd3b0?style=flat&labelColor=11161f)](LICENSE-MIT)
+<a href="https://crates.io/crates/pamoja-core"><img height="22" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/crates.svg?v=b3ddb672"></a>
+&nbsp;<a href="https://www.npmjs.com/package/@pamoja/core"><img height="22" alt="npm" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/npm.svg?v=f5a171bf"></a>
+&nbsp;<a href="https://pypi.org/project/pamoja-core/"><img height="22" alt="PyPI" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/pypi.svg?v=fd892585"></a>
+&nbsp;<a href="https://www.nuget.org/packages/Pamoja.Core"><img height="22" alt="NuGet" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/nuget.svg?v=acff9284"></a>
+&nbsp;<a href="https://github.com/molexxxx/pamoja/actions/workflows/ci.yml"><img height="22" alt="CI" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/ci.svg?v=e2e1c4f5"></a>
+&nbsp;<a href="LICENSE-MIT"><img height="22" alt="license MIT" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/license.svg?v=9ff27022"></a>
 
 <a href="https://pamoja.molex.cloud"><img height="34" alt="website" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-website.svg"></a>
 &nbsp;<a href="https://pamoja.molex.cloud/dashboard"><img height="34" alt="dashboard demo" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-dashboard.svg"></a>
