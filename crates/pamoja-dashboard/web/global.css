@@ -136,9 +136,8 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .brand-sub { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.04em; }
 
 .spacer { margin-inline-start: auto; }
-.controls { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 
-.seg, .dd-button
+.seg
 {
   display: inline-flex; align-items: center; gap: 0.45rem; min-block-size: var(--tap);
   padding: 0.5rem 0.85rem; border-radius: 999px; border: 1px solid var(--line-2);
@@ -146,12 +145,72 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
   font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
   transition: border-color 0.2s var(--ease), transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
 }
-.seg:hover, .dd-button:hover { border-color: var(--cyan); transform: translateY(-1px); box-shadow: var(--glow) color-mix(in srgb, var(--cyan) 40%, transparent); }
+.seg:hover { border-color: var(--cyan); transform: translateY(-1px); box-shadow: var(--glow) color-mix(in srgb, var(--cyan) 40%, transparent); }
 
-/* dropdown - shown/hidden by z-show; the whole top bar stacks above the content */
-.dd { position: relative; }
-.dd-button .chev { inline-size: 13px; block-size: 13px; opacity: 0.7; transition: transform 0.25s var(--ease); }
-.dd.open .chev { transform: rotate(180deg); }
+/* Control deck - one cohesive glass bar of icon-first segments. Labels collapse to icons
+   on narrow viewports (below) so the deck stays a single row from phone to desktop. */
+.deck
+{
+  display: inline-flex; align-items: center; gap: 1px; padding: 4px; flex: none;
+  margin-inline-start: auto; border-radius: 999px; border: 1px solid var(--line-2);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--panel-2) 80%, transparent), var(--panel-2));
+  backdrop-filter: blur(12px); box-shadow: var(--shadow), inset 0 1px 0 var(--hi); max-inline-size: 100%;
+}
+.deck-seg
+{
+  position: relative; display: inline-flex; align-items: center; gap: 0.45rem;
+  min-block-size: 36px; padding: 0.42rem 0.72rem; border-radius: 999px; border: 0;
+  background: transparent; color: var(--muted); font: inherit; font-size: 0.82rem;
+  font-weight: 600; line-height: 1; cursor: pointer; white-space: nowrap;
+  transition: color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.deck-seg:hover, .deck-seg:focus-visible { color: var(--text); background: color-mix(in srgb, var(--cyan) 12%, transparent); outline: none; }
+.deck-seg .ic { inline-size: 17px; block-size: 17px; flex: none; }
+.deck-seg .chev { inline-size: 12px; block-size: 12px; opacity: 0.55; margin-inline-start: -0.1rem; transition: transform 0.25s var(--ease); }
+.deck-code { font-family: var(--mono); font-weight: 700; letter-spacing: 0.03em; }
+/* The scenario label holds a fixed, centred box (sized to the longest label) so picking a
+   longer debug scenario never resizes the deck, and a short one like "Normal" sits balanced. */
+.deck-pick { display: inline-block; inline-size: 5.9rem; overflow: hidden; text-overflow: ellipsis; text-align: center; white-space: nowrap; }
+.deck-div { inline-size: 1px; align-self: stretch; margin-block: 6px; background: var(--line-2); }
+.deck-dd { position: relative; display: inline-flex; }
+.deck-dd.open > .deck-seg { color: var(--text); background: color-mix(in srgb, var(--cyan) 14%, transparent); }
+.deck-dd.open .chev { transform: rotate(180deg); }
+
+/* theme toggle - the sun/moon glyph eases as it swaps and tilts on hover */
+.deck-seg.theme .ic { transition: transform 0.45s var(--ease); }
+.deck-seg.theme:hover .ic { transform: rotate(-22deg) scale(1.06); }
+
+/* alarms - the bell goes hot and softly rings while there is anything to attend to */
+.deck-seg.bell.has { color: var(--alarm); }
+.deck-seg.bell.has .ic { animation: bell-ring 4.5s ease-in-out infinite; transform-origin: 50% 3px; }
+@keyframes bell-ring { 0%, 86%, 100% { transform: rotate(0); } 89% { transform: rotate(11deg); } 92% { transform: rotate(-9deg); } 95% { transform: rotate(5deg); } }
+.bell-count
+{
+  position: absolute; inset-block-start: 0; inset-inline-end: 0; min-inline-size: 16px; block-size: 16px;
+  padding-inline: 3px; border-radius: 999px; background: var(--alarm); color: #fff;
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 700; display: grid; place-items: center;
+  box-shadow: 0 0 8px -1px var(--alarm), 0 0 0 2px var(--bg-0);
+}
+
+/* Below tablet the segment labels fall away, leaving a compact icon deck. */
+@media (max-width: 720px)
+{
+  .deck-label { display: none; }
+  .deck-seg { padding-inline: 0.6rem; }
+}
+/* On phones the brand takes the first row on its own and the icon deck drops to a tidy,
+   right-aligned second row, so it never overflows the viewport. */
+@media (max-width: 430px)
+{
+  .topbar { row-gap: 0.7rem; justify-content: flex-end; }
+  .brand { flex: 1 1 100%; }
+  .deck { margin-inline-start: 0; }
+}
+@media (max-width: 360px)
+{
+  .deck-seg { padding-inline: 0.5rem; gap: 0.3rem; }
+}
+
 .dd-menu
 {
   position: absolute; inset-block-start: calc(100% + 0.4rem); inset-inline-end: 0; min-inline-size: 100%;
@@ -214,6 +273,11 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .orgsel-item:hover { background: var(--tile); color: var(--text); }
 .orgsel-item.on { color: var(--text); background: color-mix(in srgb, var(--cyan) 16%, transparent); }
 .orgsel-item .dotc { inline-size: 7px; block-size: 7px; border-radius: 50%; background: currentColor; flex: none; }
+/* Org dots carry the org's worst status (see orgStatus), matching the group-modal tabs.
+   Placed after the btn/item dot rules so the status tint wins in both contexts. */
+.orgsel .dotc[data-status="warn"] { background: var(--warn); box-shadow: 0 0 8px var(--warn); }
+.orgsel .dotc[data-status="alarm"] { background: var(--alarm); box-shadow: 0 0 9px var(--alarm); animation: dotpulse 1.6s ease-in-out infinite; }
+@keyframes dotpulse { 50% { box-shadow: 0 0 13px 1px var(--alarm); } }
 .orgsel-iname { flex: 1; }
 .orgsel-item .count { font-family: var(--mono); font-size: 0.72rem; opacity: 0.7; }
 
@@ -379,25 +443,31 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 
 /* Tamper-evident hash-chain log */
 .chn { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; inline-size: 100%; }
-.chn-row { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; justify-content: center; }
-.chn-blk { font-family: var(--mono); font-size: 0.78rem; font-weight: 600; padding: 0.3rem 0.55rem; border-radius: 7px; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--muted); }
+/* One nowrap row that scales to fit any width, so the chain never ragged-wraps or squishes.
+   The blocks and arrows shrink together via clamped sizing; the newest block stays emphasised. */
+.chn-row { display: flex; align-items: center; justify-content: center; gap: clamp(0.15rem, 0.8vw, 0.3rem); inline-size: 100%; flex-wrap: nowrap; }
+.chn-blk { flex: 0 1 auto; min-inline-size: 0; font-family: var(--mono); font-size: clamp(0.66rem, 2.2vw, 0.78rem); font-weight: 600; padding: 0.3rem clamp(0.34rem, 1.4vw, 0.55rem); border-radius: 7px; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chn-blk.new { color: var(--text); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); background: color-mix(in srgb, var(--accent) 12%, transparent); box-shadow: 0 0 9px -3px var(--accent); }
-.chn-arr { color: var(--faint); font-size: 0.8rem; }
+.chn-arr { flex: none; color: var(--faint); font-size: clamp(0.66rem, 2vw, 0.8rem); }
 .chn-foot { display: flex; align-items: baseline; gap: 0.5rem; }
 .chn-count { font-family: var(--mono); font-size: 1.3rem; font-weight: 700; color: var(--text); }
 .chn-seal { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ok); font-weight: 700; }
-.chn.big .chn-blk { font-size: 0.85rem; padding: 0.35rem 0.7rem; }
+.chn.big .chn-blk { font-size: clamp(0.68rem, 2.3vw, 0.85rem); padding: 0.34rem clamp(0.36rem, 1.5vw, 0.7rem); }
 .chn.big .chn-count { font-size: 1.6rem; }
 
-/* Acoustic monitor. */
-.wv { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; inline-size: 100%; padding-block-end: 0.1rem; }
+/* Acoustic monitor. The caption is one fixed-height line that holds the state label and,
+   on a spike, the bearing inline - so swapping ambient <-> spike never changes the card or
+   modal height, and the waveform above it never shifts. */
+.wv { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; inline-size: 100%; padding-block-end: 0.1rem; }
 .wv-bars { display: flex; align-items: flex-end; justify-content: center; gap: 3px; inline-size: 100%; block-size: 50px; }
 .wv-bars i { flex: 1 1 0; max-inline-size: 6px; block-size: calc(var(--h, 0.5) * 100%); border-radius: 2px; transform-origin: bottom; background: color-mix(in srgb, var(--accent) 75%, transparent); animation: eq 1.1s ease-in-out infinite; }
 .wv.big .wv-bars { block-size: 78px; }
 .wv.hot .wv-bars i { background: var(--alarm); animation-name: eqhot; animation-duration: 0.5s; }
+.wv-cap { display: flex; align-items: baseline; justify-content: center; gap: 0.5rem; min-block-size: 1.1rem; max-inline-size: 100%; line-height: 1.1; white-space: nowrap; }
 .wv-tag { font-family: var(--mono); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .wv.hot .wv-tag { color: var(--alarm); }
-.wv-loc { font-family: var(--mono); font-size: 0.62rem; color: var(--alarm); letter-spacing: 0.04em; }
+.wv-loc { position: relative; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.04em; color: color-mix(in srgb, var(--alarm) 78%, var(--muted)); padding-inline-start: 0.55rem; }
+.wv-loc::before { content: ""; position: absolute; inset-inline-start: 0; inset-block-start: -0.42rem; inline-size: 3px; block-size: 3px; border-radius: 50%; background: currentColor; opacity: 0.7; }
 @keyframes eq { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
 @keyframes eqhot { 0%, 100% { transform: scaleY(0.16); } 50% { transform: scaleY(1); } }
 @media (prefers-reduced-motion: reduce) { .wv-bars i { animation: none; } }
@@ -456,9 +526,15 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .modal-close:hover { border-color: var(--alarm); color: var(--alarm); }
 .modal-hero { display: flex; align-items: center; gap: clamp(1rem, 3vw, 1.8rem); padding: 1.1rem 0.25rem 1.2rem; flex-wrap: wrap; }
 .modal-hero .tv-wrap.big { flex: none; inline-size: 190px; margin: 0; }
-.modal-hero .tv-wrap.big.full { flex: 1; min-inline-size: 240px; block-size: auto; }
+/* The bar/trace hero shares its row with the readout: the bar flexes and shrinks while the
+   readout holds a fixed box on the right edge, so the value never wraps below or jerks the
+   bar as its digits and trend arrow change. */
+.modal-hero .tv-wrap.big.full { flex: 1 1 0; min-inline-size: 0; block-size: auto; }
 .modal-hero .tv-wrap.disc { flex: none; inline-size: min(58%, 360px); }
-.modal-readout { display: flex; align-items: baseline; gap: 0.3rem; }
+/* The hash chain needs the full row, not the narrow discrete slot, so it lays out on one
+   line at any width instead of ragged-wrapping. */
+.modal-hero.hero-discrete .tv-wrap.tv-chain { inline-size: 100%; max-inline-size: 100%; }
+.modal-readout { display: flex; align-items: baseline; gap: 0.3rem; white-space: nowrap; }
 .modal-readout b { font-family: var(--mono); font-size: clamp(2rem, 7vw, 3rem); font-weight: 700; line-height: 1; }
 .modal-readout span { color: var(--muted); font-size: 1rem; }
 .modal-readout .strend { font-size: 1.4rem; }
@@ -528,8 +604,18 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .gv-page.on { color: var(--text); border-color: transparent; background: color-mix(in srgb, var(--cyan) 22%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cyan) 45%, transparent); }
 
 /* ---------- Manage (client-side CRUD) ---------- */
-.seg.manage { margin-inline-start: auto; }
-.seg.manage.on { border-color: var(--cyan); color: var(--cyan); background: color-mix(in srgb, var(--cyan) 14%, transparent); }
+/* A glass pill matching the control deck: muted until hovered, cyan-tinted while editing. */
+.manage-btn
+{
+  display: inline-flex; align-items: center; gap: 0.5rem; margin-inline-start: auto; flex: none;
+  padding: 0.55rem 1rem; border-radius: 999px; border: 1px solid var(--line-2);
+  background: var(--panel-2); backdrop-filter: blur(10px); color: var(--muted);
+  font: inherit; font-weight: 600; font-size: 0.86rem; cursor: pointer; white-space: nowrap;
+  transition: color 0.2s var(--ease), border-color 0.2s var(--ease), background 0.2s var(--ease), transform 0.2s var(--ease);
+}
+.manage-btn .ic { inline-size: 16px; block-size: 16px; flex: none; }
+.manage-btn:hover { color: var(--text); border-color: color-mix(in srgb, var(--cyan) 45%, var(--line-2)); transform: translateY(-1px); }
+.manage-btn.on { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 50%, transparent); background: color-mix(in srgb, var(--cyan) 14%, transparent); }
 .icon-btn { inline-size: 26px; block-size: 26px; flex: none; border-radius: 8px; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--muted); font-size: 0.8rem; line-height: 1; cursor: pointer; }
 .icon-btn.danger:hover { border-color: var(--alarm); color: var(--alarm); }
 .tile-rm { position: absolute; inset-block-start: 5px; inset-inline-end: 5px; inline-size: 20px; block-size: 20px; border-radius: 6px; border: 1px solid var(--line-2); background: color-mix(in srgb, var(--bg-0) 70%, transparent); color: var(--muted); font-size: 0.7rem; line-height: 1; cursor: pointer; z-index: 2; }
@@ -658,10 +744,7 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .mm-label { fill: var(--muted); font-family: var(--mono); font-size: 12px; pointer-events: none; }
 .mm-gly { fill: var(--text); font-size: 14px; pointer-events: none; }
 
-/* ---------- Alarm bell + drawer ---------- */
-.seg.bell { position: relative; padding-inline: 0.7rem; }
-.seg.bell.has { border-color: color-mix(in srgb, var(--alarm) 55%, var(--line-2)); color: var(--alarm); }
-.bell-count { position: absolute; inset-block-start: -6px; inset-inline-end: -6px; min-inline-size: 18px; block-size: 18px; padding-inline: 4px; border-radius: 999px; background: var(--alarm); color: #fff; font-family: var(--mono); font-size: 0.66rem; font-weight: 700; display: grid; place-items: center; box-shadow: 0 0 10px -1px var(--alarm); }
+/* ---------- Alarm drawer ---------- */
 .drawer-scrim { position: fixed; inset: 0; background: rgba(4, 7, 16, 0.55); backdrop-filter: blur(3px); animation: ov 0.18s var(--ease); }
 .drawer { position: fixed; inset-block: 0; inset-inline-end: 0; inline-size: min(380px, 92vw); background: var(--panel); border-inline-start: 1px solid var(--line-2); box-shadow: var(--shadow); display: flex; flex-direction: column; animation: drawer-in 0.24s var(--ease); }
 @keyframes drawer-in { from { transform: translateX(100%); } }

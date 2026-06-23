@@ -1,9 +1,11 @@
-// top-bar.js - brand + global controls (language, theme, dev scenario).
+// top-bar.js - brand + the global control deck (alarms, network, language, theme, scenario).
 //
-// Sits outside the router outlet so it persists across navigation. Reads preferences
-// from the app store and re-renders when they change. The dropdowns follow zQuery's
-// own pattern - boolean state, z-show, @click.outside - so they behave like the
-// framework expects, with no custom z-index or document listeners.
+// Sits outside the router outlet so it persists across navigation. The controls are one
+// cohesive glass deck rather than scattered pills: each control is an icon-first segment,
+// and the text labels collapse to icons on narrow viewports so the deck stays a single row
+// from phone to desktop. Reads preferences from the app store and re-renders on change.
+// The dropdowns follow zQuery's own pattern - boolean state, z-show, @click.outside - so
+// they behave like the framework expects, with no custom z-index or document listeners.
 
 import { store } from '../store.js';
 import { t, nf, LOCALES, setLocale, localeName } from '../i18n.js';
@@ -14,6 +16,16 @@ import { openNetworkOverlay } from './network-view.js';
 import { problems } from './alarm-bar.js';
 import { esc } from '../viz.js';
 
+const SVG = (d) => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const ICON =
+{
+  bell: SVG('<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>'),
+  network: SVG('<circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.7 15.7 6.3M8.3 13.3 15.7 17.7"/>'),
+  globe: SVG('<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 4 9 15 15 0 0 1-4 9 15 15 0 0 1-4-9 15 15 0 0 1 4-9z"/>'),
+  sun: SVG('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
+  moon: SVG('<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/>'),
+  scenario: SVG('<line x1="4" y1="8.5" x2="20" y2="8.5"/><line x1="4" y1="15.5" x2="20" y2="15.5"/><circle cx="9" cy="8.5" r="2.4" fill="var(--bg-1)"/><circle cx="15" cy="15.5" r="2.4" fill="var(--bg-1)"/>'),
+};
 const CHEVRON = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
 
 $.component('top-bar', {
@@ -46,6 +58,8 @@ $.component('top-bar', {
   {
     const s = this.state;
     const alarmCount = problems(currentFleet()).length;
+    const night = store.state.theme === 'night';
+    const code = store.state.locale.slice(0, 2).toUpperCase();
     const locales = LOCALES.map((l) => `<li class="dd-option" aria-selected="${l === store.state.locale}" @click="pickLocale('${l}')">${esc(localeName(l))}</li>`).join('');
     const scenarios = SCENARIOS.map((sc) => `<li class="dd-option" aria-selected="${sc === store.state.scenario}" @click="pickScenario('${sc}')">${esc(t('scenario.' + sc))}</li>`).join('');
     return `
@@ -54,24 +68,31 @@ $.component('top-bar', {
           <span class="brand-mark"></span>
           <span class="brand-text"><span class="brand-word">pamoja</span><span class="brand-sub">${t('ui.subtitle')}</span></span>
         </a>
-        <div class="spacer"></div>
-        <div class="controls">
-          <button class="seg bell ${alarmCount ? 'has' : ''}" type="button" @click="openAlarms" aria-label="${esc(t('ui.alarmsTitle'))}">⚠${alarmCount ? `<span class="bell-count">${nf(alarmCount)}</span>` : ''}</button>
-          <button class="seg" type="button" @click="openNetwork" aria-label="${esc(t('ui.network'))}">⬡ ${t('ui.network')}</button>
-          <div class="dd ${s.localeOpen ? 'open' : ''}" @click.outside="closeLocale">
-            <button class="dd-button" type="button" @click="toggleLocale" aria-label="${esc(t('ui.language'))}">
-              <span>${esc(localeName(store.state.locale))}</span>${CHEVRON}
+        <nav class="deck" aria-label="${esc(t('ui.subtitle'))}">
+          <button class="deck-seg bell ${alarmCount ? 'has' : ''}" type="button" @click="openAlarms" aria-label="${esc(t('ui.alarmsTitle'))}" title="${esc(t('ui.alarmsTitle'))}">
+            ${ICON.bell}${alarmCount ? `<span class="bell-count">${nf(alarmCount)}</span>` : ''}
+          </button>
+          <button class="deck-seg" type="button" @click="openNetwork" aria-label="${esc(t('ui.network'))}" title="${esc(t('ui.network'))}">
+            ${ICON.network}<span class="deck-label">${t('ui.network')}</span>
+          </button>
+          <span class="deck-div" aria-hidden="true"></span>
+          <div class="deck-dd ${s.localeOpen ? 'open' : ''}" @click.outside="closeLocale">
+            <button class="deck-seg" type="button" @click="toggleLocale" aria-label="${esc(t('ui.language'))}" title="${esc(localeName(store.state.locale))}">
+              ${ICON.globe}<span class="deck-code">${esc(code)}</span>${CHEVRON}
             </button>
             <ul class="dd-menu" role="listbox" z-show="localeOpen">${locales}</ul>
           </div>
-          <button class="seg" type="button" @click="toggleTheme" aria-label="${esc(t('ui.theme'))}">${store.state.theme === 'night' ? '☀ ' + t('ui.day') : '☾ ' + t('ui.night')}</button>
-          <div class="dd ${s.scenarioOpen ? 'open' : ''}" @click.outside="closeScenario">
-            <button class="dd-button" type="button" @click="toggleScenario" aria-label="${esc(t('ui.scenario'))}">
-              <span>${esc(t('scenario.' + store.state.scenario))}</span>${CHEVRON}
+          <button class="deck-seg theme ${night ? 'is-night' : 'is-day'}" type="button" @click="toggleTheme" aria-label="${esc(t('ui.theme'))}" title="${night ? esc(t('ui.day')) : esc(t('ui.night'))}">
+            ${night ? ICON.sun : ICON.moon}
+          </button>
+          <span class="deck-div" aria-hidden="true"></span>
+          <div class="deck-dd ${s.scenarioOpen ? 'open' : ''}" @click.outside="closeScenario">
+            <button class="deck-seg" type="button" @click="toggleScenario" aria-label="${esc(t('ui.scenario'))}" title="${esc(t('scenario.' + store.state.scenario))}">
+              ${ICON.scenario}<span class="deck-label deck-pick">${esc(t('scenario.' + store.state.scenario))}</span>${CHEVRON}
             </button>
             <ul class="dd-menu" role="listbox" z-show="scenarioOpen">${scenarios}</ul>
           </div>
-        </div>
+        </nav>
       </header>`;
   },
 });

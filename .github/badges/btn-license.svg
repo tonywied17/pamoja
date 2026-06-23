@@ -1,4 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="56" height="26" viewBox="0 0 56 26" role="img" aria-label="MIT">
-  <rect x="0.5" y="0.5" width="55" height="25" rx="12.5" fill="#1FA995"/>
-  <text x="28" y="17.5" text-anchor="middle" font-family="Segoe UI, Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="12.5" font-weight="700" fill="#ffffff" letter-spacing="0.3">MIT</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="62" height="28" viewBox="0 0 62 28" role="img" aria-label="MIT">
+  <defs><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16213f"/><stop offset="1" stop-color="#0a1022"/></linearGradient></defs>
+  <rect x="0.5" y="0.5" width="61" height="27" rx="7" fill="url(#b)" stroke="rgba(140,170,230,0.30)"/>
+  <rect x="1.5" y="1.5" width="59" height="12" rx="6" fill="#ffffff" opacity="0.05"/>
+  <circle cx="16.2" cy="14" r="3.2" fill="#1fd3b0"/>
+  <text x="26.4" y="18.4" font-family="Segoe UI, Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="600" fill="#e6eeff" letter-spacing="0.3">MIT</text>
 </svg>

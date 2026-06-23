@@ -13,9 +13,24 @@ import { currentFleet } from '../edits.js';
 import { conn, tileViz, bannerRing, trendArrow, isDiscrete, vizFor, esc } from '../viz.js';
 import { openMeshOverlay } from './mesh-modal.js';
 
+const ICON_EDIT = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19.5l-4 1 1-4z"/></svg>';
+const ICON_DONE = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+
 function meshPeerCount(g)
 {
   return g.sensors.filter((x) => vizFor(x.reading.key, x.reading.unit) !== 'mesh').length;
+}
+
+/** Worst sensor status across an org, so its dot can carry the org's health. */
+function orgStatus(o)
+{
+  let worst = 'ok';
+  for (const g of o.groups) for (const s of g.sensors)
+  {
+    if (s.reading.status === 'alarm') return 'alarm';
+    if (s.reading.status === 'warn') worst = 'warn';
+  }
+  return worst;
 }
 
 function isMeshSensor(sid)
@@ -211,18 +226,18 @@ $.component('dashboard-page', {
     const sel = this.selectedOrg(f) || f.orgs[0];
     const open = this.state.orgOpen;
     const menu = f.orgs.map((o) => `<a class="orgsel-item ${sel && o.id === sel.id ? 'on' : ''}" z-link="/org/${o.id}" @click="closeOrg">
-        <span class="dotc"></span><span class="orgsel-iname">${esc(o.name)}</span><span class="count">${nf(o.groups.length)}</span></a>`).join('');
+        <span class="dotc" data-status="${orgStatus(o)}"></span><span class="orgsel-iname">${esc(o.name)}</span><span class="count">${nf(o.groups.length)}</span></a>`).join('');
     return `<div class="orgbar">
       <div class="orgsel ${open ? 'open' : ''}" @click.outside="closeOrg">
         <button class="orgsel-btn" type="button" @click="toggleOrg" aria-expanded="${open ? 'true' : 'false'}">
-          <span class="dotc"></span>
+          <span class="dotc" data-status="${sel ? orgStatus(sel) : 'ok'}"></span>
           <span class="orgsel-cur">${esc(sel ? sel.name : t('ui.orgs'))}</span>
           <span class="count">${sel ? nf(sel.groups.length) : ''}</span>
           <svg class="orgsel-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
         </button>
         <div class="orgsel-menu">${menu}</div>
       </div>
-      <button class="seg manage ${store.state.editing ? 'on' : ''}" type="button" @click="onManage">${store.state.editing ? '✓ ' + t('ui.done') : '✎ ' + t('ui.manage')}</button>
+      <button class="manage-btn ${store.state.editing ? 'on' : ''}" type="button" @click="onManage">${store.state.editing ? ICON_DONE : ICON_EDIT}<span>${store.state.editing ? t('ui.done') : t('ui.manage')}</span></button>
     </div>`;
   },
 

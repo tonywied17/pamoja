@@ -10,14 +10,14 @@
 &nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-offline-first-dark.svg"><img height="26" alt="offline-first" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-offline-first-light.svg"></picture>
 &nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-rust-core-dark.svg"><img height="26" alt="Rust core" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-rust-core-light.svg"></picture>
 
-<a href="https://crates.io/users/tonywied17"><img height="26" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-crates.svg"></a>
-&nbsp;<a href="https://www.npmjs.com/org/pamoja"><img height="26" alt="npm" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-npm.svg"></a>
-&nbsp;<a href="https://pypi.org/user/tonywied17/"><img height="26" alt="PyPI" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-pypi.svg"></a>
-&nbsp;<a href="https://www.nuget.org/profiles/tonywied17"><img height="26" alt="NuGet" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-nuget.svg"></a>
-&nbsp;<a href="LICENSE-MIT"><img height="26" alt="MIT license" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-license.svg"></a>
+<a href="https://crates.io/users/tonywied17"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-crates.svg"></a>
+&nbsp;<a href="https://www.npmjs.com/org/pamoja"><img height="28" alt="npm" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-npm.svg"></a>
+&nbsp;<a href="https://pypi.org/user/tonywied17/"><img height="28" alt="PyPI" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-pypi.svg"></a>
+&nbsp;<a href="https://www.nuget.org/profiles/tonywied17"><img height="28" alt="NuGet" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-nuget.svg"></a>
+&nbsp;<a href="LICENSE-MIT"><img height="28" alt="MIT license" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-license.svg"></a>
 
-<a href="https://pamoja.molex.cloud"><img height="32" alt="website" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-website.svg"></a>
-&nbsp;<a href="https://pamoja.molex.cloud/dashboard"><img height="32" alt="dashboard demo" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-dashboard.svg"></a>
+<a href="https://pamoja.molex.cloud"><img height="34" alt="website" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-website.svg"></a>
+&nbsp;<a href="https://pamoja.molex.cloud/dashboard"><img height="34" alt="dashboard demo" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-dashboard.svg"></a>
 
 </div>
 

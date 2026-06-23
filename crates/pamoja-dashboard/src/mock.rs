@@ -606,11 +606,12 @@ impl StateSource for Mock {
 
         // Health post: a cold-chain clinic kit on NB-IoT whose readings are written to a
         // tamper-evident, hash-chained log so a record cannot be altered after the fact.
+        let fridge_base = if s == Scenario::Alarm { 11.5 } else { 4.2 };
         let fridge = self.sensor(
             "fridge",
             "fridge_temp",
             "celsius",
-            4.2,
+            fridge_base,
             1.2,
             (2.0, 8.0),
             None,
@@ -703,13 +704,27 @@ impl StateSource for Mock {
             (0.0, 16.0),
             None,
         );
-        let water_point = self.group(
+        let mut water_point = self.group(
             "water-point",
             "Water point",
             LinkKind::Lora,
             3,
             vec![flow, wp_well, tank, pump, flow_trend],
         );
+        if s == Scenario::LinkLost {
+            water_point.link.online = false;
+            water_point.link.strength = 0;
+            water_point.sensors[0].events.insert(
+                0,
+                EventRecord {
+                    level: EventLevel::Error,
+                    code: "link.lost".to_owned(),
+                    value: None,
+                    age_secs: Some(40),
+                },
+            );
+            water_point.recompute_status();
+        }
 
         // Ranger relay: a conservation mesh node that listens for threats (chainsaws,
         // gunshots) on an acoustic monitor and relays alerts to the ranger post.
@@ -722,21 +737,27 @@ impl StateSource for Mock {
             (0.0, 3000.0),
             None,
         );
+        let rr_low = s == Scenario::LowBattery;
         let rr_batt = self.sensor(
             "rr-batt",
             "battery_level",
             "percent",
-            90.0,
+            if rr_low { 14.0 } else { 90.0 },
             5.0,
             (20.0, 100.0),
-            Some(0.9),
+            Some(if rr_low { 0.14 } else { 0.9 }),
         );
         let relay = self.chip_sensor("relay", "relay_status", "state.online", Status::Ok);
+        let rr_temp_base = if s == Scenario::SensorFault {
+            -127.0
+        } else {
+            27.0
+        };
         let rr_temp = self.sensor(
             "rr-temp",
             "ambient_temp",
             "celsius",
-            27.0,
+            rr_temp_base,
             4.0,
             (0.0, 45.0),
             None,

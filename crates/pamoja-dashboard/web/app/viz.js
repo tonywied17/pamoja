@@ -290,7 +290,7 @@ function wave(r, big)
   }
   const tag = r.state ? t(r.state) : t('acoustic.ambient');
   const loc = threat ? '<span class="wv-loc">≈ 2.1 km · NE</span>' : '';
-  return `<div class="wv${threat ? ' hot' : ''}${big ? ' big' : ''}"><div class="wv-bars" aria-hidden="true">${bars}</div><span class="wv-tag">${esc(tag)}</span>${loc}</div>`;
+  return `<div class="wv${threat ? ' hot' : ''}${big ? ' big' : ''}"><div class="wv-bars" aria-hidden="true">${bars}</div><div class="wv-cap"><span class="wv-tag">${esc(tag)}</span>${loc}</div></div>`;
 }
 
 // The tamper-evident log: a row of hash-chained blocks (newest emphasised) and the count
@@ -298,7 +298,7 @@ function wave(r, big)
 function chain(r, big)
 {
   const count = Math.round(r.value);
-  const n = big ? 6 : 4;
+  const n = 4;
   const hex = (k) => (((Math.abs(k) * 2654435761) >>> 0) % 0x10000).toString(16).padStart(4, '0');
   let row = '';
   for (let i = n - 1; i >= 0; i--)
@@ -424,8 +424,9 @@ export function tileViz(s, big = false, nodes)
 {
   const r = s.reading;
   const uid = (big ? 'b' : 't') + (s.id || r.key).replace(/[^a-z0-9]/gi, '');
+  const vk = vizFor(r.key, r.unit);
   let inner, full = false, disc = false;
-  switch (vizFor(r.key, r.unit))
+  switch (vk)
   {
     case 'therm': inner = therm(r, big); break;
     case 'droplet': inner = droplet(r, uid, big); break;
@@ -444,7 +445,7 @@ export function tileViz(s, big = false, nodes)
     default: inner = big ? bigBars(s.history, r.band) : miniSpark(s.history); full = true;
   }
   // Discrete glyphs (chip/valve) size to their own content rather than the fixed gauge slot.
-  const cls = disc ? 'tv-wrap disc' : `tv-wrap${full ? ' full' : ''}${big ? ' big' : ''}`;
+  const cls = disc ? `tv-wrap disc tv-${vk}` : `tv-wrap tv-${vk}${full ? ' full' : ''}${big ? ' big' : ''}`;
   return `<div class="${cls}">${inner}</div>`;
 }
 
