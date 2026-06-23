@@ -10,7 +10,9 @@
 &nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-offline-first-dark.svg"><img height="26" alt="offline-first" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-offline-first-light.svg"></picture>
 &nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-rust-core-dark.svg"><img height="26" alt="Rust core" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/tag-rust-core-light.svg"></picture>
 
-<a href="https://crates.io/users/molexxxx"><img height="26" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-crates.svg"></a>
+<a href="https://pamoja.molex.cloud"><img height="26" alt="website" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-website.svg"></a>
+&nbsp;<a href="https://pamoja.molex.cloud/dashboard"><img height="26" alt="dashboard demo" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-dashboard.svg"></a>
+&nbsp;<a href="https://crates.io/users/molexxxx"><img height="26" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-crates.svg"></a>
 &nbsp;<a href="https://www.npmjs.com/org/pamoja"><img height="26" alt="npm" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-npm.svg"></a>
 &nbsp;<a href="https://pypi.org/user/molexxxx/"><img height="26" alt="PyPI" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-pypi.svg"></a>
 &nbsp;<a href="https://www.nuget.org/profiles/molexxxx"><img height="26" alt="NuGet" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-nuget.svg"></a>
@@ -61,12 +63,14 @@ today.
 | `pamoja-coap` | messaging | A CoAP client over UDP with confirmable and non-confirmable delivery and RFC 7641 observe. |
 | `pamoja-ladder` | resilience | A cost-aware transport ladder: cheapest reachable rung first, buffering to a `Store` when every link is down. |
 | `pamoja-sync` | resilience | Offline-first store-and-forward queues: in-memory, plus a crash-safe on-disk queue that survives power loss. |
+| `pamoja-dashboard` | resilience | A local-first fleet dashboard a node serves over its own hotspot - multilingual and fully offline, with a hardware-free mock for development - so a community can see its own data with no cloud. |
 | `pamoja-bus` | core | An in-memory typed publish/subscribe event bus implementing the core `EventBus` trait. |
 | `pamoja-loopback` | testing | An in-process `Transport` with topic matching and a fault injector, exercising the full path with no broker. |
 | `pamoja-sim` | testing | Hardware-free simulators: noisy and replay sensors, a recording actuator, a degraded-link transport, and a simulated robot that turns velocity commands into a dead-reckoned pose. |
 | `pamoja-power` | energy | Duty cycling plus an energy-aware governor that stretches work as the battery drains and eases off while charging. |
 | `pamoja-security` | trust | ed25519 device identity: sign a device's telemetry and verify it, so a gateway can prove a reading is authentic. |
 | `pamoja-audit` | trust | A `no_std` tamper-evident, SHA-256 hash-chained log; altering, reordering, or dropping any record breaks verification. |
+| `pamoja-session` | trust | A secured channel - X25519 key agreement, HKDF, and ChaCha20-Poly1305 with an anti-replay window - so two nodes get confidentiality and integrity over a hostile link without a TLS stack. |
 | `pamoja-telemetry` | observe | Allocation-free observability that ships only what is worth the bytes as link cost rises, while counting everything. |
 | `pamoja-lora` | radio | The exact LoRa time-on-air of a payload and the duty-cycle off-time it forces, so a node stays in regulation and budget. |
 | `pamoja-lorawan` | radio | LoRaWAN 1.0.x MAC framing with AES-CMAC and AES encryption and OTAA join, against the FIPS-197 and RFC 4493 vectors. |
@@ -76,6 +80,8 @@ today.
 | `pamoja-can` | field I/O | CAN 2.0 and CAN-FD frames (11- and 29-bit IDs) plus J1939 decode and compose for trucks, tractors, and gensets. |
 | `pamoja-serial` | field I/O | SLIP (RFC 1055) and COBS byte-stuffing with streaming frame decoders, so a raw UART byte stream carries discrete packets to motor controllers, GPS, and LiDAR. |
 | `pamoja-gpio` | field I/O | On-board bus logic: I2C 7- and 10-bit address frames (NXP UM10204) with reserved-range checks, the four SPI clock modes, and active-high/active-low GPIO pins. |
+| `pamoja-sensors` | field I/O | Datasheet-anchored, `no_std` decoders for common, cheap parts: BME280 (temp/humidity/pressure), DS18B20, INA219 power, and the ADS1115 ADC. |
+| `pamoja-actuators` | field I/O | `no_std` drivers for cheap outputs: PCA9685 16-channel PWM with servo-angle helpers, plus a stepper driver. |
 | `pamoja-zenoh` | robotics | A Zenoh transport plus a key-expression engine (validity, canonical form, wildcard matching) so fleets and robots share data over Zenoh, with or without ROS 2. |
 | `pamoja-ros2` | robotics | A ROS 2 bridge - topics, services, and actions - with ROS 2 name, RIHS01 type-hash, and CDR handling plus rmw_zenoh key assembly, so a robot appears as an ordinary pamoja device; interoperates with rmw_zenoh, routerless. |
 | `pamoja-kit` | ergonomics | Plain-language helpers that name the goal over the math: smoothing/filtering (EMA, median, Kalman, complementary, debounce), calibration, units and deadband shaping, PID and on/off control with ramping, trend/surge/depletion and anomaly prediction, rolling-window stats, wheel kinematics (differential, Ackermann, skid-steer, mecanum), odometry, waypoint guidance and motion safety (e-stop, watchdog, limits), two-link arm forward/inverse kinematics, and geo (distance/bearing/geofence), IMU tilt, and dew-point helpers. |
@@ -183,13 +189,13 @@ This separation is literal in Rust: `pamoja-core` defines the traits, and each t
 
 Messaging and radio. MQTT and CoAP work today, behind a cost-aware transport ladder that tries the cheapest link first and buffers when there is none. LoRa and LoRaWAN long-range radio, and a CRC-checked mesh frame with reverse-path routing, now ship as further rungs. Next: the cheap-radio drivers they ride on (ESP-NOW, nRF24), a Meshtastic bridge for off-grid networks, and cellular and satellite uplinks for the most remote telemetry.
 
-Hardware and sensors. Serial (SLIP/COBS), CAN with J1939, and RS485/Modbus ship today for long field cabling, with GPIO/I2C/SPI next. A catalog of drivers for cheap, common, salvageable parts, plus device profiles you instantiate by name (an irrigation node, a well-level monitor) instead of wiring pins.
+Hardware and sensors. Serial (SLIP/COBS), CAN with J1939, RS485/Modbus, and on-board GPIO/I2C/SPI ship today for field wiring, alongside datasheet-anchored decoders for common, salvageable parts (BME280, DS18B20, INA219, ADS1115) and actuator drivers (PCA9685 PWM/servo, stepper). You can also instantiate a node by name with a device profile (an irrigation node, a well-level monitor) instead of wiring pins. Next: a broader driver catalog.
 
-Resilience and power. Offline-first store-and-forward and energy-aware duty cycling for solar and battery work today; next are local-first dashboards a device serves over its own hotspot, and data-mule sync for places with no link at all.
+Resilience and power. Offline-first store-and-forward, energy-aware duty cycling for solar and battery, and a local-first dashboard a node serves over its own hotspot - multilingual, fully offline, with a hardware-free mock - all work today; next is data-mule sync for places with no link at all.
 
 Robotics and drones. A ROS 2 bridge - topics, services, and actions - over a Zenoh transport ships today, interoperating with rmw_zenoh, routerless; the kit adds wheel kinematics, odometry, waypoint guidance, motion safety, and arm forward/inverse kinematics, and a simulated robot exercises it all with no hardware. MAVLink for drones is next, modeled as ordinary pamoja devices.
 
-Security. Memory safety by construction today, with ed25519 device identity and a tamper-evident, hash-chained audit log already shipping. Next: TLS 1.3 and DTLS, X.509 device identity, and signed OTA updates with verified rollback.
+Security. Memory safety by construction today, with ed25519 device identity, a tamper-evident hash-chained audit log, and a secured channel (X25519 key agreement and ChaCha20-Poly1305 with anti-replay) already shipping. Next: TLS 1.3 and DTLS, X.509 device identity, and signed OTA updates with verified rollback.
 
 Reach. Bindings beyond Node: Python, C#/.NET, Lua, WebAssembly, Kotlin, Swift, and Go. The plain-language helper layer (`pamoja-kit`) is broad today - smooth a noisy reading, hold a value with a PID, warn before a tank runs dry, steer by wheel kinematics - each naming the goal over the math with the real algorithm one layer down. And an offline-first community cookbook so the SDK reaches the people it is built for.
 

@@ -185,6 +185,22 @@ export const CRATES = [
       'On-board bus logic: I2C 7- and 10-bit address frames (NXP UM10204) with reserved-range checks, the four SPI clock modes, and active-high/active-low GPIO pins, so a node addresses the cheap breakout sensors and relays wired straight to it. no_std and allocation-free.',
   },
   {
+    id: 'pamoja-sensors',
+    name: 'pamoja-sensors',
+    role: 'field I/O',
+    color: 'teal',
+    blurb:
+      'Datasheet-anchored, no_std decoders for the cheap parts a field node actually carries: BME280 temperature/humidity/pressure, the DS18B20 one-wire probe, INA219 current and power, and the ADS1115 ADC - raw registers in, real units out.',
+  },
+  {
+    id: 'pamoja-actuators',
+    name: 'pamoja-actuators',
+    role: 'field I/O',
+    color: 'teal',
+    blurb:
+      'no_std drivers for the cheap outputs on the other side of a node: the PCA9685 16-channel PWM expander with servo-angle helpers, and a stepper driver, so the same device that reads a sensor can move a valve or a pump.',
+  },
+  {
     id: 'pamoja-security',
     name: 'pamoja-security',
     role: 'trust',
@@ -199,6 +215,14 @@ export const CRATES = [
     color: 'amber',
     blurb:
       'A no_std tamper-evident log: signed, SHA-256 hash-chained entries where each commits to the one before, so altering, reordering, or dropping any record breaks verification. Proof for anything that has to be trusted after the fact - a cold chain, a water log, a clinic record.',
+  },
+  {
+    id: 'pamoja-session',
+    name: 'pamoja-session',
+    role: 'trust',
+    color: 'amber',
+    blurb:
+      'A secured channel for two nodes over a hostile link: X25519 key agreement, HKDF, and ChaCha20-Poly1305 with an anti-replay window - confidentiality and integrity without dragging in a full TLS stack.',
   },
   {
     id: 'pamoja-telemetry',
@@ -231,6 +255,14 @@ export const CRATES = [
     color: 'teal',
     blurb:
       'A cost-aware transport ladder: it tries the cheapest reachable link first and buffers to a Store when every link is down, so connectivity degrades gracefully instead of failing outright.',
+  },
+  {
+    id: 'pamoja-dashboard',
+    name: 'pamoja-dashboard',
+    role: 'resilience',
+    color: 'teal',
+    blurb:
+      'A local-first fleet dashboard a node serves over its own hotspot: a futuristic, multilingual console that runs fully offline, with a hardware-free mock for development, so a community sees its own data with no cloud.',
   },
   {
     id: 'pamoja-kit',
@@ -306,14 +338,6 @@ export const PLANNED_CRATES = [
     planned: true,
     blurb:
       'Signed over-the-air updates with verified rollback, so a fleet scattered across a region can be fixed and trusted without a truck roll, and a bad update can never brick a node.',
-  },
-  {
-    id: 'pamoja-dashboard',
-    name: 'pamoja-dashboard',
-    role: 'resilience · planned',
-    planned: true,
-    blurb:
-      'A local-first dashboard a node serves over its own hotspot, so a community can see its own data with no cloud and no internet - the offline-first answer to "where does the data go".',
   },
   {
     id: 'pamoja-mavlink',
@@ -604,7 +628,8 @@ export const TRACKS = [
     lead: 'Talk to the cheap, salvageable parts the field already runs on, by name instead of by pin.',
     tags: [
       { t: 'Modbus / RS485', on: true }, { t: 'CAN / J1939', on: true }, { t: 'device profiles', on: true },
-      { t: 'serial (SLIP / COBS)', on: true }, { t: 'GPIO / I2C / SPI', on: true }, { t: 'driver catalog', on: false },
+      { t: 'serial (SLIP / COBS)', on: true }, { t: 'GPIO / I2C / SPI', on: true },
+      { t: 'sensor + actuator drivers', on: true }, { t: 'driver catalog', on: false },
     ],
   },
   {
@@ -625,7 +650,7 @@ export const TRACKS = [
     lead: 'Offline-first by default, awake only when it must be, so a node lives on sun and a battery.',
     tags: [
       { t: 'store-and-forward', on: true }, { t: 'duty cycling', on: true }, { t: 'tamper-evident audit', on: true },
-      { t: 'local-first dashboards', on: false }, { t: 'data-mule sync', on: false },
+      { t: 'local-first dashboards', on: true }, { t: 'data-mule sync', on: false },
     ],
   },
   {
@@ -634,8 +659,8 @@ export const TRACKS = [
     accent: 'amber',
     lead: 'Memory-safe by construction, with identity and signed updates that survive a hostile link.',
     tags: [
-      { t: 'memory safety', on: true }, { t: 'TLS 1.3 / DTLS', on: false }, { t: 'X.509 identity', on: false },
-      { t: 'signed OTA + rollback', on: false },
+      { t: 'memory safety', on: true }, { t: 'secured channel', on: true }, { t: 'TLS 1.3 / DTLS', on: false },
+      { t: 'X.509 identity', on: false }, { t: 'signed OTA + rollback', on: false },
     ],
   },
   {
