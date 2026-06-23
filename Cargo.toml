@@ -43,8 +43,8 @@ version = "0.1.10"
 edition = "2021"
 rust-version = "1.75"
 license = "MIT"
-repository = "https://github.com/tonywied17/pamoja"
-authors = ["tonywied17"]
+repository = "https://github.com/molexxxx/pamoja"
+authors = ["molexxxx"]
 
 # Internal crate dependencies. The version is required so each crate can be
 # published to crates.io, and is kept in lockstep with workspace.package.version.

@@ -1,6 +1,6 @@
 # pamoja-core (Python)
 
-Python bindings for the [pamoja](https://github.com/tonywied17/pamoja) device
+Python bindings for the [pamoja](https://github.com/molexxxx/pamoja) device
 SDK core, built with [PyO3](https://pyo3.rs) and [maturin](https://www.maturin.rs).
 
 The generated surface is intentionally thin. A hand-written, idiomatic layer is

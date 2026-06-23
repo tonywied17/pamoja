@@ -1,6 +1,6 @@
 # @pamoja/core
 
-Node.js bindings for the [pamoja](https://github.com/tonywied17/pamoja)
+Node.js bindings for the [pamoja](https://github.com/molexxxx/pamoja)
 device SDK core, built with [napi-rs](https://napi.rs).
 
 The generated surface is intentionally thin. A hand-written, idiomatic layer is

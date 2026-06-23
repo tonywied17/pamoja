@@ -25,7 +25,7 @@ const PACKAGES = [
   { label: '@pamoja/core', href: 'https://www.npmjs.com/org/pamoja' },
   { label: 'PyPI', href: 'https://pypi.org/user/tonywied17/' },
   { label: 'NuGet', href: 'https://www.nuget.org/profiles/tonywied17' },
-  { label: 'GitHub', href: 'https://github.com/tonywied17/pamoja' },
+  { label: 'GitHub', href: 'https://github.com/molexxxx/pamoja' },
 ];
 
 export function setAccent(theme)

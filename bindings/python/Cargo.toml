@@ -5,8 +5,8 @@ edition = "2021"
 # PyO3 sets the real minimum supported Rust version for this binding.
 rust-version = "1.74"
 license = "MIT"
-repository = "https://github.com/tonywied17/pamoja"
-authors = ["tonywied17"]
+repository = "https://github.com/molexxxx/pamoja"
+authors = ["molexxxx"]
 publish = false
 
 [lib]

@@ -6,7 +6,7 @@
   "publishConfig": { "access": "public" },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tonywied17/pamoja.git"
+    "url": "git+https://github.com/molexxxx/pamoja.git"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
