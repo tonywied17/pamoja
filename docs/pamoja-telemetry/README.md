@@ -1,0 +1,49 @@
+# pamoja-telemetry
+
+Generated from rustdoc by `cargo xtask docs` - do not edit by hand.
+
+Device-side observability for the pamoja SDK.
+
+Observability is hard on the devices this SDK targets: a node on a metered radio
+cannot afford to stream every log line, but it still needs to be diagnosable when
+something goes wrong in the field. This crate squares that by separating the
+detail a node records from the detail it ships, and by letting the link decide how
+much detail is worth sending:
+
+- [`Event`] - a structured, allocation-free event: a [`Level`], a stable short
+  code, and an optional measurement.
+- [`Reporter`] - records events, ships only those at or above a threshold, and
+  counts every event it sees so the aggregate picture stays complete even when
+  detail is held back.
+- [`LinkCost`] - maps how costly the link is onto that threshold, so telemetry
+  degrades gracefully: everything on a free link, only warnings and errors on an
+  expensive one.
+- [`Snapshot`] - a handful of integers a node ships periodically in place of the
+  raw event stream.
+
+The crate is `no_std` and allocation-free - it keeps only fixed counters and
+`'static` codes - so the same observability runs on a microcontroller and on a
+server.
+
+**Examples**
+
+```
+use pamoja_telemetry::{Event, Level, LinkCost, Reporter};
+
+let mut reporter = Reporter::new(Level::Trace);
+
+// The link becomes expensive, so only warnings and errors are worth shipping.
+reporter.adapt_to(LinkCost::Expensive);
+assert!(reporter.record(Event::info("reading.ok").with_value(4.8)).is_none());
+assert!(reporter.record(Event::error("link.lost")).is_some());
+
+// The detail was dropped, but the counts are intact for the next snapshot.
+assert_eq!(reporter.total(), 2);
+assert_eq!(reporter.snapshot().dropped, 1);
+```
+
+## Modules
+
+- [event](event.md)
+- [reporter](reporter.md)
+

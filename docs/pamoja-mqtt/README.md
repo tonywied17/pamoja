@@ -1,0 +1,205 @@
+# pamoja-mqtt
+
+Generated from rustdoc by `cargo xtask docs` - do not edit by hand.
+
+MQTT transport for the pamoja SDK.
+
+[`MqttTransport`] implements the core [`Transport`](pamoja_core::Transport)
+trait on top of the pure-Rust [`rumqttc`] client, so an application can publish
+to and subscribe from an MQTT broker through the same protocol-agnostic surface
+it uses for every other transport.
+
+Once [`connect`](Transport::connect) succeeds the transport owns a background
+task that drives the MQTT event loop: it answers keep-alive pings, completes
+delivery handshakes, and forwards inbound messages to an internal queue that
+[`recv`](MqttTransport::recv) drains. Publishing and subscribing use the
+default [`QualityOfService`] configured on the transport.
+
+**Examples**
+
+```no_run
+use pamoja_core::Transport;
+use pamoja_mqtt::{MqttConfig, MqttTransport};
+
+let mut transport = MqttTransport::new(MqttConfig::new("sensor-1", "localhost", 1883));
+transport.connect().await?;
+transport.subscribe("sensors/+/temperature").await?;
+transport.send("sensors/1/temperature", b"21.5").await?;
+
+if let Some(message) = transport.recv().await? {
+    println!("{}: {} bytes", message.topic, message.payload.len());
+}
+```
+
+## enum `QualityOfService`
+
+The delivery guarantee applied to published and subscribed messages.
+
+These map one-to-one onto the MQTT protocol's quality-of-service levels.
+
+- `AtMostOnce` - Fire and forget: the broker does not acknowledge delivery.
+- `AtLeastOnce` - The message is delivered at least once and acknowledged.
+- `ExactlyOnce` - The message is delivered exactly once via a four-step handshake.
+
+## struct `MqttConfig`
+
+Connection settings for an [`MqttTransport`].
+
+Construct with [`MqttConfig::new`] and refine with the chained setters; every
+field has a sensible default so only the broker address and client id are
+required.
+
+### `MqttConfig::new`
+
+Creates a configuration for the given client id and broker address.
+
+**Arguments**
+
+* `client_id` - the MQTT client identifier presented to the broker.
+* `host` - the broker hostname or IP address.
+* `port` - the broker TCP port, conventionally `1883` for plaintext MQTT.
+
+**Returns**
+
+A configuration with a 30-second keep-alive, a request capacity of 64, and
+a default quality of service of [`QualityOfService::AtLeastOnce`].
+
+```rust
+fn new(client_id: impl Into <String>, host: impl Into <String>, port: u16) -> Self
+```
+
+### `MqttConfig::keep_alive`
+
+Sets the keep-alive interval used to hold the connection open.
+
+**Arguments**
+
+* `interval` - how often the client pings the broker when otherwise idle.
+
+**Returns**
+
+The updated configuration, for chaining.
+
+```rust
+fn keep_alive(mut self, interval: Duration) -> Self
+```
+
+### `MqttConfig::capacity`
+
+Sets the bound on outstanding client requests buffered toward the broker.
+
+**Arguments**
+
+* `capacity` - the request channel capacity; values below one are clamped
+  to one.
+
+**Returns**
+
+The updated configuration, for chaining.
+
+```rust
+fn capacity(mut self, capacity: usize) -> Self
+```
+
+### `MqttConfig::qos`
+
+Sets the default quality of service for publishes and subscriptions.
+
+**Arguments**
+
+* `qos` - the delivery guarantee applied by [`send`](Transport::send) and
+  [`subscribe`](Transport::subscribe).
+
+**Returns**
+
+The updated configuration, for chaining.
+
+```rust
+fn qos(mut self, qos: QualityOfService) -> Self
+```
+
+## struct `Message`
+
+A message received from a subscribed topic.
+
+Fields:
+
+- `topic: String` - The topic the message was published to.
+- `payload: Vec <u8>` - The raw payload bytes.
+
+## struct `MqttTransport`
+
+An MQTT client that implements the core [`Transport`] trait.
+
+A transport is created disconnected; [`connect`](Transport::connect) opens the
+link and spawns the background task that runs the MQTT event loop for the life
+of the connection. Inbound messages are queued and read with
+[`recv`](MqttTransport::recv).
+
+### `MqttTransport::new`
+
+Creates a transport from the given configuration without connecting.
+
+**Arguments**
+
+* `config` - the broker connection settings.
+
+**Returns**
+
+A disconnected transport ready for [`connect`](Transport::connect).
+
+```rust
+fn new(config: MqttConfig) -> Self
+```
+
+### `MqttTransport::is_connected`
+
+Reports whether the transport currently holds an active connection.
+
+**Returns**
+
+`true` once [`connect`](Transport::connect) has succeeded and before
+[`disconnect`](MqttTransport::disconnect) is called.
+
+```rust
+fn is_connected(&self) -> bool
+```
+
+### `MqttTransport::recv`
+
+Awaits the next message from any subscribed topic.
+
+**Returns**
+
+`Some(message)` for the next queued message, or `None` once the event loop
+has stopped and no further messages will arrive.
+
+**Errors**
+
+Returns [`Error::Closed`](pamoja_core::Error::Closed) if the transport
+is not connected.
+
+```rust
+async fn recv(&mut self) -> Result <Option <Message>>
+```
+
+### `MqttTransport::disconnect`
+
+Closes the connection and stops the background event loop.
+
+Calling this on a transport that is not connected is a no-op.
+
+**Returns**
+
+`Ok(())` once the disconnect request has been issued and the event loop
+task has been stopped.
+
+**Errors**
+
+This call is best-effort and does not surface broker errors raised while
+tearing down, so it currently always returns `Ok(())`.
+
+```rust
+async fn disconnect(&mut self) -> Result <()>
+```
+

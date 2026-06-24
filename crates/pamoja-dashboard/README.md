@@ -37,23 +37,39 @@ back for the project to apply. This push model is why the dashboard works with a
 and stays synchronous and dependency-light.
 
 ```rust
-use pamoja_dashboard::{Assets, Fleet, LinkKind, Reading, Sensor, Server};
+use pamoja_dashboard::{Assets, Fleet, LinkKind, Reading, Sensor, Server, Status};
 
-// 1. Declare the fleet's shape.
+// 1. Declare the fleet's shape. The reading here is only the starting value shown until the
+//    first real sample arrives - it is not a fixed value; live values are fed in step 2.
 let fleet = Fleet::builder()
     .org("farm", "Pamoja farm")
     .group("farm", "field", "Field node", LinkKind::Lora)
     .sensor("field", Sensor::new("soil", Reading::new("soil_moisture", 60.0, "percent").with_band(40.0, 80.0)))
     .build();
 
-// 2. From your sampling loop, push readings and apply queued commands.
+// 2. From your own sampling loop, feed each real reading in. The Fleet keeps the rolling
+//    history (the sparkline) for you, and queues any control commands for you to apply.
 let worker = fleet.clone();
-// worker.report_reading("field", "soil", Reading::new("soil_moisture", value, "percent")...);
-// for command in worker.take_commands() { /* drive real hardware, persist */ }
+loop {
+    let value = read_soil_sensor();  // your driver, or a pamoja-sensors decoder
+    worker.report_reading(
+        "field",
+        "soil",
+        Reading::new("soil_moisture", value, "percent")
+            .with_band(40.0, 80.0)
+            .with_status(if value < 40.0 { Status::Warn } else { Status::Ok }),
+    );
+    for command in worker.take_commands() { /* drive real hardware, then report the result */ }
+    // wait for the sensor's duty cycle
+}
 
-// 3. Serve it.
+// 3. Serve it (from another thread or task; `run` blocks).
 Server::new(fleet, Assets::Embedded).with_pairing_secret(secret).run("0.0.0.0:80").unwrap();
 ```
+
+The builder *declares* what exists (and a starting reading); `report_reading` *feeds* live
+values and grows the history automatically. That split is why the dashboard works with any
+project - it never reaches into your sensors; you push what you have.
 
 A complete, runnable version is in [`examples/gateway.rs`](examples/gateway.rs) (driven by a
 real `pamoja-profile` controller, with discovery and persistence). Run it:
@@ -117,9 +133,10 @@ into the binary with `include_bytes!`.
 - `cargo run -p pamoja-dashboard --example gateway` - run the real-`Fleet` reference gateway.
 - `cargo xtask dashboard i18n --check` - validate the locale bundles.
 - `cargo xtask dashboard footprint` - check the gzipped page-load budget.
-- `cargo xtask docs` - regenerate the API reference under [`docs/api/`](docs/api/).
+- `cargo xtask docs` - regenerate the workspace API reference under the repo's `docs/`.
 
 ## API reference
 
-Generated from the crate's rustdoc into [`docs/api/`](docs/api/) (regenerate with
-`cargo xtask docs`). Start at [`docs/api/README.md`](docs/api/README.md).
+The canonical per-item API is on docs.rs once the crate is published. A Markdown mirror of the
+whole workspace, generated from the rustdoc by `cargo xtask docs`, lives in the repo under
+[`docs/pamoja-dashboard/`](../../docs/pamoja-dashboard/README.md).

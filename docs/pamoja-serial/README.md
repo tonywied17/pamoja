@@ -1,0 +1,63 @@
+# pamoja-serial
+
+Generated from rustdoc by `cargo xtask docs` - do not edit by hand.
+
+Serial-line packet framing for the pamoja SDK.
+
+A serial line, whether a bare UART, an RS232/RS485 link, or a USB-serial bridge, is a
+raw stream of bytes with no notion of where one message ends and the next begins. The
+parts a robot or a field node talks to over that line, motor controllers, GPS
+receivers, LiDAR, and a long tail of cheap sensors, each send packets, so something has
+to mark packet boundaries in the stream and survive the noise of a long cable. The
+answer is byte stuffing: reserve one byte value as the frame delimiter and encode the
+payload so that value can never occur inside it.
+
+This crate is that framing layer, as pure logic with no serial port and no allocation:
+
+- [`slip`] - SLIP (RFC 1055), the simplest serial framing there is: an `END` byte ends
+  a packet, and an escape pair carries `END` or the escape byte itself when they appear
+  in the data. Ubiquitous and trivial, at a worst case of doubling the payload.
+- [`cobs`] - COBS (Consistent Overhead Byte Stuffing), which removes the zero byte from
+  the payload so a single zero delimits packets unambiguously, at a bounded worst case
+  of one byte of overhead per 254. This is the framing motor-control and robotics links
+  reach for when the overhead has to stay small and predictable.
+
+Each module both [encodes](slip::encode) a packet into a frame and [decodes](slip::decode)
+one back, rejecting a frame that arrived corrupt. Each also offers a streaming decoder,
+[`slip::SlipDecoder`] and [`cobs::CobsDecoder`], that reassembles whole frames from the
+stream a byte at a time, because a UART hands an application arbitrary chunks rather
+than tidy packets. It is the streaming decoder, not the one-shot call, that a real
+serial read loop uses.
+
+Everything is exact byte work over caller-provided buffers, so the same framing runs on
+the smallest microcontroller hanging off the bus. Driving the serial line itself, the
+baud rate and the bytes on the wire, arrives with the hardware-I/O layer; this is the
+framing half ahead of it.
+
+**Examples**
+
+```
+use pamoja_serial::{cobs, slip};
+
+let payload = b"gps:37.42,-122.08";
+let mut framed = [0u8; 64];
+let mut restored = [0u8; 64];
+
+// SLIP frames a packet with a delimiter byte, escaping any that appear in the data.
+let n = slip::encode(payload, &mut framed)?;
+let m = slip::decode(&framed[..n], &mut restored)?;
+assert_eq!(&restored[..m], payload);
+
+// COBS frames the same packet with bounded overhead and a single zero delimiter.
+let n = cobs::encode(payload, &mut framed)?;
+assert_eq!(framed[n - 1], 0x00); // the frame delimiter
+let m = cobs::decode(&framed[..n], &mut restored)?;
+assert_eq!(&restored[..m], payload);
+```
+
+## Modules
+
+- [cobs](cobs.md)
+- [error](error.md)
+- [slip](slip.md)
+

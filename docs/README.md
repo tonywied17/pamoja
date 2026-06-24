@@ -1,0 +1,36 @@
+# API reference
+
+Generated from each crate's rustdoc by `cargo xtask docs` - do not edit by hand. The canonical per-crate reference is docs.rs; this hub mirrors the source tree.
+
+## Crates
+
+- [pamoja-actuators](pamoja-actuators/README.md)
+- [pamoja-audit](pamoja-audit/README.md)
+- [pamoja-bus](pamoja-bus/README.md)
+- [pamoja-can](pamoja-can/README.md)
+- [pamoja-coap](pamoja-coap/README.md)
+- [pamoja-codec](pamoja-codec/README.md)
+- [pamoja-core](pamoja-core/README.md)
+- [pamoja-dashboard](pamoja-dashboard/README.md)
+- [pamoja-ffi](pamoja-ffi/README.md)
+- [pamoja-gpio](pamoja-gpio/README.md)
+- [pamoja-kit](pamoja-kit/README.md)
+- [pamoja-ladder](pamoja-ladder/README.md)
+- [pamoja-loopback](pamoja-loopback/README.md)
+- [pamoja-lora](pamoja-lora/README.md)
+- [pamoja-lorawan](pamoja-lorawan/README.md)
+- [pamoja-mesh](pamoja-mesh/README.md)
+- [pamoja-modbus](pamoja-modbus/README.md)
+- [pamoja-mqtt](pamoja-mqtt/README.md)
+- [pamoja-power](pamoja-power/README.md)
+- [pamoja-profile](pamoja-profile/README.md)
+- [pamoja-ros2](pamoja-ros2/README.md)
+- [pamoja-routing](pamoja-routing/README.md)
+- [pamoja-security](pamoja-security/README.md)
+- [pamoja-sensors](pamoja-sensors/README.md)
+- [pamoja-serial](pamoja-serial/README.md)
+- [pamoja-session](pamoja-session/README.md)
+- [pamoja-sim](pamoja-sim/README.md)
+- [pamoja-sync](pamoja-sync/README.md)
+- [pamoja-telemetry](pamoja-telemetry/README.md)
+- [pamoja-zenoh](pamoja-zenoh/README.md)

@@ -1,0 +1,224 @@
+# pamoja-coap
+
+Generated from rustdoc by `cargo xtask docs` - do not edit by hand.
+
+CoAP transport for the pamoja SDK.
+
+[`CoapTransport`] implements the core [`Transport`](pamoja_core::Transport)
+trait on top of the pure-Rust [`coap_lite`] message codec and a UDP socket, so
+an application can talk to constrained RESTful devices through the same
+protocol-agnostic surface it uses for every other transport.
+
+CoAP is connectionless: [`connect`](Transport::connect) binds a local UDP
+socket and points it at the server, then spawns a background task that decodes
+inbound datagrams. A [`send`](Transport::send) is a CoAP `PUT` to a resource
+path, and a [`subscribe`](Transport::subscribe) registers an RFC 7641 observe on
+a resource so the server's notifications are forwarded to an internal queue that
+[`recv`](CoapTransport::recv) drains.
+
+Delivery follows the configured [`Reliability`]: [`Reliability::Confirmable`]
+messages are acknowledged with retransmission (at-least-once), while
+[`Reliability::NonConfirmable`] messages are fire-and-forget (at-most-once),
+which suits the cheapest, most power-constrained devices.
+
+**Examples**
+
+```no_run
+use pamoja_core::Transport;
+use pamoja_coap::{CoapConfig, CoapTransport};
+
+let mut transport = CoapTransport::new(CoapConfig::new("localhost", 5683));
+transport.connect().await?;
+transport.subscribe("sensors/temperature").await?;
+transport.send("actuators/valve", b"open").await?;
+
+if let Some(message) = transport.recv().await? {
+    println!("{}: {} bytes", message.topic, message.payload.len());
+}
+```
+
+## enum `Reliability`
+
+The delivery guarantee applied to published and subscribed messages.
+
+These map onto the CoAP message types defined in RFC 7252.
+
+- `NonConfirmable` - Fire and forget: the request is sent once and not acknowledged.
+- `Confirmable` - The request is acknowledged, and retransmitted until an ACK arrives.
+
+## struct `CoapConfig`
+
+Connection settings for a [`CoapTransport`].
+
+Construct with [`CoapConfig::new`] and refine with the chained setters; every
+field has a sensible default so only the server address is required.
+
+### `CoapConfig::new`
+
+Creates a configuration pointing at the given CoAP server.
+
+**Arguments**
+
+* `host` - the server hostname or IP address.
+* `port` - the server UDP port, conventionally `5683` for plaintext CoAP.
+
+**Returns**
+
+A configuration that binds an ephemeral local port, uses confirmable
+delivery, waits two seconds for the first acknowledgement, and retransmits
+up to four times.
+
+```rust
+fn new(host: impl Into <String>, port: u16) -> Self
+```
+
+### `CoapConfig::bind`
+
+Sets the local socket address the transport binds to.
+
+**Arguments**
+
+* `addr` - the local `host:port` to bind, for example `"0.0.0.0:0"` to let
+  the operating system choose a free port.
+
+**Returns**
+
+The updated configuration, for chaining.
+
+```rust
+fn bind(mut self, addr: impl Into <String>) -> Self
+```
+
+### `CoapConfig::reliability`
+
+Sets the delivery guarantee applied to sends and subscriptions.
+
+**Arguments**
+
+* `reliability` - confirmable (acknowledged) or non-confirmable delivery.
+
+**Returns**
+
+The updated configuration, for chaining.
+
+```rust
+fn reliability(mut self, reliability: Reliability) -> Self
+```
+
+### `CoapConfig::ack_timeout`
+
+Sets how long to wait for the first acknowledgement of a confirmable request.
+
+The wait doubles for each retransmission, following the CoAP backoff.
+
+**Arguments**
+
+* `timeout` - the initial acknowledgement timeout.
+
+**Returns**
+
+The updated configuration, for chaining.
+
+```rust
+fn ack_timeout(mut self, timeout: Duration) -> Self
+```
+
+### `CoapConfig::max_retransmits`
+
+Sets how many times a confirmable request is retransmitted before failing.
+
+**Arguments**
+
+* `count` - the maximum number of retransmissions after the first send.
+
+**Returns**
+
+The updated configuration, for chaining.
+
+```rust
+fn max_retransmits(mut self, count: u32) -> Self
+```
+
+## struct `Message`
+
+A message received from an observed resource.
+
+Fields:
+
+- `topic: String` - The resource path the message was published to.
+- `payload: Vec <u8>` - The raw payload bytes.
+
+## struct `CoapTransport`
+
+A CoAP client that implements the core [`Transport`] trait.
+
+A transport is created disconnected; [`connect`](Transport::connect) binds the
+socket and spawns the background task that decodes inbound datagrams for the
+life of the connection. Observe notifications are queued and read with
+[`recv`](CoapTransport::recv).
+
+### `CoapTransport::new`
+
+Creates a transport from the given configuration without connecting.
+
+**Arguments**
+
+* `config` - the server connection settings.
+
+**Returns**
+
+A disconnected transport ready for [`connect`](Transport::connect).
+
+```rust
+fn new(config: CoapConfig) -> Self
+```
+
+### `CoapTransport::is_connected`
+
+Reports whether the transport currently holds a bound socket.
+
+**Returns**
+
+`true` once [`connect`](Transport::connect) has succeeded and before
+[`disconnect`](CoapTransport::disconnect) is called.
+
+```rust
+fn is_connected(&self) -> bool
+```
+
+### `CoapTransport::recv`
+
+Awaits the next notification from an observed resource.
+
+**Returns**
+
+`Some(message)` for the next queued notification, or `None` once the
+background task has stopped and no further messages will arrive.
+
+**Errors**
+
+Returns [`Error::Closed`](pamoja_core::Error::Closed) if the transport is
+not connected.
+
+```rust
+async fn recv(&mut self) -> Result <Option <Message>>
+```
+
+### `CoapTransport::disconnect`
+
+Closes the socket and stops the background task.
+
+Calling this on a transport that is not connected is a no-op.
+
+**Returns**
+
+`Ok(())` once the background task has been stopped and the socket released.
+
+**Errors**
+
+This call is best-effort and currently always returns `Ok(())`.
+
+```rust
+async fn disconnect(&mut self) -> Result <()>
+```
+

@@ -1,13 +1,13 @@
-//! Generate scoped Markdown API docs for a crate from its rustdoc comments.
+//! Generate scoped Markdown API docs for the workspace crates from their rustdoc comments.
 //!
 //! The crates carry thorough `///` and `//!` documentation; this turns that into committed,
-//! browsable Markdown - one file per module plus an index - so the API is readable without
-//! building rustdoc HTML. It parses the source with `syn` (no nightly needed), so it runs on
-//! the scoop toolchain. `cargo xtask docs` regenerates the files; `cargo xtask docs --check`
-//! re-generates in memory and fails if the committed docs are stale, the way the i18n bundles
-//! are guarded.
-//!
-//! Scoped to `pamoja-dashboard` for now; the crate to document is a constant below.
+//! browsable Markdown under a single root `docs/` hub - one folder per crate, one file per
+//! module, plus an index - so the whole API is readable on GitHub without building rustdoc
+//! HTML. It parses the source with `syn` (no nightly needed), so it runs on the scoop
+//! toolchain. `cargo xtask docs` regenerates the tree; `cargo xtask docs --check`
+//! re-generates in memory and fails if the committed docs are stale, the way the dashboard
+//! i18n bundles are guarded. The published crates stay lean (the canonical per-crate API is
+//! docs.rs); this hub is for reading the source tree.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -16,9 +16,8 @@ use std::process::ExitCode;
 use quote::ToTokens;
 use syn::{Fields, ImplItem, Item, TraitItem, Visibility};
 
-/// The crate whose API is documented, relative to the repo root, and where the docs go.
-const CRATE_SRC: &str = "crates/pamoja-dashboard/src";
-const DOCS_DIR: &str = "crates/pamoja-dashboard/docs/api";
+/// Where the generated docs live, relative to the repo root.
+const DOCS_DIR: &str = "docs";
 
 /// Run the `docs` task: generate the API Markdown, or `--check` to verify it is in sync.
 ///
@@ -54,56 +53,97 @@ fn repo_root() -> PathBuf {
         .to_path_buf()
 }
 
+// The workspace library crates (a `crates/<name>/src/lib.rs`), sorted; binaries like xtask
+// have no lib and are skipped.
+fn lib_crates() -> Result<Vec<String>, String> {
+    let dir = repo_root().join("crates");
+    let mut names: Vec<String> = fs::read_dir(&dir)
+        .map_err(|e| format!("reading {}: {e}", dir.display()))?
+        .filter_map(|entry| entry.ok().map(|e| e.path()))
+        .filter(|path| path.join("src/lib.rs").is_file())
+        .filter_map(|path| path.file_name().and_then(|n| n.to_str()).map(str::to_owned))
+        .collect();
+    names.sort();
+    Ok(names)
+}
+
 // Renders every output file as (relative path under DOCS_DIR, contents).
 fn render_all() -> Result<Vec<(String, String)>, String> {
-    let src = repo_root().join(CRATE_SRC);
-    let mut modules: Vec<String> = fs::read_dir(&src)
-        .map_err(|e| format!("reading {}: {e}", src.display()))?
-        .filter_map(|entry| entry.ok().map(|e| e.path()))
-        .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("rs"))
-        .filter_map(|p| p.file_stem().and_then(|s| s.to_str()).map(str::to_owned))
-        .filter(|name| name != "lib")
-        .collect();
-    modules.sort();
-
+    let crates_root = repo_root().join("crates");
+    let crates = lib_crates()?;
     let mut files = Vec::new();
-    for module in &modules {
-        let source = fs::read_to_string(src.join(format!("{module}.rs")))
-            .map_err(|e| format!("reading {module}.rs: {e}"))?;
-        files.push((format!("{module}.md"), render_module(module, &source)?));
+    let mut index = String::from("# API reference\n\n");
+    index.push_str("Generated from each crate's rustdoc by `cargo xtask docs` - do not edit by hand. The canonical per-crate reference is docs.rs; this hub mirrors the source tree.\n\n## Crates\n\n");
+
+    for krate in &crates {
+        let src = crates_root.join(krate).join("src");
+        let mut modules = module_files(&src)?;
+        modules.sort();
+
+        for module in &modules {
+            let source = fs::read_to_string(src.join(format!("{module}.rs")))
+                .map_err(|e| format!("reading {krate}/{module}.rs: {e}"))?;
+            let parsed = syn::parse_file(&source)
+                .map_err(|e| format!("parsing {krate}/{module}.rs: {e}"))?;
+            let mut body = format!("# {krate}::{module}\n\n");
+            body.push_str(
+                "Generated from rustdoc by `cargo xtask docs` - do not edit by hand.\n\n",
+            );
+            let module_doc = doc_of(&parsed.attrs);
+            if !module_doc.is_empty() {
+                body.push_str(&module_doc);
+                body.push_str("\n\n");
+            }
+            body.push_str(&render_items(&parsed.items));
+            files.push((format!("{krate}/{module}.md"), body));
+        }
+
+        // The crate index: the overview from lib.rs, links to each module, and any items
+        // lib.rs defines itself.
+        let lib = fs::read_to_string(src.join("lib.rs"))
+            .map_err(|e| format!("reading {krate}/lib.rs: {e}"))?;
+        let lib_parsed =
+            syn::parse_file(&lib).map_err(|e| format!("parsing {krate}/lib.rs: {e}"))?;
+        let mut crate_index = format!("# {krate}\n\n");
+        crate_index
+            .push_str("Generated from rustdoc by `cargo xtask docs` - do not edit by hand.\n\n");
+        let overview = doc_of(&lib_parsed.attrs);
+        if !overview.is_empty() {
+            crate_index.push_str(&overview);
+            crate_index.push_str("\n\n");
+        }
+        if !modules.is_empty() {
+            crate_index.push_str("## Modules\n\n");
+            for module in &modules {
+                crate_index.push_str(&format!("- [{module}]({module}.md)\n"));
+            }
+            crate_index.push('\n');
+        }
+        crate_index.push_str(&render_items(&lib_parsed.items));
+        files.push((format!("{krate}/README.md"), crate_index));
+
+        index.push_str(&format!("- [{krate}]({krate}/README.md)\n"));
     }
 
-    // The index: the crate overview from lib.rs, plus links to each module.
-    let lib = fs::read_to_string(src.join("lib.rs")).map_err(|e| format!("reading lib.rs: {e}"))?;
-    let lib_file = syn::parse_file(&lib).map_err(|e| format!("parsing lib.rs: {e}"))?;
-    let mut index = String::from("# pamoja-dashboard API\n\n");
-    index.push_str(
-        "Generated from the crate's rustdoc by `cargo xtask docs` - do not edit by hand.\n\n",
-    );
-    let overview = doc_of(&lib_file.attrs);
-    if !overview.is_empty() {
-        index.push_str(&overview);
-        index.push_str("\n\n");
-    }
-    index.push_str("## Modules\n\n");
-    for module in &modules {
-        index.push_str(&format!("- [{module}]({module}.md)\n"));
-    }
     files.push(("README.md".to_owned(), index));
     Ok(files)
 }
 
-fn render_module(module: &str, source: &str) -> Result<String, String> {
-    let file = syn::parse_file(source).map_err(|e| format!("parsing {module}.rs: {e}"))?;
-    let mut out = format!("# {module}\n\n");
-    out.push_str("Generated from rustdoc by `cargo xtask docs` - do not edit by hand.\n\n");
-    let module_doc = doc_of(&file.attrs);
-    if !module_doc.is_empty() {
-        out.push_str(&module_doc);
-        out.push_str("\n\n");
-    }
+// The top-level module source files of a crate (`src/*.rs` except lib.rs and main.rs).
+fn module_files(src: &Path) -> Result<Vec<String>, String> {
+    Ok(fs::read_dir(src)
+        .map_err(|e| format!("reading {}: {e}", src.display()))?
+        .filter_map(|entry| entry.ok().map(|e| e.path()))
+        .filter(|path| path.extension().and_then(|e| e.to_str()) == Some("rs"))
+        .filter_map(|path| path.file_stem().and_then(|s| s.to_str()).map(str::to_owned))
+        .filter(|name| name != "lib" && name != "main")
+        .collect())
+}
 
-    for item in &file.items {
+// Renders the public items of a module (or lib.rs) to Markdown, in source order.
+fn render_items(items: &[Item]) -> String {
+    let mut out = String::new();
+    for item in items {
         match item {
             Item::Struct(item) if is_public(&item.vis) => {
                 section(
@@ -201,7 +241,7 @@ fn render_module(module: &str, source: &str) -> Result<String, String> {
             _ => {}
         }
     }
-    Ok(out)
+    out
 }
 
 fn section(out: &mut String, kind: &str, name: &str, doc: &str) {
@@ -323,34 +363,35 @@ fn tidy(sig: String) -> String {
 }
 
 fn write(files: &[(String, String)]) -> ExitCode {
-    let dir = repo_root().join(DOCS_DIR);
-    if let Err(err) = fs::create_dir_all(&dir) {
-        eprintln!("xtask docs: creating {}: {err}", dir.display());
-        return ExitCode::FAILURE;
-    }
+    let base = repo_root().join(DOCS_DIR);
     for (name, body) in files {
-        let path = dir.join(name);
+        let path = base.join(name);
+        if let Some(parent) = path.parent() {
+            if let Err(err) = fs::create_dir_all(parent) {
+                eprintln!("xtask docs: creating {}: {err}", parent.display());
+                return ExitCode::FAILURE;
+            }
+        }
         if let Err(err) = fs::write(&path, body) {
             eprintln!("xtask docs: writing {}: {err}", path.display());
             return ExitCode::FAILURE;
         }
-        println!("wrote {}", path.display());
     }
+    println!("docs: wrote {} files under {DOCS_DIR}/", files.len());
     ExitCode::SUCCESS
 }
 
 fn verify(files: &[(String, String)]) -> ExitCode {
-    let dir = repo_root().join(DOCS_DIR);
+    let base = repo_root().join(DOCS_DIR);
     let mut stale = Vec::new();
     for (name, body) in files {
-        let path = dir.join(name);
-        match fs::read_to_string(&path) {
+        match fs::read_to_string(base.join(name)) {
             Ok(on_disk) if &on_disk == body => {}
             _ => stale.push(name.clone()),
         }
     }
     if stale.is_empty() {
-        println!("docs: API Markdown is in sync");
+        println!("docs: API Markdown is in sync ({} files)", files.len());
         ExitCode::SUCCESS
     } else {
         eprintln!(

@@ -28,8 +28,7 @@ You do not have to be an engineer to use it, and you do not give anything up if 
 
 **Where to start**
 
-- **Just want to see it?** Open the [live dashboard demo](https://pamoja.molex.cloud/dashboard) - it runs entirely in your browser, with nothing to install.
-- **Try it with no hardware.** `cargo xtask dashboard dev` serves the dashboard from a built-in mock fleet, and the simulators (`pamoja-sim`) stand in for real sensors and radios.
+- **Try it with no hardware.** The simulators (`pamoja-sim`) stand in for real sensors, radios, and even a robot, so you can build and test with nothing plugged in.
 - **Building something?** Skip to [A quick look](#a-quick-look) and the [crate list](#engine-and-capability-crates), and add only the pieces you need.
 - **On a microcontroller or in a rural clinic?** That is the design target, not an afterthought - see [Why it exists](#why-it-exists).
 
@@ -229,10 +228,11 @@ Reach. Bindings beyond Node: Python, C#/.NET, Lua, WebAssembly, Kotlin, Swift, a
 ```
 crates/      Rust engine and capability crates (including pamoja-ffi, the C ABI)
 bindings/    per-language bindings (Node, Python, .NET today; more to come)
+docs/        generated Markdown API reference, one folder per crate (cargo xtask docs)
 assets/      brand and logo
 ```
 
-Planned as the project grows: `examples/` (runnable samples per module and language), `sims/` (device and transport simulators for hardware-free testing), and `docs/` (guides and generated API reference).
+Planned as the project grows: `examples/` (runnable samples per module and language) and `sims/` (device and transport simulators for hardware-free testing).
 
 ## Building
 
