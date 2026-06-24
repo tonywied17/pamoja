@@ -11,7 +11,7 @@ import { store } from '../store.js';
 import { currentFleet } from '../lib/edits.js';
 import { open, back } from '../nav.js';
 import { t, nf, fmt } from '../lib/i18n.js';
-import { conn, tileViz, trendArrow, isDiscrete, realSensors, vizFor, esc } from '../lib/viz/index.js';
+import { conn, tileViz, trendArrow, isDiscrete, realSensors, meshPeerCount, vizFor, esc } from '../lib/viz/index.js';
 import { openMeshOverlay } from './mesh-modal.js';
 
 // Sensors shown per page in the group view before it paginates.
@@ -112,7 +112,7 @@ $.component('group-modal', {
     const head = `<div class="gv-top"><span class="gv-label">${esc(t('label.' + r.key))}</span><span class="pill" data-status="${r.status}">${t('status.' + r.status)}</span></div>`;
     if (isDiscrete(r))
     {
-      const nodes = vk === 'mesh' ? group.sensors.filter((x) => vizFor(x.reading.key, x.reading.unit) !== 'mesh').length : undefined;
+      const nodes = vk === 'mesh' ? meshPeerCount(group) : undefined;
       return `<article class="gv-card${span}" data-status="${r.status}" data-sid="${group.id}/${s.id}" @click="onSensor" tabindex="0" role="button">
           ${head}<div class="gv-viz gv-viz-disc">${tileViz(s, true, nodes)}</div>
         </article>`;
@@ -146,7 +146,9 @@ $.component('group-modal', {
 
     if (this._lastId !== id) { this._lastId = id; this.state.page = 0; }
 
-    const sensors = realSensors(group);
+    // The grid shows everything the node carries (sensors, stats, and its mesh map) so a
+    // pure relay is not blank; the count in the header stays the real sensor count.
+    const sensors = group.sensors;
     const pages = Math.max(1, Math.ceil(sensors.length / PAGE));
     const page = Math.min(Math.max(this.state.page || 0, 0), pages - 1);
     const start = page * PAGE;
@@ -166,7 +168,7 @@ $.component('group-modal', {
           <div class="gv-head">
             <div class="gv-head-main">
               <div class="modal-title">${esc(group.name)}</div>
-              <div class="modal-sub">${esc(org.name)} · ${nf(idx + 1)} / ${nf(n)} · ${t('ui.sensorsCount', { n: sensors.length })}</div>
+              <div class="modal-sub">${esc(org.name)} · ${nf(idx + 1)} / ${nf(n)} · ${t('ui.sensorsCount', { n: realSensors(group).length })}</div>
             </div>
             <div class="gv-head-side">
               ${conn(group.link)}

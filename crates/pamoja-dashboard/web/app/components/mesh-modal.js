@@ -13,7 +13,7 @@ import { currentFleet } from '../lib/edits.js';
 import { open, back } from '../nav.js';
 import { t, nf, fmt } from '../lib/i18n.js';
 import { catalog } from '../lib/catalog.js';
-import { LINK_NAMES, LINK_COLORS, LINK_RSSI, realSensors, esc } from '../lib/viz/index.js';
+import { LINK_NAMES, LINK_COLORS, LINK_RSSI, realSensors, meshPeerCount, esc } from '../lib/viz/index.js';
 
 const W = 900, H = 560;
 
@@ -158,7 +158,7 @@ $.component('mesh-modal', {
     // neighbours stat, or just the sensor peers when none is given (so a relay with sensors
     // and a bare routing node draw different graphs). Hops falls back shorter, too.
     const sensors = realSensors(group);
-    const neighbours = $.clamp(this.statVal(group, 'neighbours', 0) || Math.max(sensors.length, 3), 1, 14);
+    const neighbours = meshPeerCount(group);
     const hops = $.clamp(this.statVal(group, 'hops', 2), 1, 8);
 
     const hub = { key: 'hub', role: 'hub', x: cx, y: hubY, name: group.name, status: group.status, link: group.link, group };

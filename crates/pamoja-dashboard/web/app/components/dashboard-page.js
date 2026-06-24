@@ -12,7 +12,7 @@ import { t, nf, fmt } from '../lib/i18n.js';
 import { currentFleet, provision } from '../lib/edits.js';
 import { live } from '../lib/feed.js';
 import { unlocked, promptUnlock } from '../lib/pair.js';
-import { conn, tileViz, bannerRing, trendArrow, isDiscrete, isStat, realSensors, groupStats, vizFor, esc } from '../lib/viz/index.js';
+import { conn, tileViz, bannerRing, trendArrow, isDiscrete, isStat, realSensors, groupStats, meshPeerCount, vizFor, esc } from '../lib/viz/index.js';
 import { openMeshOverlay } from './mesh-modal.js';
 
 const ICON_EDIT = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19.5l-4 1 1-4z"/></svg>';
@@ -26,14 +26,6 @@ const ICON_DRAG = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="curre
  * @param {object} g - the group.
  * @returns {number} the count of non-mesh sensors.
  */
-function meshPeerCount(g)
-{
-  // The mesh preview draws the node's neighbour graph, so its node count is the neighbours
-  // stat (a real mesh peer count), not the number of sensors on the group.
-  const neigh = (g.sensors || []).find((s) => s.reading.key === 'neighbours');
-  return neigh ? Math.max(1, Math.round(neigh.reading.value)) : 5;
-}
-
 /**
  * Computes the worst sensor status across an org, so its dot can carry the org's health.
  *

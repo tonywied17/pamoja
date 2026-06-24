@@ -86,6 +86,21 @@ export const realSensors = (g) => (g.sensors || []).filter((s) => !isStat(s) && 
 export const groupStats = (g) => (g.sensors || []).filter(isStat);
 
 /**
+ * The number of mesh peers to draw for a group: its declared `neighbours` stat, or the
+ * number of sensors it hosts when none is given. Shared by the tile preview and the full
+ * mesh map so the two never disagree.
+ *
+ * @param {object} g - the group.
+ * @returns {number} the peer count, 1 to 14.
+ */
+export const meshPeerCount = (g) =>
+{
+  const n = (g.sensors || []).find((s) => s.reading.key === 'neighbours');
+  const stat = n ? Math.max(0, Math.round(n.reading.value)) : 0;
+  return Math.min(14, Math.max(1, stat || Math.max(realSensors(g).length, 3)));
+};
+
+/**
  * Renders the chosen visualization for a sensor, sized by `big`.
  *
  * @param {object} s - the sensor, carrying `reading`, `history`, and `id`.
