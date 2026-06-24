@@ -58,6 +58,11 @@ jobs:
       - name: Dashboard footprint budget
         run: cargo run -p xtask -- dashboard footprint
 
+      # The dashboard's Markdown API docs are generated from its rustdoc; this fails if they
+      # are stale, so they stay in sync with the code.
+      - name: Dashboard API docs in sync
+        run: cargo run -p xtask -- docs --check
+
   ros-bridge:
     name: ros2 + zenoh bridge
     runs-on: ubuntu-latest

@@ -10,6 +10,7 @@ use std::process::{Command, ExitCode};
 use std::thread::sleep;
 use std::time::Duration;
 
+mod docs;
 mod footprint;
 mod i18n;
 
@@ -39,6 +40,10 @@ const TASKS: &[(&str, &str)] = &[
     (
         "dashboard",
         "run the local-first dashboard dev server with mock data (dashboard dev [scenario])",
+    ),
+    (
+        "docs",
+        "generate scoped Markdown API docs for pamoja-dashboard from its rustdoc (docs [--check])",
     ),
 ];
 
@@ -106,6 +111,10 @@ fn main() -> ExitCode {
 
     if task == "dashboard" {
         return dashboard(&args.collect::<Vec<_>>());
+    }
+
+    if task == "docs" {
+        return docs::run(&args.collect::<Vec<_>>());
     }
 
     match TASKS.iter().find(|(name, _)| *name == task) {

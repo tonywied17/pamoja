@@ -5332,7 +5332,9 @@ name = "xtask"
 version = "0.1.10"
 dependencies = [
  "flate2",
+ "quote",
  "serde_json",
+ "syn 2.0.117",
 ]
 
 [[package]]
