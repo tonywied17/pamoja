@@ -47,6 +47,7 @@
     "ui.stats": "Takwimu",
     "ui.meshRelay": "Relei",
     "ui.meshPeer": "Nodi mwenzi",
+    "ui.meshPeerHint": "Hiari: kituo chenye jina, mf. Kituo cha mto",
     "ui.meshHopOf": "Rukio {n} kati ya {total}",
     "ui.meshPeerOf": "Nodi {n} kati ya {total}",
     "ui.topology": "Topolojia",

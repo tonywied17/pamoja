@@ -51,6 +51,7 @@
     "ui.stats": "إحصاءات",
     "ui.meshRelay": "مُرحِّل",
     "ui.meshPeer": "عقدة نظيرة",
+    "ui.meshPeerHint": "اختياري: محطة باسم، مثل محطة النهر",
     "ui.meshHopOf": "قفزة {n} من {total}",
     "ui.meshPeerOf": "نظير {n} من {total}",
     "ui.topology": "الطوبولوجيا",

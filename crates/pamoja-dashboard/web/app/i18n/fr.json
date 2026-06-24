@@ -47,6 +47,7 @@
     "ui.stats": "Statistiques",
     "ui.meshRelay": "Relais",
     "ui.meshPeer": "Pair du maillage",
+    "ui.meshPeerHint": "Facultatif : une station nommée, ex. Poste rivière",
     "ui.meshHopOf": "Saut {n} sur {total}",
     "ui.meshPeerOf": "Pair {n} sur {total}",
     "ui.topology": "Topologie",

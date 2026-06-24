@@ -47,6 +47,7 @@
     "ui.stats": "Estatísticas",
     "ui.meshRelay": "Retransmissor",
     "ui.meshPeer": "Par da malha",
+    "ui.meshPeerHint": "Opcional: uma estação nomeada, ex. Posto do rio",
     "ui.meshHopOf": "Salto {n} de {total}",
     "ui.meshPeerOf": "Par {n} de {total}",
     "ui.topology": "Topologia",

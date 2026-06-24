@@ -233,6 +233,9 @@ impl Mock {
             },
             history,
             events,
+            peer: None,
+            lat: None,
+            lon: None,
         }
     }
 
@@ -261,6 +264,9 @@ impl Mock {
                 value: None,
                 age_secs: Some(8),
             }],
+            peer: None,
+            lat: None,
+            lon: None,
         }
     }
 
@@ -281,6 +287,9 @@ impl Mock {
                 value: None,
                 age_secs: Some(8),
             }],
+            peer: None,
+            lat: None,
+            lon: None,
         }
     }
 
@@ -302,6 +311,8 @@ impl Mock {
             },
             status: Status::Ok,
             sensors,
+            lat: None,
+            lon: None,
         };
         group.recompute_status();
         group
@@ -753,6 +764,9 @@ impl StateSource for Mock {
                     age_secs: Some(22),
                 },
             ],
+            peer: None,
+            lat: None,
+            lon: None,
         };
         let health_post = self.group(
             "health-post",
@@ -825,53 +839,67 @@ impl StateSource for Mock {
 
         // Ranger relay: a conservation mesh node that listens for threats (chainsaws,
         // gunshots) on an acoustic monitor and relays alerts to the ranger post.
-        let rr_river = self.sensor(
-            "rr-river",
-            "river_level",
-            "millimeter",
-            1700.0,
-            120.0,
-            (0.0, 3000.0),
-            None,
-        );
+        // The relay's neighbours are real sensor stations with their own positions; two
+        // sensors share the riverside post to show a peer that hosts more than one sensor.
+        let rr_river = self
+            .sensor(
+                "rr-river",
+                "river_level",
+                "millimeter",
+                1700.0,
+                120.0,
+                (0.0, 3000.0),
+                None,
+            )
+            .on_peer("River post")
+            .at(-0.4503, 36.8702);
         let rr_low = s == Scenario::LowBattery;
-        let rr_batt = self.sensor(
-            "rr-batt",
-            "battery_level",
-            "percent",
-            if rr_low { 14.0 } else { 90.0 },
-            5.0,
-            (20.0, 100.0),
-            Some(if rr_low { 0.14 } else { 0.9 }),
-        );
+        let rr_batt = self
+            .sensor(
+                "rr-batt",
+                "battery_level",
+                "percent",
+                if rr_low { 14.0 } else { 90.0 },
+                5.0,
+                (20.0, 100.0),
+                Some(if rr_low { 0.14 } else { 0.9 }),
+            )
+            .on_peer("River post")
+            .at(-0.4503, 36.8702);
         let relay = stat(self.chip_sensor("relay", "relay_status", "state.online", Status::Ok));
         let rr_temp_base = if s == Scenario::SensorFault {
             -127.0
         } else {
             27.0
         };
-        let rr_temp = self.sensor(
-            "rr-temp",
-            "ambient_temp",
-            "celsius",
-            rr_temp_base,
-            4.0,
-            (0.0, 45.0),
-            None,
-        );
+        let rr_temp = self
+            .sensor(
+                "rr-temp",
+                "ambient_temp",
+                "celsius",
+                rr_temp_base,
+                4.0,
+                (0.0, 45.0),
+                None,
+            )
+            .on_peer("Ridge camera")
+            .at(-0.3902, 36.9461);
         // Most of the time it is quiet ambient; briefly and periodically a chainsaw is
         // heard, spiking the monitor so the threat state is visible without any input. The
         // sound class drives the hot waveform; the node stays OK (it heard and relayed).
         let chainsaw = (self.tick % 40) < 3;
-        let mut acoustic = self.sensor(
-            "acoustic",
-            "acoustic",
-            "decibel",
-            if chainsaw { 84.0 } else { 41.0 },
-            6.0,
-            (0.0, 120.0),
-            None,
-        );
+        let mut acoustic = self
+            .sensor(
+                "acoustic",
+                "acoustic",
+                "decibel",
+                if chainsaw { 84.0 } else { 41.0 },
+                6.0,
+                (0.0, 120.0),
+                None,
+            )
+            .on_peer("Acoustic post")
+            .at(-0.4288, 36.9303);
         acoustic.reading.state = Some(
             if chainsaw {
                 "acoustic.abnormal"
@@ -881,13 +909,15 @@ impl StateSource for Mock {
             .to_owned(),
         );
         let relay_mesh = self.mesh_sensor("relay-mesh", 5.0);
-        let ranger_relay = self.group(
-            "ranger-relay",
-            "Ranger relay",
-            LinkKind::Mesh,
-            3,
-            vec![rr_river, rr_batt, relay, rr_temp, acoustic, relay_mesh],
-        );
+        let ranger_relay = self
+            .group(
+                "ranger-relay",
+                "Ranger relay",
+                LinkKind::Mesh,
+                3,
+                vec![rr_river, rr_batt, relay, rr_temp, acoustic, relay_mesh],
+            )
+            .at(-0.4216, 36.9123);
 
         // Mesh node: a routing peer in the mesh - it draws its neighbour graph with live
         // packets and reports neighbours, hops to the gateway, routing state and traffic.
@@ -1118,6 +1148,8 @@ mod tests {
             },
             status: Status::Ok,
             sensors: Vec::new(),
+            lat: None,
+            lon: None,
         };
         fleet
             .command(&Command::AddGroup {
@@ -1152,6 +1184,8 @@ mod tests {
             },
             status: Status::Ok,
             sensors: Vec::new(),
+            lat: None,
+            lon: None,
         };
         assert_eq!(
             fleet.command(&Command::AddGroup {

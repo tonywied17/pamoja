@@ -332,6 +332,17 @@ pub struct Sensor {
     pub history: Vec<f32>,
     /// The most recent telemetry events for this sensor, newest first.
     pub events: Vec<EventRecord>,
+    /// The mesh peer (node or station) that hosts this sensor, if any. Sensors sharing a
+    /// peer name are drawn on one node in the mesh map; an empty peer is the node itself.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub peer: Option<String>,
+    /// The sensor's (or its hosting peer's) latitude in decimal degrees, if known. When set
+    /// with [`lon`](Sensor::lon) the mesh map can place the peer by real position.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lat: Option<f64>,
+    /// The sensor's (or its hosting peer's) longitude in decimal degrees, if known.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lon: Option<f64>,
 }
 
 impl Sensor {
@@ -353,7 +364,40 @@ impl Sensor {
             mode: Mode::Active,
             history: Vec::new(),
             events: Vec::new(),
+            peer: None,
+            lat: None,
+            lon: None,
         }
+    }
+
+    /// Sets the mesh peer (node or station) that hosts this sensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `peer` - the host peer's name.
+    ///
+    /// # Returns
+    ///
+    /// The sensor, for chaining.
+    pub fn on_peer(mut self, peer: impl Into<String>) -> Self {
+        self.peer = Some(peer.into());
+        self
+    }
+
+    /// Sets the sensor's (or its hosting peer's) geographic position.
+    ///
+    /// # Arguments
+    ///
+    /// * `lat` - latitude in decimal degrees.
+    /// * `lon` - longitude in decimal degrees.
+    ///
+    /// # Returns
+    ///
+    /// The sensor, for chaining.
+    pub fn at(mut self, lat: f64, lon: f64) -> Self {
+        self.lat = Some(lat);
+        self.lon = Some(lon);
+        self
     }
 }
 
@@ -371,9 +415,32 @@ pub struct Group {
     pub status: Status,
     /// The sensors in the group.
     pub sensors: Vec<Sensor>,
+    /// The node's latitude in decimal degrees, if known. With [`lon`](Group::lon) it places
+    /// the node on a geographic map.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lat: Option<f64>,
+    /// The node's longitude in decimal degrees, if known.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lon: Option<f64>,
 }
 
 impl Group {
+    /// Sets the node's geographic position.
+    ///
+    /// # Arguments
+    ///
+    /// * `lat` - latitude in decimal degrees.
+    /// * `lon` - longitude in decimal degrees.
+    ///
+    /// # Returns
+    ///
+    /// The group, for chaining.
+    pub fn at(mut self, lat: f64, lon: f64) -> Self {
+        self.lat = Some(lat);
+        self.lon = Some(lon);
+        self
+    }
+
     /// Recomputes the group's [`status`](Group::status) from its sensors and events.
     ///
     /// # Returns
@@ -500,6 +567,9 @@ mod tests {
             mode: Mode::Active,
             history: vec![value],
             events: Vec::new(),
+            peer: None,
+            lat: None,
+            lon: None,
         }
     }
 
@@ -518,6 +588,8 @@ mod tests {
                     },
                     status: Status::Ok,
                     sensors: vec![sensor("temperature", 5.0, sensor_status)],
+                    lat: None,
+                    lon: None,
                 }],
             }],
             status: Status::Ok,

@@ -13,7 +13,7 @@ import { catalog } from '../lib/catalog.js';
 import { LINK_NAMES, esc } from '../lib/viz/index.js';
 
 $.component('manage-modal', {
-  state: { name: '', linkKind: 'lora', sensorKind: 'temperature', value: '', binding: '', error: null, last: null },
+  state: { name: '', linkKind: 'lora', sensorKind: 'temperature', value: '', binding: '', peer: '', error: null, last: null },
 
   /** Resets the form whenever the create target changes. */
   mounted() { this._un = store.subscribe(() => this.sync()); },
@@ -31,6 +31,7 @@ $.component('manage-modal', {
       this.state.name = '';
       this.state.value = '';
       this.state.binding = '';
+      this.state.peer = '';
       this.state.error = null;
       this.state.linkKind = 'lora';
       this.state.sensorKind = 'temperature';
@@ -62,10 +63,20 @@ $.component('manage-modal', {
    */
   presetsFor(groupId)
   {
+    return catalog.sensorPresets.filter((p) => !p.meshOnly || this.groupKind(groupId) === 'mesh');
+  },
+
+  /**
+   * The link kind of a target group, or null if not found.
+   *
+   * @param {string} groupId - the target group's id.
+   * @returns {?string} the link kind, such as `'mesh'`.
+   */
+  groupKind(groupId)
+  {
     const f = currentFleet();
-    let kind = null;
-    if (f) for (const o of f.orgs) for (const g of o.groups) if (g.id === groupId) kind = g.link.kind;
-    return catalog.sensorPresets.filter((p) => !p.meshOnly || kind === 'mesh');
+    if (f) for (const o of f.orgs) for (const g of o.groups) if (g.id === groupId) return g.link.kind;
+    return null;
   },
 
   /**
@@ -105,8 +116,14 @@ $.component('manage-modal', {
     const built = c.mode === 'group'
       ? makeGroup(c.orgId, this.state.name.trim() || t('ui.newGroup'), this.state.linkKind)
       : makeSensor(c.groupId, this.state.sensorKind, (() => { const v = parseFloat(this.state.value); return Number.isFinite(v) ? v : NaN; })());
-    // A sensor may carry an optional hardware binding for a real gateway to bind a driver.
-    if (c.mode === 'sensor') built.binding = this.state.binding.trim() || undefined;
+    // A sensor may carry an optional hardware binding for a real gateway to bind a driver,
+    // and on a mesh node an optional peer (station) name that groups it on the mesh map.
+    if (c.mode === 'sensor')
+    {
+      built.binding = this.state.binding.trim() || undefined;
+      const peer = this.state.peer.trim();
+      if (peer) built.peer = peer;
+    }
     const result = await provision(c.mode === 'group' ? 'addGroup' : 'addSensor', built);
     if (result.ok) { back(); return; }
     this.state.error = t('ui.commandFailed');
@@ -135,7 +152,9 @@ $.component('manage-modal', {
         <label class="field"><span>${t('ui.value')}</span>
           <input class="field-input" type="number" step="any" z-model="value" placeholder="${t('ui.auto')}" /></label>
         <label class="field"><span>${t('ui.binding')}</span>
-          <input class="field-input" type="text" autocomplete="off" spellcheck="false" z-model="binding" placeholder="${esc(t('ui.bindingHint'))}" /></label>`;
+          <input class="field-input" type="text" autocomplete="off" spellcheck="false" z-model="binding" placeholder="${esc(t('ui.bindingHint'))}" /></label>
+        ${this.groupKind(c.groupId) === 'mesh' ? `<label class="field"><span>${t('ui.meshPeer')}</span>
+          <input class="field-input" type="text" autocomplete="off" spellcheck="false" z-model="peer" placeholder="${esc(t('ui.meshPeerHint'))}" /></label>` : ''}`;
     return `
       <div class="modal-overlay" @click="onOverlay">
         <div class="modal modal-form" role="dialog" aria-modal="true">

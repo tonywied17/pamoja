@@ -47,6 +47,7 @@
     "ui.stats": "Stats",
     "ui.meshRelay": "Relay",
     "ui.meshPeer": "Mesh peer",
+    "ui.meshPeerHint": "Optional: a named station, e.g. River post",
     "ui.meshHopOf": "Hop {n} of {total}",
     "ui.meshPeerOf": "Peer {n} of {total}",
     "ui.topology": "Topology",

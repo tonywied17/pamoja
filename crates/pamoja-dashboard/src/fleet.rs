@@ -387,6 +387,8 @@ impl FleetBuilder {
                 },
                 status: Status::Ok,
                 sensors: Vec::new(),
+                lat: None,
+                lon: None,
             });
         }
         self
@@ -542,6 +544,8 @@ mod tests {
                 },
                 status: Status::Ok,
                 sensors: Vec::new(),
+                lat: None,
+                lon: None,
             },
         );
         fleet.add_sensor(

@@ -47,6 +47,7 @@
     "ui.stats": "आँकड़े",
     "ui.meshRelay": "रिले",
     "ui.meshPeer": "समकक्ष नोड",
+    "ui.meshPeerHint": "वैकल्पिक: एक नामित स्टेशन, जैसे रिवर पोस्ट",
     "ui.meshHopOf": "{total} में से हॉप {n}",
     "ui.meshPeerOf": "{total} में से नोड {n}",
     "ui.topology": "टोपोलॉजी",

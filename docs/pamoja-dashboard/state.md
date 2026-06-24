@@ -251,6 +251,9 @@ Fields:
 - `mode: Mode` - The work cadence the sensor's node is running at.
 - `history: Vec <f32>` - Recent values of the reading, oldest first, for a sparkline and min/max.
 - `events: Vec <EventRecord>` - The most recent telemetry events for this sensor, newest first.
+- `peer: Option <String>` - The mesh peer (node or station) that hosts this sensor, if any. Sensors sharing a peer name are drawn on one node in the mesh map; an empty peer is the node itself.
+- `lat: Option <f64>` - The sensor's (or its hosting peer's) latitude in decimal degrees, if known. When set with [`lon`](Sensor::lon) the mesh map can place the peer by real position.
+- `lon: Option <f64>` - The sensor's (or its hosting peer's) longitude in decimal degrees, if known.
 
 ### `Sensor::new`
 
@@ -269,6 +272,39 @@ An [`Mode::Active`] sensor carrying just the reading.
 fn new(id: impl Into <String>, reading: Reading) -> Self
 ```
 
+### `Sensor::on_peer`
+
+Sets the mesh peer (node or station) that hosts this sensor.
+
+**Arguments**
+
+* `peer` - the host peer's name.
+
+**Returns**
+
+The sensor, for chaining.
+
+```rust
+fn on_peer(mut self, peer: impl Into <String>) -> Self
+```
+
+### `Sensor::at`
+
+Sets the sensor's (or its hosting peer's) geographic position.
+
+**Arguments**
+
+* `lat` - latitude in decimal degrees.
+* `lon` - longitude in decimal degrees.
+
+**Returns**
+
+The sensor, for chaining.
+
+```rust
+fn at(mut self, lat: f64, lon: f64) -> Self
+```
+
 ## struct `Group`
 
 A group of sensors sharing one node and one link, such as a clinic's fridges.
@@ -280,6 +316,25 @@ Fields:
 - `link: Link` - The group's link.
 - `status: Status` - The group's overall health, the worst of its sensors.
 - `sensors: Vec <Sensor>` - The sensors in the group.
+- `lat: Option <f64>` - The node's latitude in decimal degrees, if known. With [`lon`](Group::lon) it places the node on a geographic map.
+- `lon: Option <f64>` - The node's longitude in decimal degrees, if known.
+
+### `Group::at`
+
+Sets the node's geographic position.
+
+**Arguments**
+
+* `lat` - latitude in decimal degrees.
+* `lon` - longitude in decimal degrees.
+
+**Returns**
+
+The group, for chaining.
+
+```rust
+fn at(mut self, lat: f64, lon: f64) -> Self
+```
 
 ### `Group::recompute_status`
 

@@ -86,9 +86,32 @@ export const realSensors = (g) => (g.sensors || []).filter((s) => !isStat(s) && 
 export const groupStats = (g) => (g.sensors || []).filter(isStat);
 
 /**
+ * Groups a node's real sensors into the mesh peers (stations) that host them: sensors that
+ * share a `peer` name collapse onto one station; an unnamed sensor is its own station. Each
+ * station carries its position from the first member that has one.
+ *
+ * @param {object} g - the group.
+ * @returns {Array<{name: string, sensors: Array, lat: ?number, lon: ?number}>} the stations.
+ */
+export const meshStations = (g) =>
+{
+  const order = [];
+  const byKey = new Map();
+  for (const s of realSensors(g))
+  {
+    const key = s.peer || ('@' + s.id);
+    if (!byKey.has(key)) { byKey.set(key, { name: s.peer || t('label.' + s.reading.key), sensors: [], lat: null, lon: null }); order.push(key); }
+    const st = byKey.get(key);
+    st.sensors.push(s);
+    if (st.lat == null && s.lat != null) { st.lat = s.lat; st.lon = s.lon; }
+  }
+  return order.map((k) => byKey.get(k));
+};
+
+/**
  * The number of mesh peers to draw for a group: its declared `neighbours` stat, or the
- * number of sensors it hosts when none is given. Shared by the tile preview and the full
- * mesh map so the two never disagree.
+ * number of peer stations it hosts when none is given. Shared by the tile preview and the
+ * full mesh map so the two never disagree.
  *
  * @param {object} g - the group.
  * @returns {number} the peer count, 1 to 14.
@@ -97,7 +120,7 @@ export const meshPeerCount = (g) =>
 {
   const n = (g.sensors || []).find((s) => s.reading.key === 'neighbours');
   const stat = n ? Math.max(0, Math.round(n.reading.value)) : 0;
-  return Math.min(14, Math.max(1, stat || Math.max(realSensors(g).length, 3)));
+  return Math.min(14, Math.max(1, stat || Math.max(meshStations(g).length, 3)));
 };
 
 /**
