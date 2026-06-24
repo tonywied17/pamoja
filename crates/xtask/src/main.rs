@@ -328,7 +328,7 @@ fn dashboard(args: &[String]) -> ExitCode {
         .collect();
 
     let mut cmd = Command::new("cargo");
-    cmd.args(["run", "-p", "pamoja-dashboard", "--bin", "dev", "--"]);
+    cmd.args(["run", "-p", "pamoja-dashboard", "--example", "dev", "--"]);
     cmd.args(&forwarded);
 
     if run(&mut cmd) {

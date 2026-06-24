@@ -37,7 +37,7 @@ serde_json = { version = "1" }
 
 # The dev server and the snapshot generator are the hardware-free demo, so they need the
 # mock fleet. The gateway example shows real use and needs only the serving layer.
-[[bin]]
+[[example]]
 name = "dev"
 required-features = ["serve", "mock"]
 
