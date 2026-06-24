@@ -1,0 +1,21 @@
+[package]
+name = "pamoja-i18n"
+description = "Canonical Fluent localization store for pamoja with a fluent-bundle plus icu runtime: the shared source the dashboard's generated browser bundles and on-device Rust rendering both read."
+version.workspace = true
+edition.workspace = true
+rust-version = "1.82"
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+fluent-bundle = "0.16"
+unic-langid = "0.9"
+icu = "2"
+
+[dev-dependencies]
+# Used only by tests, to introspect message ids straight from the .ftl source.
+fluent-syntax = "0.12"
+
+[lints]
+workspace = true

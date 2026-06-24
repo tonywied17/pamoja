@@ -166,7 +166,7 @@ $.component('group-modal', {
           <div class="gv-head">
             <div class="gv-head-main">
               <div class="modal-title">${esc(group.name)}</div>
-              <div class="modal-sub">${esc(org.name)} · ${nf(idx + 1)} / ${nf(n)} · ${nf(sensors.length)} ${t('ui.sensors')}</div>
+              <div class="modal-sub">${esc(org.name)} · ${nf(idx + 1)} / ${nf(n)} · ${t('ui.sensorsCount', { n: sensors.length })}</div>
             </div>
             <div class="gv-head-side">
               ${conn(group.link)}

@@ -1,11 +1,6 @@
 /*
-  English - the source and fallback locale.
-
-  A bundle is one object: the locale tag, text direction, the CLDR numbering system
-  the page formats numbers with, and the flat message table the page looks up by stable
-  key. Number, percent, and relative-time formatting are done by the browser's Intl
-  engine, so a bundle carries words, never formatting rules. This is the browser-facing
-  emit of the shared canonical message store; per-language review is a seed task.
+  en bundle - GENERATED from crates/pamoja-i18n/i18n/en.ftl by
+  `cargo xtask dashboard i18n`. Do not edit by hand; edit the .ftl and regenerate.
 */
 export default
 {
@@ -26,6 +21,7 @@ export default
     'ui.groups': 'groups',
     'ui.group': 'Group',
     'ui.sensors': 'sensors',
+    'ui.sensorsCount': (a, h) => h.sel(a.n, { 'one': `${h.num(a.n)} sensor`, 'other': `${h.num(a.n)} sensors` }, 'other'),
     'ui.history': 'History',
     'ui.now': 'Now',
     'ui.min': 'Min',

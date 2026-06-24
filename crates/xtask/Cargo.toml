@@ -9,5 +9,11 @@ repository.workspace = true
 authors.workspace = true
 publish = false
 
+[dependencies]
+# The dashboard i18n emitter parses the canonical .ftl store and gzips the emitted
+# bundles to enforce the per-locale footprint budget.
+fluent-syntax = "0.12"
+flate2 = "1"
+
 [lints]
 workspace = true

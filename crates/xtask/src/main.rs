@@ -10,6 +10,8 @@ use std::process::{Command, ExitCode};
 use std::thread::sleep;
 use std::time::Duration;
 
+mod i18n;
+
 /// The tasks xtask knows about, each paired with a one-line description.
 const TASKS: &[(&str, &str)] = &[
     (
@@ -293,13 +295,19 @@ fn ros(args: &[String]) -> ExitCode {
     }
 }
 
-/// Run the local-first dashboard dev server, backed by the hardware-free mock.
+/// Run a `dashboard` subcommand: `i18n` generates or checks the locale bundles, anything
+/// else runs the mock-backed dev server.
 ///
-/// Forwards its arguments to the `dev` binary in `pamoja-dashboard`, so
-/// `cargo xtask dashboard dev alarm` serves the alarm scenario. A leading `dev`
-/// subcommand word is optional and dropped, and any other arguments (a scenario key,
-/// `--addr`, `--embedded`, `--interval-ms`) pass straight through.
+/// `cargo xtask dashboard i18n` regenerates the browser bundles from the canonical Fluent
+/// store, and `dashboard i18n --check` verifies them. `cargo xtask dashboard dev alarm`
+/// serves the alarm scenario; a leading `dev` word is optional and dropped, and any other
+/// arguments (a scenario key, `--addr`, `--embedded`, `--interval-ms`) pass straight
+/// through to the dev binary.
 fn dashboard(args: &[String]) -> ExitCode {
+    if args.first().map(String::as_str) == Some("i18n") {
+        return i18n::run(&args[1..]);
+    }
+
     let forwarded: Vec<&String> = args
         .iter()
         .skip_while(|arg| arg.as_str() == "dev")

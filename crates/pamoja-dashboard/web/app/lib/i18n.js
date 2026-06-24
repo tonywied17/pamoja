@@ -51,13 +51,35 @@ function active() { return bundles[store.state.locale] || fallback; }
 /** Reflects the active bundle's language and text direction onto the document. */
 function applyDir() { const b = active(); document.documentElement.lang = b.locale; document.documentElement.dir = b.dir; }
 
+const pluralRules = {};
+const pluralRulesFor = (locale) =>
+  (pluralRules[locale] ??= new Intl.PluralRules(locale, { type: 'cardinal' }));
+
+/**
+ * Runtime helpers passed to function-valued messages (counts and plurals). A generated
+ * bundle compiles a Fluent selector to `(a, h) => ...` and calls back into these.
+ */
+const helpers =
+{
+  num: (n) => nf(n),
+  plural: (n) => pluralRulesFor(active().locale).select(n),
+  sel: (n, variants, fallbackKey) =>
+    variants[n] ?? variants[helpers.plural(n)] ?? variants[fallbackKey],
+};
+
 /**
  * Looks up a localized message by its stable key.
  *
  * @param {string} k - the message key, such as `"ui.status"`.
+ * @param {object} [args] - arguments for a counted or plural message, such as `{ n: 3 }`.
  * @returns {string} the active-locale text, the English fallback, or the key itself.
  */
-export const t = (k) => active().messages[k] ?? fallback.messages[k] ?? k;
+export const t = (k, args) =>
+{
+  const m = active().messages[k] ?? fallback.messages[k];
+  if (m == null) return k;
+  return typeof m === 'function' ? m(args || {}, helpers) : m;
+};
 
 /**
  * Formats a number in the active locale and numbering system.

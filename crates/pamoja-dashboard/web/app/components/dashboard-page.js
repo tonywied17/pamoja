@@ -295,7 +295,7 @@ $.component('dashboard-page', {
         <div class="banner-text">
           <span class="banner-eyebrow">${t('ui.status')}</span>
           <h1 class="banner-title">${t('ui.hero.' + f.status)}</h1>
-          <span class="banner-sub">${nf(f.orgs.length)} ${t('ui.orgs')} · ${nf(groups)} ${t('ui.groups')} · ${nf(sensors)} ${t('ui.sensors')}</span>
+          <span class="banner-sub">${nf(f.orgs.length)} ${t('ui.orgs')} · ${nf(groups)} ${t('ui.groups')} · ${t('ui.sensorsCount', { n: sensors })}</span>
         </div>
         <div class="banner-stats">
           <div class="bstat"><b>${nf(sensors)}</b><span>${t('ui.sensors')}</span></div>

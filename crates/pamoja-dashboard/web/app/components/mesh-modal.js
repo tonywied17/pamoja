@@ -240,7 +240,7 @@ $.component('mesh-modal', {
           <div class="net-head">
             <div>
               <div class="net-title">${esc(group.name)}</div>
-              <div class="net-subtitle">${LINK_NAMES[group.link.kind] || group.link.kind} · ${nf(sCount)} ${t('ui.sensors')} · ${t('ui.networkHint')}</div>
+              <div class="net-subtitle">${LINK_NAMES[group.link.kind] || group.link.kind} · ${t('ui.sensorsCount', { n: sCount })} · ${t('ui.networkHint')}</div>
             </div>
             <div class="spacer"></div>
             <button class="modal-close" type="button" @click="close" aria-label="${esc(t('ui.cancel'))}">✕</button>
