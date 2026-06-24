@@ -25,6 +25,8 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
+use flate2::write::GzEncoder;
+use flate2::Compression;
 use serde::Deserialize;
 
 use crate::assets::Assets;
@@ -232,12 +234,14 @@ impl<S: StateSource + Send + 'static> Server<S> {
     }
 }
 
-// One parsed request line: the method, the path, the raw query string, and any body.
+// One parsed request line: the method, the path, the raw query string, any body, and
+// whether the client accepts a gzip-encoded response.
 struct Request {
     method: String,
     path: String,
     query: String,
     body: Vec<u8>,
+    accept_gzip: bool,
 }
 
 // A client's proof that it derived the session key during pairing.
@@ -315,7 +319,7 @@ fn handle<S: StateSource, C: Read + Write>(
         ("POST", "/command") => handle_command(&mut conn, &source, &auth, &request.body),
         ("GET", path) => match assets.get(path) {
             Some((content_type, bytes)) => {
-                write_response(&mut conn, 200, "OK", content_type, &bytes)
+                write_asset(&mut conn, content_type, &bytes, request.accept_gzip)
             }
             None => write_response(&mut conn, 404, "Not Found", "text/plain", b"not found"),
         },
@@ -397,8 +401,10 @@ fn read_request<C: Read>(conn: &mut C) -> std::io::Result<Option<Request>> {
         None => (target.to_owned(), String::new()),
     };
 
-    // Drain the headers, noting a body length so a POST can be consumed politely.
+    // Drain the headers, noting a body length so a POST can be consumed politely and
+    // whether the client accepts a gzip-encoded response.
     let mut content_length = 0usize;
+    let mut accept_gzip = false;
     loop {
         let mut header = String::new();
         if reader.read_line(&mut header)? == 0 {
@@ -408,10 +414,12 @@ fn read_request<C: Read>(conn: &mut C) -> std::io::Result<Option<Request>> {
         if header.is_empty() {
             break;
         }
-        // Header names are case-insensitive; clients send `content-length` in any case.
+        // Header names are case-insensitive; clients send these in any case.
         if let Some((name, value)) = header.split_once(':') {
             if name.eq_ignore_ascii_case("content-length") {
                 content_length = value.trim().parse().unwrap_or(0);
+            } else if name.eq_ignore_ascii_case("accept-encoding") {
+                accept_gzip = value.to_ascii_lowercase().contains("gzip");
             }
         }
     }
@@ -426,6 +434,7 @@ fn read_request<C: Read>(conn: &mut C) -> std::io::Result<Option<Request>> {
         path,
         query,
         body,
+        accept_gzip,
     }))
 }
 
@@ -474,6 +483,34 @@ fn stream_events<S: StateSource, W: Write>(
         thread::sleep(interval);
     }
     Ok(())
+}
+
+// Serves a static asset, gzip-encoded when the client accepts it. The one-time asset load
+// is the dominant transfer over a weak hotspot link, so compressing it is the main win; a
+// client that does not accept gzip still gets the identity bytes.
+fn write_asset<W: Write>(
+    conn: &mut W,
+    content_type: &str,
+    bytes: &[u8],
+    gzip: bool,
+) -> std::io::Result<()> {
+    if !gzip {
+        return write_response(conn, 200, "OK", content_type, bytes);
+    }
+    let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
+    encoder.write_all(bytes)?;
+    let compressed = encoder.finish()?;
+    let header = format!(
+        "HTTP/1.1 200 OK\r\n\
+         Content-Type: {content_type}\r\n\
+         Content-Encoding: gzip\r\n\
+         Content-Length: {len}\r\n\
+         Connection: close\r\n\r\n",
+        len = compressed.len(),
+    );
+    conn.write_all(header.as_bytes())?;
+    conn.write_all(&compressed)?;
+    conn.flush()
 }
 
 // Writes a JSON response with the given status.
@@ -601,6 +638,49 @@ mod tests {
         let start = json.find(&needle).expect("key present") + needle.len();
         let rest = &json[start..];
         rest[..rest.find('"').expect("closing quote")].to_owned()
+    }
+
+    #[test]
+    fn an_asset_is_gzipped_when_the_client_accepts_it() {
+        use flate2::read::GzDecoder;
+        use std::io::Read as _;
+
+        let mut conn =
+            MemConn::new(b"GET /app/app.js HTTP/1.1\r\nAccept-Encoding: gzip, deflate\r\n\r\n");
+        handle(
+            &mut conn,
+            Arc::new(Mutex::new(Mock::new(Scenario::Normal))),
+            Assets::Embedded,
+            Duration::from_millis(0),
+            Arc::new(Auth::new("secret")),
+        )
+        .expect("handled");
+
+        let split = conn
+            .output
+            .windows(4)
+            .position(|w| w == b"\r\n\r\n")
+            .expect("headers end")
+            + 4;
+        let head = String::from_utf8_lossy(&conn.output[..split]);
+        assert!(head.contains("Content-Encoding: gzip"), "head: {head}");
+
+        let mut decoded = Vec::new();
+        GzDecoder::new(&conn.output[split..])
+            .read_to_end(&mut decoded)
+            .expect("gunzip");
+        let (_, original) = Assets::Embedded.get("/app/app.js").expect("asset");
+        assert_eq!(decoded, original, "gunzipped body matches the source asset");
+    }
+
+    #[test]
+    fn an_asset_is_identity_without_accept_encoding() {
+        let written = handle_request(
+            b"GET /app/app.js HTTP/1.1\r\n\r\n",
+            Arc::new(Auth::new("s")),
+        );
+        assert!(written.contains("200 OK"));
+        assert!(!written.contains("Content-Encoding"));
     }
 
     // An in-memory connection: reads from a fixed request, collects the response.

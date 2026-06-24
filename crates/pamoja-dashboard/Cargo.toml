@@ -16,7 +16,7 @@ publish = false
 # Serving brings the command authenticator, which needs the keyed-hash primitives
 # and a system RNG.
 default = ["serve"]
-serve = ["dep:pamoja-session", "dep:getrandom"]
+serve = ["dep:pamoja-session", "dep:getrandom", "dep:flate2"]
 
 [dependencies]
 # Only the data types are read from these crates to build the snapshot; the
@@ -28,6 +28,8 @@ pamoja-power = { path = "../pamoja-power", version = "0.1.10" }
 # actions are gated without a second crypto stack; only used by the serving layer.
 pamoja-session = { path = "../pamoja-session", version = "0.1.10", optional = true }
 getrandom = { version = "0.2", optional = true }
+# Compresses the one-time asset load so the bundle is cheap over a weak hotspot link.
+flate2 = { version = "1", optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
 

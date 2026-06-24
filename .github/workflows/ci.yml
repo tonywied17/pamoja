@@ -53,6 +53,11 @@ jobs:
       - name: Dashboard i18n bundles valid
         run: cargo run -p xtask -- dashboard i18n --check
 
+      # The dashboard's page-load bundle must stay within its gzipped transfer budget, so
+      # it loads fast over a weak hotspot link; this fails if the bundle grows past it.
+      - name: Dashboard footprint budget
+        run: cargo run -p xtask -- dashboard footprint
+
   ros-bridge:
     name: ros2 + zenoh bridge
     runs-on: ubuntu-latest
