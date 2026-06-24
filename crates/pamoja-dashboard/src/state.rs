@@ -317,6 +317,29 @@ pub struct Sensor {
     pub events: Vec<EventRecord>,
 }
 
+impl Sensor {
+    /// Creates a sensor with an id and current reading, no battery, history, or events yet.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - the stable sensor identifier.
+    /// * `reading` - the sensor's current reading.
+    ///
+    /// # Returns
+    ///
+    /// An [`Mode::Active`] sensor carrying just the reading.
+    pub fn new(id: impl Into<String>, reading: Reading) -> Self {
+        Self {
+            id: id.into(),
+            reading,
+            battery: None,
+            mode: Mode::Active,
+            history: Vec::new(),
+            events: Vec::new(),
+        }
+    }
+}
+
 /// A group of sensors sharing one node and one link, such as a clinic's fridges.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

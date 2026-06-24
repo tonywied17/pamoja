@@ -11,12 +11,14 @@ authors.workspace = true
 publish = false
 
 [features]
-# The data contract and the mock are always available; the host-side HTTP/SSE
-# server is opt-in (but on by default) so the contract can be reused without it.
-# Serving brings the command authenticator, which needs the keyed-hash primitives
-# and a system RNG.
-default = ["serve"]
+# The data contract is always available; the host-side HTTP/SSE server is opt-in (but on
+# by default) so the contract can be reused without it, and brings the command
+# authenticator (keyed-hash primitives + a system RNG) and asset compression. The `mock`
+# feature is the hardware-free demo fleet: on by default for development and the showcase,
+# off in a real firmware build that ships only its own real source.
+default = ["serve", "mock"]
 serve = ["dep:pamoja-session", "dep:getrandom", "dep:flate2"]
+mock = []
 
 [dependencies]
 # Only the data types are read from these crates to build the snapshot; the
@@ -32,6 +34,20 @@ getrandom = { version = "0.2", optional = true }
 flate2 = { version = "1", optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
+
+# The dev server and the snapshot generator are the hardware-free demo, so they need the
+# mock fleet. The gateway example shows real use and needs only the serving layer.
+[[bin]]
+name = "dev"
+required-features = ["serve", "mock"]
+
+[[example]]
+name = "snapshot"
+required-features = ["mock"]
+
+[[example]]
+name = "gateway"
+required-features = ["serve"]
 
 [lints]
 workspace = true

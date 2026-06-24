@@ -40,25 +40,33 @@
 
 mod assets;
 mod command;
-mod mock;
 mod source;
 mod state;
 
+#[cfg(feature = "mock")]
+mod mock;
+
 #[cfg(feature = "serve")]
 mod auth;
+#[cfg(feature = "serve")]
+mod fleet;
 #[cfg(feature = "serve")]
 mod serve;
 
 pub use assets::Assets;
 pub use command::{Command, CommandError};
-pub use mock::{Mock, Scenario};
 pub use source::StateSource;
 pub use state::{
     EventLevel, EventRecord, Group, Link, LinkKind, Mode, Org, Reading, Sensor, State, Status,
     Trend,
 };
 
+#[cfg(feature = "mock")]
+pub use mock::{Mock, Scenario};
+
 #[cfg(feature = "serve")]
 pub use auth::{Auth, AuthError, Challenge};
+#[cfg(feature = "serve")]
+pub use fleet::{Fleet, FleetBuilder};
 #[cfg(feature = "serve")]
 pub use serve::Server;
