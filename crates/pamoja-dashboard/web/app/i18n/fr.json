@@ -27,6 +27,7 @@
     "ui.band": "Plage sûre",
     "ui.sensorId": "Capteur",
     "ui.manage": "Gérer",
+    "ui.reset": "Réinitialiser",
     "ui.done": "Terminé",
     "ui.dragHint": "Glissez les cartes et tuiles pour réorganiser",
     "ui.dragHintTouch": "Appuyez longuement sur une carte ou tuile, puis glissez pour réorganiser",

@@ -657,6 +657,8 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .manage-btn .ic { inline-size: 16px; block-size: 16px; flex: none; }
 .manage-btn:hover { color: var(--text); border-color: color-mix(in srgb, var(--cyan) 45%, var(--line-2)); transform: translateY(-1px); }
 .manage-btn.on { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 50%, transparent); background: color-mix(in srgb, var(--cyan) 14%, transparent); }
+.reset-btn:hover { color: var(--alarm); border-color: color-mix(in srgb, var(--alarm) 45%, var(--line-2)); }
+.reset-btn + .manage-btn { margin-inline-start: 0.6rem; }
 /* On phones the org switcher and Manage share one row: the switcher flexes (its name
    ellipsises) and Manage collapses to its icon, so the bar never spills onto a new line. */
 @media (max-width: 560px)

@@ -27,6 +27,7 @@
     "ui.band": "Faixa segura",
     "ui.sensorId": "Sensor",
     "ui.manage": "Gerir",
+    "ui.reset": "Redefinir",
     "ui.done": "Concluído",
     "ui.dragHint": "Arraste cartões e blocos para reordenar",
     "ui.dragHintTouch": "Toque e segure um cartão ou bloco e arraste para reordenar",

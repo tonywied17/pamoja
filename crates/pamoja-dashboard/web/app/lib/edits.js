@@ -170,6 +170,19 @@ export const currentFleet = () =>
 };
 
 /**
+ * Whether the local edit overlay holds any changes (added or removed groups or sensors, or a
+ * custom ordering). Drives the demo's "reset" affordance.
+ *
+ * @returns {boolean} true if any local edit is present.
+ */
+export const hasLocalEdits = () =>
+{
+  const e = store.state.edits;
+  return !!(e.addGroups.length || e.addSensors.length || e.rmGroups.length || e.rmSensors.length
+    || Object.keys(e.groupOrder || {}).length || Object.keys(e.sensorOrder || {}).length);
+};
+
+/**
  * Builds the authenticated command for a provisioning operation.
  *
  * @param {string} kind - `'addGroup'`, `'addSensor'`, `'removeGroup'`, or `'removeSensor'`.

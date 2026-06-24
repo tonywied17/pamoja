@@ -9,7 +9,7 @@
 
 import { store } from '../store.js';
 import { t, nf, LOCALES, setLocale, localeName } from '../lib/i18n.js';
-import { SCENARIOS, demo } from '../lib/feed.js';
+import { SCENARIOS, demo, live } from '../lib/feed.js';
 import { currentFleet } from '../lib/edits.js';
 import { open } from '../nav.js';
 import { openNetworkOverlay } from './network-view.js';
@@ -38,7 +38,7 @@ $.component('top-bar', {
   mounted()
   {
     this._un = store.subscribe(() => this.setState({}));
-    this._eff = $.effect(() => { currentFleet(); unlocked.value; demo.value; this.setState({}); });
+    this._eff = $.effect(() => { currentFleet(); unlocked.value; demo.value; live.value; this.setState({}); });
   },
   /** Tears down the store subscription and fleet effect. */
   destroyed() { if (this._un) this._un(); if (typeof this._eff === 'function') this._eff(); },
@@ -110,9 +110,9 @@ $.component('top-bar', {
           <button class="deck-seg" type="button" @click="openNetwork" aria-label="${esc(t('ui.network'))}" title="${esc(t('ui.network'))}">
             ${ICON.network}<span class="deck-label">${t('ui.network')}</span>
           </button>
-          <button class="deck-seg control ${unlocked.value ? 'is-unlocked' : ''}" type="button" @click="toggleControl" aria-label="${esc(t('ui.control'))}" title="${esc(unlocked.value ? t('ui.lock') : t('ui.unlock'))}">
+          ${live.value ? `<button class="deck-seg control ${unlocked.value ? 'is-unlocked' : ''}" type="button" @click="toggleControl" aria-label="${esc(t('ui.control'))}" title="${esc(unlocked.value ? t('ui.lock') : t('ui.unlock'))}">
             ${unlocked.value ? ICON.unlock : ICON.lock}
-          </button>
+          </button>` : ''}
           <span class="deck-div" aria-hidden="true"></span>
           <div class="deck-dd ${s.localeOpen ? 'open' : ''}" @click.outside="closeLocale">
             <button class="deck-seg" type="button" @click="toggleLocale" aria-label="${esc(t('ui.language'))}" title="${esc(localeName(store.state.locale))}">

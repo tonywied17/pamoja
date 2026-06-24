@@ -9,7 +9,7 @@
 import { store } from '../store.js';
 import { open } from '../nav.js';
 import { t, nf, fmt } from '../lib/i18n.js';
-import { currentFleet, provision } from '../lib/edits.js';
+import { currentFleet, provision, hasLocalEdits } from '../lib/edits.js';
 import { live } from '../lib/feed.js';
 import { unlocked, promptUnlock } from '../lib/pair.js';
 import { conn, tileViz, bannerRing, trendArrow, isDiscrete, isStat, realSensors, groupStats, meshPeerCount, vizFor, esc } from '../lib/viz/index.js';
@@ -19,6 +19,7 @@ const ICON_EDIT = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="curre
 const ICON_DONE = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
 const ICON_EXPAND = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>';
 const ICON_DRAG = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9 2 12l3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>';
+const ICON_RESET = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>';
 
 /**
  * Counts the non-mesh sensors in a group, the peer count the mesh preview draws.
@@ -336,9 +337,13 @@ $.component('dashboard-page', {
         </button>
         <div class="orgsel-menu">${menu}</div>
       </div>
+      ${!live.value && hasLocalEdits() ? `<button class="manage-btn reset-btn" type="button" @click="onReset" title="${esc(t('ui.reset'))}">${ICON_RESET}<span>${t('ui.reset')}</span></button>` : ''}
       <button class="manage-btn ${store.state.editing ? 'on' : ''}" type="button" @click="onManage">${store.state.editing ? ICON_DONE : ICON_EDIT}<span>${store.state.editing ? t('ui.done') : t('ui.manage')}</span></button>
     </div>`;
   },
+
+  /** Discards the demo's local edit overlay, restoring the original fleet. */
+  onReset() { store.dispatch('resetEdits'); this.scheduleLayout(); this.setState({}); },
 
   /** Toggles the org selector dropdown. */
   toggleOrg() { this.setState({ orgOpen: !this.state.orgOpen }); },
