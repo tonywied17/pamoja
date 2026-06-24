@@ -907,7 +907,7 @@ impl StateSource for Mock {
         ));
         let mesh_node = self.group(
             "mesh-node",
-            "Mesh node",
+            "Neighborhood Mesh",
             LinkKind::Mesh,
             4,
             vec![neighbour_mesh, neighbours, hops, routing, relayed],

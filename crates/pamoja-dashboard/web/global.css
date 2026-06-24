@@ -806,6 +806,7 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .mm-dot { fill: var(--bg-1); stroke: var(--lc); stroke-width: 2; transition: stroke-width 0.15s var(--ease); }
 .mm-node.hub .mm-dot { fill: color-mix(in srgb, var(--lc) 22%, var(--bg-1)); stroke-width: 2.5; }
 .mm-node.gateway .mm-dot { fill: color-mix(in srgb, var(--cyan) 18%, var(--bg-1)); stroke: var(--cyan); }
+.mm-node.sensor .mm-dot { fill: color-mix(in srgb, var(--lc) 16%, var(--bg-1)); }
 .mm-node.sensor[data-status="ok"] .mm-dot { stroke: var(--ok); }
 .mm-node.sensor[data-status="warn"] .mm-dot { stroke: var(--warn); }
 .mm-node.sensor[data-status="alarm"] .mm-dot { stroke: var(--alarm); }
