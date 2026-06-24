@@ -191,6 +191,8 @@
     "ui.pairCode": "Msimbo wa kuunganisha",
     "ui.pairFailed": "Msimbo huo haukufanya kazi",
     "ui.pairOffline": "Kifaa hakipatikani",
-    "ui.commandFailed": "Kitendo kimeshindwa"
+    "ui.commandFailed": "Kitendo kimeshindwa",
+    "ui.binding": "Kifungo cha vifaa",
+    "ui.bindingHint": "Hiari: jinsi kifaa kinavyopata kitambuzi hiki (mf. i2c:0x76)"
   }
 }

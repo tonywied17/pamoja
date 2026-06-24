@@ -43,6 +43,11 @@ pub enum Command {
         group: String,
         /// The sensor to add.
         sensor: Sensor,
+        /// An optional gateway-defined hardware binding the device uses to find the sensor,
+        /// such as `"i2c:0x76"`, `"gpio:4"`, or `"lora:ab12"`. The dashboard only carries it
+        /// through; binding a real driver is the gateway's job when it drains the command.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        binding: Option<String>,
     },
     /// Remove a sensor by its `"groupId/sensorId"` path.
     RemoveSensor {

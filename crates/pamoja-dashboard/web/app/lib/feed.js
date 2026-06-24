@@ -33,6 +33,12 @@ export const connected = $.signal(true);
  */
 export const live = $.signal(false);
 
+/**
+ * Whether the current snapshot is the hardware-free demo (the mock sets this). Demo-only
+ * affordances such as the scenario switcher show only when true; a real device omits it.
+ */
+export const demo = $.signal(false);
+
 let es;
 let lastScenario;
 let replay;
@@ -47,6 +53,7 @@ let replay;
 function publish(snap)
 {
   if (snap && snap.catalog) mergeCatalog(snap.catalog);
+  demo.value = !!(snap && snap.demo);
   fleet.value = snap;
 }
 

@@ -191,6 +191,8 @@
     "ui.pairCode": "Código de emparelhamento",
     "ui.pairFailed": "Esse código não funcionou",
     "ui.pairOffline": "Dispositivo inacessível",
-    "ui.commandFailed": "Falha na ação"
+    "ui.commandFailed": "Falha na ação",
+    "ui.binding": "Vínculo de hardware",
+    "ui.bindingHint": "Opcional: como o dispositivo encontra este sensor (ex. i2c:0x76)"
   }
 }

@@ -181,7 +181,13 @@ function toCommand(kind, payload)
   switch (kind)
   {
     case 'addGroup': return { type: 'addGroup', org: payload.orgId, group: payload };
-    case 'addSensor': return { type: 'addSensor', group: payload.groupId, sensor: payload };
+    case 'addSensor':
+    {
+      // The hardware binding is device config, not display data, so it rides on the command
+      // rather than the sensor the dashboard renders.
+      const { binding, ...sensor } = payload;
+      return { type: 'addSensor', group: sensor.groupId, sensor, binding: binding || undefined };
+    }
     case 'removeGroup': return { type: 'removeGroup', id: payload };
     default: return { type: 'removeSensor', target: payload };
   }

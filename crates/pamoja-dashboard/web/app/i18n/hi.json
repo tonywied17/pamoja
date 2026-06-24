@@ -191,6 +191,8 @@
     "ui.pairCode": "पेयरिंग कोड",
     "ui.pairFailed": "यह कोड काम नहीं आया",
     "ui.pairOffline": "डिवाइस अनुपलब्ध",
-    "ui.commandFailed": "कार्रवाई विफल"
+    "ui.commandFailed": "कार्रवाई विफल",
+    "ui.binding": "हार्डवेयर बाइंडिंग",
+    "ui.bindingHint": "वैकल्पिक: डिवाइस इस सेंसर को कैसे ढूँढे (जैसे i2c:0x76)"
   }
 }

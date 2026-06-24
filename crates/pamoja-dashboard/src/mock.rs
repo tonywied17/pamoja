@@ -915,6 +915,7 @@ impl StateSource for Mock {
             orgs: vec![field_kits, health, coop],
             status: Status::Ok,
             uptime_secs: Some(uptime),
+            demo: true,
         };
         self.apply_edits(&mut state);
         self.apply_overrides(&mut state);
@@ -962,7 +963,7 @@ impl StateSource for Mock {
                 self.removed_groups.push(id.clone());
                 Ok(())
             }
-            Command::AddSensor { group, sensor } => {
+            Command::AddSensor { group, sensor, .. } => {
                 let known = fleet
                     .orgs
                     .iter()
@@ -1003,6 +1004,7 @@ mod tests {
         let groups: usize = state.orgs.iter().map(|o| o.groups.len()).sum();
         assert!(groups >= 7, "expected a rich fleet, got {groups} groups");
         assert_eq!(state.status, Status::Ok);
+        assert!(state.demo, "the mock marks its snapshot as demo data");
     }
 
     #[test]

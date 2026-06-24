@@ -409,6 +409,15 @@ pub struct State {
     /// Seconds the gateway has been running, if tracked.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub uptime_secs: Option<u64>,
+    /// Whether this snapshot comes from the hardware-free demo, not a real device. The page
+    /// shows demo-only affordances (the scenario switcher) only when this is set; a real
+    /// device omits it.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub demo: bool,
+}
+
+fn is_false(value: &bool) -> bool {
+    !*value
 }
 
 impl State {
@@ -440,6 +449,23 @@ impl State {
     /// practice only happens on a non-finite float.
     pub fn to_json(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(self)
+    }
+
+    /// Parses a snapshot from its JSON form, for restoring a persisted fleet on boot.
+    ///
+    /// # Arguments
+    ///
+    /// * `json` - the JSON text of a previously serialized snapshot.
+    ///
+    /// # Returns
+    ///
+    /// The parsed [`State`].
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`serde_json::Error`] if the JSON is malformed or does not match the shape.
+    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(json)
     }
 }
 
@@ -479,6 +505,7 @@ mod tests {
             }],
             status: Status::Ok,
             uptime_secs: Some(3600),
+            demo: false,
         }
     }
 

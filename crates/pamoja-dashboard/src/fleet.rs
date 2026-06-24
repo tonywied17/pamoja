@@ -71,7 +71,18 @@ impl Fleet {
         FleetBuilder { orgs: Vec::new() }
     }
 
-    fn with_state(state: State) -> Self {
+    /// Restores a fleet from a previously saved [`State`], for a gateway that persists its
+    /// fleet across restarts (save what [`snapshot`](StateSource::snapshot) returns, reload
+    /// it here on boot).
+    ///
+    /// # Arguments
+    ///
+    /// * `state` - the fleet structure and last readings to restore.
+    ///
+    /// # Returns
+    ///
+    /// A fleet holding the restored state.
+    pub fn from_state(state: State) -> Self {
         Self {
             inner: Arc::new(Mutex::new(Inner {
                 state,
@@ -158,6 +169,63 @@ impl Fleet {
         let mut inner = self.inner.lock().expect("fleet lock");
         std::mem::take(&mut inner.commands)
     }
+
+    /// Adds a group to an organization at runtime, so a gateway can surface a node the moment
+    /// it is discovered (a LoRa join, a new mesh neighbour). A no-op if the org is unknown.
+    ///
+    /// # Arguments
+    ///
+    /// * `org` - the organization id to add the group to.
+    /// * `group` - the group to add.
+    pub fn add_group(&self, org: &str, group: Group) {
+        self.mutate(Command::AddGroup {
+            org: org.to_owned(),
+            group,
+        });
+    }
+
+    /// Adds a sensor to a group at runtime, for a newly discovered sensor. A no-op if the
+    /// group is unknown.
+    ///
+    /// # Arguments
+    ///
+    /// * `group` - the group id to add the sensor to.
+    /// * `sensor` - the sensor to add.
+    pub fn add_sensor(&self, group: &str, sensor: Sensor) {
+        self.mutate(Command::AddSensor {
+            group: group.to_owned(),
+            sensor,
+            binding: None,
+        });
+    }
+
+    /// Removes a group by id at runtime, for a node that has gone away.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - the group id to remove.
+    pub fn remove_group(&self, id: &str) {
+        self.mutate(Command::RemoveGroup { id: id.to_owned() });
+    }
+
+    /// Removes a sensor by its `"groupId/sensorId"` path at runtime.
+    ///
+    /// # Arguments
+    ///
+    /// * `target` - the `"groupId/sensorId"` path to remove.
+    pub fn remove_sensor(&self, target: &str) {
+        self.mutate(Command::RemoveSensor {
+            target: target.to_owned(),
+        });
+    }
+
+    // Applies a structural change to the held state, the gateway-initiated counterpart of a
+    // dashboard command; it is not queued back to the gateway.
+    fn mutate(&self, command: Command) {
+        let mut inner = self.inner.lock().expect("fleet lock");
+        let _ = apply(&mut inner.state, &command);
+        recompute(&mut inner.state);
+    }
 }
 
 impl StateSource for Fleet {
@@ -210,7 +278,7 @@ fn apply(state: &mut State, command: &Command) -> Result<(), CommandError> {
             }
             Ok(())
         }
-        Command::AddSensor { group, sensor } => match group_mut(state, group) {
+        Command::AddSensor { group, sensor, .. } => match group_mut(state, group) {
             Some(target) => {
                 target.sensors.push(sensor.clone());
                 Ok(())
@@ -354,9 +422,10 @@ impl FleetBuilder {
             orgs: std::mem::take(&mut self.orgs),
             status: Status::Ok,
             uptime_secs: None,
+            demo: false,
         };
         recompute(&mut state);
-        Fleet::with_state(state)
+        Fleet::from_state(state)
     }
 }
 
@@ -445,6 +514,7 @@ mod tests {
             .command(&Command::AddSensor {
                 group: "fridges".to_owned(),
                 sensor: Sensor::new("fridge-2", Reading::new("fridge_temp", 5.0, "celsius")),
+                binding: None,
             })
             .expect("add sensor to a known group");
         assert!(sensor_present(&fleet, "fridges", "fridge-2"));
@@ -455,6 +525,52 @@ mod tests {
             })
             .expect("remove the sensor");
         assert!(!sensor_present(&fleet, "fridges", "fridge-2"));
+    }
+
+    #[test]
+    fn runtime_mutators_add_and_remove_for_discovery() {
+        let fleet = fleet();
+        fleet.add_group(
+            "clinic",
+            Group {
+                id: "ward".to_owned(),
+                name: "Ward".to_owned(),
+                link: Link {
+                    kind: LinkKind::Wifi,
+                    strength: 4,
+                    online: true,
+                },
+                status: Status::Ok,
+                sensors: Vec::new(),
+            },
+        );
+        fleet.add_sensor(
+            "ward",
+            Sensor::new("o2", Reading::new("oxygen_stock", 80.0, "percent")),
+        );
+        assert!(
+            sensor_present(&fleet, "ward", "o2"),
+            "discovered sensor shows"
+        );
+        fleet.remove_group("ward");
+        let mut handle = fleet.clone();
+        assert!(
+            !handle
+                .snapshot()
+                .orgs
+                .iter()
+                .flat_map(|o| &o.groups)
+                .any(|g| g.id == "ward"),
+            "removed group is gone"
+        );
+    }
+
+    #[test]
+    fn from_state_restores_a_saved_fleet() {
+        let mut original = fleet();
+        let saved = original.snapshot();
+        let mut restored = Fleet::from_state(saved.clone());
+        assert_eq!(restored.snapshot().orgs.len(), saved.orgs.len());
     }
 
     fn sensor_after(fleet: &Fleet, group: &str, sensor: &str) -> Sensor {

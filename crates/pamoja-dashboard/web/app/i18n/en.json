@@ -191,6 +191,8 @@
     "ui.pairCode": "Pairing code",
     "ui.pairFailed": "That code did not work",
     "ui.pairOffline": "Device unreachable",
-    "ui.commandFailed": "Action failed"
+    "ui.commandFailed": "Action failed",
+    "ui.binding": "Hardware binding",
+    "ui.bindingHint": "Optional: how the device finds this sensor (e.g. i2c:0x76)"
   }
 }

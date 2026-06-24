@@ -9,7 +9,7 @@
 
 import { store } from '../store.js';
 import { t, nf, LOCALES, setLocale, localeName } from '../lib/i18n.js';
-import { SCENARIOS } from '../lib/feed.js';
+import { SCENARIOS, demo } from '../lib/feed.js';
 import { currentFleet } from '../lib/edits.js';
 import { open } from '../nav.js';
 import { openNetworkOverlay } from './network-view.js';
@@ -38,7 +38,7 @@ $.component('top-bar', {
   mounted()
   {
     this._un = store.subscribe(() => this.setState({}));
-    this._eff = $.effect(() => { currentFleet(); unlocked.value; this.setState({}); });
+    this._eff = $.effect(() => { currentFleet(); unlocked.value; demo.value; this.setState({}); });
   },
   /** Tears down the store subscription and fleet effect. */
   destroyed() { if (this._un) this._un(); if (typeof this._eff === 'function') this._eff(); },
@@ -123,13 +123,14 @@ $.component('top-bar', {
           <button class="deck-seg theme ${night ? 'is-night' : 'is-day'}" type="button" @click="toggleTheme" aria-label="${esc(t('ui.theme'))}" title="${night ? esc(t('ui.day')) : esc(t('ui.night'))}">
             ${night ? ICON.sun : ICON.moon}
           </button>
+          ${demo.value ? `
           <span class="deck-div" aria-hidden="true"></span>
           <div class="deck-dd ${s.scenarioOpen ? 'open' : ''}" @click.outside="closeScenario">
             <button class="deck-seg" type="button" @click="toggleScenario" aria-label="${esc(t('ui.scenario'))}" title="${esc(t('scenario.' + store.state.scenario))}">
               ${ICON.scenario}<span class="deck-label deck-pick">${esc(t('scenario.' + store.state.scenario))}</span>${CHEVRON}
             </button>
             <ul class="dd-menu" role="listbox" z-show="scenarioOpen">${scenarios}</ul>
-          </div>
+          </div>` : ''}
         </nav>
       </header>`;
   },
