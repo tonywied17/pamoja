@@ -295,14 +295,14 @@ fn ros(args: &[String]) -> ExitCode {
     }
 }
 
-/// Run a `dashboard` subcommand: `i18n` generates or checks the locale bundles, anything
-/// else runs the mock-backed dev server.
+/// Run a `dashboard` subcommand: `i18n` validates the locale bundles, anything else runs
+/// the mock-backed dev server.
 ///
-/// `cargo xtask dashboard i18n` regenerates the browser bundles from the canonical Fluent
-/// store, and `dashboard i18n --check` verifies them. `cargo xtask dashboard dev alarm`
-/// serves the alarm scenario; a leading `dev` word is optional and dropped, and any other
-/// arguments (a scenario key, `--addr`, `--embedded`, `--interval-ms`) pass straight
-/// through to the dev binary.
+/// `cargo xtask dashboard i18n` checks the per-locale JSON bundles (key parity, placeholder
+/// parity, metadata, and footprint). `cargo xtask dashboard dev alarm` serves the alarm
+/// scenario; a leading `dev` word is optional and dropped, and any other arguments (a
+/// scenario key, `--addr`, `--embedded`, `--interval-ms`) pass straight through to the dev
+/// binary.
 fn dashboard(args: &[String]) -> ExitCode {
     if args.first().map(String::as_str) == Some("i18n") {
         return i18n::run(&args[1..]);

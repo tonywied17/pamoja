@@ -1,18 +1,38 @@
 // i18n.js - localization for the dashboard.
 //
-// The device serves a language-neutral snapshot; every label and all number, percent,
-// and relative-time formatting is produced here from the active locale bundle plus the
-// browser's own Intl engine (which carries CLDR), so non-Latin numerals and RTL need
-// nothing shipped from the device. Bundles are loaded on demand and cached; the active
-// locale lives in the store.
+// One JSON file per locale is the single source of translations: the device serves a
+// language-neutral snapshot, and this loads the active locale's JSON (fetched and cached)
+// and renders every label and all number, percent, plural, and relative-time formatting
+// from it plus the browser's Intl engine, which already carries CLDR. So non-Latin
+// numerals, plural forms, and right-to-left need nothing generated and nothing shipped
+// from the device beyond the messages themselves. A message is either a string or, for a
+// counted message, a plural map keyed by CLDR category ({ one, other, ... }); `{n}` and
+// other `{name}` placeholders are filled at render time.
 
 import { store } from '../store.js';
 
-/** The locales shipped as seed bundles, in menu order. */
+/** The locales shipped as JSON bundles, in menu order. */
 export const LOCALES = ['en', 'sw', 'ar', 'fr', 'pt', 'hi'];
 
 const bundles = {};
 let fallback;
+
+/**
+ * Loads and caches a locale's JSON bundle, resolved relative to this module so it works
+ * on a device and under any base path on a static host.
+ *
+ * @param {string} l - the locale tag.
+ * @returns {Promise<object>} the loaded bundle.
+ */
+async function load(l)
+{
+  if (!bundles[l])
+  {
+    const res = await fetch(new URL('../i18n/' + l + '.json', import.meta.url), { cache: 'no-store' });
+    bundles[l] = await res.json();
+  }
+  return bundles[l];
+}
 
 /**
  * Loads the English fallback and the active locale bundle, then applies text direction.
@@ -21,9 +41,8 @@ let fallback;
  */
 export async function initI18n()
 {
-  fallback = bundles.en = (await import('../i18n/en.js')).default;
-  const l = store.state.locale;
-  if (!bundles[l]) bundles[l] = (await import('../i18n/' + l + '.js')).default;
+  fallback = bundles.en = await load('en');
+  await load(store.state.locale);
   applyDir();
 }
 
@@ -36,7 +55,7 @@ export async function initI18n()
 export async function setLocale(l)
 {
   if (!LOCALES.includes(l)) return;
-  if (!bundles[l]) bundles[l] = (await import('../i18n/' + l + '.js')).default;
+  await load(l);
   store.dispatch('setLocale', l);
   applyDir();
 }
@@ -52,33 +71,45 @@ function active() { return bundles[store.state.locale] || fallback; }
 function applyDir() { const b = active(); document.documentElement.lang = b.locale; document.documentElement.dir = b.dir; }
 
 const pluralRules = {};
-const pluralRulesFor = (locale) =>
-  (pluralRules[locale] ??= new Intl.PluralRules(locale, { type: 'cardinal' }));
+const plural = (locale, n) =>
+  (pluralRules[locale] ??= new Intl.PluralRules(locale, { type: 'cardinal' })).select(n);
 
 /**
- * Runtime helpers passed to function-valued messages (counts and plurals). A generated
- * bundle compiles a Fluent selector to `(a, h) => ...` and calls back into these.
+ * Fills `{name}` placeholders in a message, formatting numeric arguments in the locale.
+ *
+ * @param {string} text - the message text.
+ * @param {object} args - the named arguments.
+ * @returns {string} the filled message.
  */
-const helpers =
+function fill(text, args)
 {
-  num: (n) => nf(n),
-  plural: (n) => pluralRulesFor(active().locale).select(n),
-  sel: (n, variants, fallbackKey) =>
-    variants[n] ?? variants[helpers.plural(n)] ?? variants[fallbackKey],
-};
+  return text.replace(/\{(\w+)\}/g, (_, name) =>
+  {
+    const v = args[name];
+    if (v == null) return '';
+    return typeof v === 'number' ? nf(v) : String(v);
+  });
+}
 
 /**
  * Looks up a localized message by its stable key.
  *
  * @param {string} k - the message key, such as `"ui.status"`.
- * @param {object} [args] - arguments for a counted or plural message, such as `{ n: 3 }`.
+ * @param {object} [args] - arguments for a counted or interpolated message, such as `{ n: 3 }`.
  * @returns {string} the active-locale text, the English fallback, or the key itself.
  */
-export const t = (k, args) =>
+export const t = (k, args = {}) =>
 {
-  const m = active().messages[k] ?? fallback.messages[k];
+  const b = active();
+  let m = b.messages[k];
+  if (m == null) m = fallback.messages[k];
   if (m == null) return k;
-  return typeof m === 'function' ? m(args || {}, helpers) : m;
+  if (typeof m === 'object')
+  {
+    // A plural map: choose the CLDR category for the count, falling back to `other`.
+    m = m[plural(b.locale, args.n)] ?? m.other ?? Object.values(m)[0];
+  }
+  return m.includes('{') ? fill(m, args) : m;
 };
 
 /**

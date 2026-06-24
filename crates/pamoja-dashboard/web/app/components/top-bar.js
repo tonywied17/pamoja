@@ -14,6 +14,7 @@ import { currentFleet } from '../lib/edits.js';
 import { open } from '../nav.js';
 import { openNetworkOverlay } from './network-view.js';
 import { problems } from './alarm-bar.js';
+import { unlocked, lock } from '../lib/pair.js';
 import { esc } from '../lib/viz/index.js';
 
 const SVG = (d) => `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -25,6 +26,8 @@ const ICON =
   sun: SVG('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
   moon: SVG('<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/>'),
   scenario: SVG('<line x1="4" y1="8.5" x2="20" y2="8.5"/><line x1="4" y1="15.5" x2="20" y2="15.5"/><circle cx="9" cy="8.5" r="2.4" fill="var(--bg-1)"/><circle cx="15" cy="15.5" r="2.4" fill="var(--bg-1)"/>'),
+  lock: SVG('<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'),
+  unlock: SVG('<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.6-1.5"/>'),
 };
 const CHEVRON = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
 
@@ -35,7 +38,7 @@ $.component('top-bar', {
   mounted()
   {
     this._un = store.subscribe(() => this.setState({}));
-    this._eff = $.effect(() => { currentFleet(); this.setState({}); });
+    this._eff = $.effect(() => { currentFleet(); unlocked.value; this.setState({}); });
   },
   /** Tears down the store subscription and fleet effect. */
   destroyed() { if (this._un) this._un(); if (typeof this._eff === 'function') this._eff(); },
@@ -65,6 +68,12 @@ $.component('top-bar', {
   pickScenario(s) { this.state.scenarioOpen = false; store.dispatch('setScenario', s); },
   /** Opens the network overlay. */
   openNetwork() { openNetworkOverlay(); },
+  /** Locks control if unlocked, otherwise opens the pairing dialog. */
+  toggleControl()
+  {
+    if (unlocked.value) lock();
+    else open(() => store.dispatch('openPairing'), () => store.dispatch('closePairing'));
+  },
   /** Opens the alarm drawer through the overlay nav. */
   openAlarms() { open(() => store.dispatch('openAlarms'), () => store.dispatch('closeAlarms')); },
   /** Toggles between the night and day themes, persisting the choice. */
@@ -100,6 +109,9 @@ $.component('top-bar', {
           </button>
           <button class="deck-seg" type="button" @click="openNetwork" aria-label="${esc(t('ui.network'))}" title="${esc(t('ui.network'))}">
             ${ICON.network}<span class="deck-label">${t('ui.network')}</span>
+          </button>
+          <button class="deck-seg control ${unlocked.value ? 'is-unlocked' : ''}" type="button" @click="toggleControl" aria-label="${esc(t('ui.control'))}" title="${esc(unlocked.value ? t('ui.lock') : t('ui.unlock'))}">
+            ${unlocked.value ? ICON.unlock : ICON.lock}
           </button>
           <span class="deck-div" aria-hidden="true"></span>
           <div class="deck-dd ${s.localeOpen ? 'open' : ''}" @click.outside="closeLocale">

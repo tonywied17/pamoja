@@ -4,6 +4,7 @@
 //! serving layer never knows which it is talking to. What you design and debug against
 //! the mock on a laptop is exactly what ships against real sensors.
 
+use crate::command::{Command, CommandError};
 use crate::state::State;
 
 /// Produces the current [`State`] snapshot whenever the dashboard asks for one.
@@ -36,5 +37,28 @@ pub trait StateSource {
     fn select(&mut self, key: &str) -> bool {
         let _ = key;
         false
+    }
+
+    /// Carries out an authenticated control command, changing the node's state.
+    ///
+    /// The serving layer calls this only after a command has been authenticated, so an
+    /// implementation may act on it directly. A read-only source rejects every command,
+    /// which is the default.
+    ///
+    /// # Arguments
+    ///
+    /// * `command` - the action to carry out.
+    ///
+    /// # Returns
+    ///
+    /// `Ok(())` once the command has been applied; its effect shows in the next snapshot.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`CommandError`] if the source does not support the command, the target
+    /// is unknown, or the action is not allowed.
+    fn command(&mut self, command: &Command) -> Result<(), CommandError> {
+        let _ = command;
+        Err(CommandError::Unsupported)
     }
 }

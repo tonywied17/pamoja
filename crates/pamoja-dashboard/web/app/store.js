@@ -34,6 +34,7 @@ export const store = $.store('app', {
     netSensor: null,
     group: null,
     alarms: false,
+    pairing: false,
     edits: get('edits', blankEdits()),
   },
   actions: {
@@ -56,6 +57,8 @@ export const store = $.store('app', {
     clearMeshNode(state) { state.meshNode = null; },
     openAlarms(state) { state.alarms = true; },
     closeAlarms(state) { state.alarms = false; },
+    openPairing(state) { state.pairing = true; },
+    closePairing(state) { state.pairing = false; },
 
     toggleEditing(state) { state.editing = !state.editing; if (!state.editing) state.create = null; },
     openCreate(state, payload) { state.create = payload; },

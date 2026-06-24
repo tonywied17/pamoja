@@ -9,7 +9,9 @@
 import { store } from '../store.js';
 import { open } from '../nav.js';
 import { t, nf, fmt } from '../lib/i18n.js';
-import { currentFleet } from '../lib/edits.js';
+import { currentFleet, provision } from '../lib/edits.js';
+import { live } from '../lib/feed.js';
+import { unlocked, promptUnlock } from '../lib/pair.js';
 import { conn, tileViz, bannerRing, trendArrow, isDiscrete, vizFor, esc } from '../lib/viz/index.js';
 import { openMeshOverlay } from './mesh-modal.js';
 
@@ -217,14 +219,14 @@ $.component('dashboard-page', {
    * @param {MouseEvent} e - the click event.
    * @returns {void}
    */
-  onRemoveSensor(e) { e.stopPropagation(); const el = e.target.closest('[data-key]'); if (el) store.dispatch('removeSensor', el.dataset.key); },
+  onRemoveSensor(e) { e.stopPropagation(); const el = e.target.closest('[data-key]'); if (el) provision('removeSensor', el.dataset.key); },
   /**
    * Removes a group in Manage mode.
    *
    * @param {MouseEvent} e - the click event.
    * @returns {void}
    */
-  onRemoveGroup(e) { const el = e.target.closest('[data-gid]'); if (el) store.dispatch('removeGroup', el.dataset.gid); },
+  onRemoveGroup(e) { const el = e.target.closest('[data-gid]'); if (el) provision('removeGroup', el.dataset.gid); },
   /**
    * Opens the group view for the clicked group's expand button.
    *
@@ -336,7 +338,13 @@ $.component('dashboard-page', {
   /** Closes the org selector dropdown. */
   closeOrg() { if (this.state.orgOpen) this.setState({ orgOpen: false }); },
   /** Toggles Manage mode. */
-  onManage() { store.dispatch('toggleEditing'); },
+  onManage()
+  {
+    // Against a real device, managing the fleet sends authenticated commands, so entering
+    // manage mode requires control to be unlocked first. A static host edits locally.
+    if (!store.state.editing && live.value && !unlocked.value) { promptUnlock(); return; }
+    store.dispatch('toggleEditing');
+  },
 
   /**
    * Renders the masonry grid of group cards for the selected org, plus an add card in

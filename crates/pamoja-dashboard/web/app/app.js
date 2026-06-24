@@ -16,6 +16,7 @@ import './components/top-bar.js';
 import './components/dashboard-page.js';
 import './components/sensor-modal.js';
 import './components/manage-modal.js';
+import './components/pairing-modal.js';
 import './components/group-modal.js';
 import './components/mesh-modal.js';
 import './components/network-view.js';

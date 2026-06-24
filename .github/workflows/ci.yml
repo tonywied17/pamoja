@@ -47,10 +47,10 @@ jobs:
       - name: Test
         run: cargo test --workspace
 
-      # The dashboard's browser locale bundles are generated from the canonical Fluent
-      # store; this fails if they are stale, if a locale's keys or variables drift from
-      # English, or if a bundle grows past its gzipped footprint budget.
-      - name: Dashboard i18n bundles in sync
+      # The dashboard's per-locale JSON bundles are the single source of translations;
+      # this fails if a locale's keys or placeholders drift from English, if a bundle is
+      # missing metadata, or if one grows past its gzipped footprint budget.
+      - name: Dashboard i18n bundles valid
         run: cargo run -p xtask -- dashboard i18n --check
 
   ros-bridge:

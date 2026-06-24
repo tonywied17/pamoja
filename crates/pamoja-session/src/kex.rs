@@ -7,9 +7,9 @@
 //! so each session gets an independent key and the key is tied to the specific pair
 //! of devices. The tests pin both primitives to their RFC reference vectors.
 
-use hkdf::Hkdf;
-use sha2::Sha256;
 use x25519_dalek::{PublicKey, StaticSecret};
+
+use crate::kdf::hkdf_sha256;
 
 // The label mixed into every derivation, so a pamoja session key can never collide
 // with a key some other protocol derives from the same shared secret.
@@ -135,15 +135,6 @@ pub(crate) fn derive(
     okm
 }
 
-// HKDF-SHA256 (RFC 5869): extract a pseudorandom key from `salt` and `ikm`, then
-// expand it under `info` into `out`. Kept as its own function so it can be pinned to
-// the RFC's published test vector.
-fn hkdf_sha256(salt: &[u8], ikm: &[u8], info: &[u8], out: &mut [u8]) {
-    Hkdf::<Sha256>::new(Some(salt), ikm)
-        .expand(info, out)
-        .expect("output length is within HKDF-SHA256's 255 * 32-byte limit");
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -200,24 +191,6 @@ mod tests {
     fn a_public_key_round_trips_through_bytes() {
         let public = AgreementKey::from_seed(&ALICE_SEED).public();
         assert_eq!(AgreementPublicKey::from_bytes(&public.to_bytes()), public);
-    }
-
-    #[test]
-    fn hkdf_matches_the_rfc_5869_basic_vector() {
-        // RFC 5869 Appendix A.1: the SHA-256 basic test case.
-        let ikm = [0x0bu8; 22];
-        let salt: [u8; 13] = [
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c,
-        ];
-        let info: [u8; 10] = [0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9];
-        let expected: [u8; 42] = [
-            0x3c, 0xb2, 0x5f, 0x25, 0xfa, 0xac, 0xd5, 0x7a, 0x90, 0x43, 0x4f, 0x64, 0xd0, 0x36,
-            0x2f, 0x2a, 0x2d, 0x2d, 0x0a, 0x90, 0xcf, 0x1a, 0x5a, 0x4c, 0x5d, 0xb0, 0x2d, 0x56,
-            0xec, 0xc4, 0xc5, 0xbf, 0x34, 0x00, 0x72, 0x08, 0xd5, 0xb8, 0x87, 0x18, 0x58, 0x65,
-        ];
-        let mut okm = [0u8; 42];
-        hkdf_sha256(&salt, &ikm, &info, &mut okm);
-        assert_eq!(okm, expected);
     }
 
     #[test]

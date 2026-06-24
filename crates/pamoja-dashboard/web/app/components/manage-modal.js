@@ -8,12 +8,12 @@
 import { store } from '../store.js';
 import { back } from '../nav.js';
 import { t } from '../lib/i18n.js';
-import { makeGroup, makeSensor, currentFleet } from '../lib/edits.js';
+import { makeGroup, makeSensor, currentFleet, provision } from '../lib/edits.js';
 import { catalog } from '../lib/catalog.js';
 import { LINK_NAMES, esc } from '../lib/viz/index.js';
 
 $.component('manage-modal', {
-  state: { name: '', linkKind: 'lora', sensorKind: 'temperature', value: '', last: null },
+  state: { name: '', linkKind: 'lora', sensorKind: 'temperature', value: '', error: null, last: null },
 
   /** Resets the form whenever the create target changes. */
   mounted() { this._un = store.subscribe(() => this.sync()); },
@@ -30,6 +30,7 @@ $.component('manage-modal', {
       this.state.last = id;
       this.state.name = '';
       this.state.value = '';
+      this.state.error = null;
       this.state.linkKind = 'lora';
       this.state.sensorKind = 'temperature';
     }
@@ -77,18 +78,16 @@ $.component('manage-modal', {
   onOverlay(e) { if (e.target.classList.contains('modal-overlay')) back(); },
 
   /** Creates the group or sensor from the form, then closes the dialog. */
-  submit()
+  async submit()
   {
     const c = store.state.create; if (!c) return;
-    if (c.mode === 'group')
-    {
-      store.dispatch('addGroup', makeGroup(c.orgId, this.state.name.trim() || t('ui.newGroup'), this.state.linkKind));
-    } else
-    {
-      const v = parseFloat(this.state.value);
-      store.dispatch('addSensor', makeSensor(c.groupId, this.state.sensorKind, Number.isFinite(v) ? v : NaN));
-    }
-    back();
+    const built = c.mode === 'group'
+      ? makeGroup(c.orgId, this.state.name.trim() || t('ui.newGroup'), this.state.linkKind)
+      : makeSensor(c.groupId, this.state.sensorKind, (() => { const v = parseFloat(this.state.value); return Number.isFinite(v) ? v : NaN; })());
+    const result = await provision(c.mode === 'group' ? 'addGroup' : 'addSensor', built);
+    if (result.ok) { back(); return; }
+    this.state.error = t('ui.commandFailed');
+    this.setState({});
   },
 
   /**
@@ -121,7 +120,7 @@ $.component('manage-modal', {
             <div class="modal-title">${c.mode === 'group' ? t('ui.addGroup') : t('ui.addSensor')}</div>
             <button class="modal-close" type="button" @click="cancel" aria-label="${esc(t('ui.cancel'))}">✕</button>
           </div>
-          <div class="form">${body}</div>
+          <div class="form">${body}${s.error ? `<p class="form-error">${esc(s.error)}</p>` : ''}</div>
           <div class="form-actions">
             <button class="seg" type="button" @click="cancel">${t('ui.cancel')}</button>
             <button class="seg primary" type="button" @click="submit">${t('ui.create')}</button>

@@ -29,7 +29,6 @@ members = [
     "crates/pamoja-gpio",
     "crates/pamoja-bus",
     "crates/pamoja-dashboard",
-    "crates/pamoja-i18n",
     "crates/pamoja-zenoh",
     "crates/pamoja-ros2",
     "crates/xtask",

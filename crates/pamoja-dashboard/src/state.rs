@@ -76,6 +76,11 @@ pub struct Reading {
     /// Numeric readings leave this `None`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub state: Option<String>,
+    /// The discrete actions this reading can be commanded to, such as
+    /// `["open", "closed"]` for a valve. Present only on a controllable actuator; a
+    /// read-only sensor leaves this `None`, and the page shows control only when it is set.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub actions: Option<Vec<String>>,
 }
 
 impl Reading {
@@ -99,6 +104,7 @@ impl Reading {
             band: None,
             trend: None,
             state: None,
+            actions: None,
         }
     }
 
@@ -156,6 +162,20 @@ impl Reading {
     /// The reading, for chaining.
     pub fn with_state(mut self, state: impl Into<String>) -> Self {
         self.state = Some(state.into());
+        self
+    }
+
+    /// Marks the reading as a controllable actuator with the given discrete actions.
+    ///
+    /// # Arguments
+    ///
+    /// * `actions` - the action codes a client may command, such as `["open", "closed"]`.
+    ///
+    /// # Returns
+    ///
+    /// The reading, for chaining.
+    pub fn with_actions(mut self, actions: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        self.actions = Some(actions.into_iter().map(Into::into).collect());
         self
     }
 }

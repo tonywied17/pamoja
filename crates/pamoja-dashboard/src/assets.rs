@@ -19,6 +19,7 @@ struct Asset {
 const HTML: &str = "text/html; charset=utf-8";
 const CSS: &str = "text/css; charset=utf-8";
 const JS: &str = "application/javascript; charset=utf-8";
+const JSON: &str = "application/json; charset=utf-8";
 
 // The bundle, embedded at compile time. `/` maps to the page shell. The order does not
 // matter; lookups are by exact path.
@@ -159,34 +160,34 @@ const EMBEDDED: &[Asset] = &[
         bytes: include_bytes!("../web/app/components/alarm-bar.js"),
     },
     Asset {
-        path: "/app/i18n/en.js",
-        content_type: JS,
-        bytes: include_bytes!("../web/app/i18n/en.js"),
+        path: "/app/i18n/en.json",
+        content_type: JSON,
+        bytes: include_bytes!("../web/app/i18n/en.json"),
     },
     Asset {
-        path: "/app/i18n/sw.js",
-        content_type: JS,
-        bytes: include_bytes!("../web/app/i18n/sw.js"),
+        path: "/app/i18n/sw.json",
+        content_type: JSON,
+        bytes: include_bytes!("../web/app/i18n/sw.json"),
     },
     Asset {
-        path: "/app/i18n/ar.js",
-        content_type: JS,
-        bytes: include_bytes!("../web/app/i18n/ar.js"),
+        path: "/app/i18n/ar.json",
+        content_type: JSON,
+        bytes: include_bytes!("../web/app/i18n/ar.json"),
     },
     Asset {
-        path: "/app/i18n/fr.js",
-        content_type: JS,
-        bytes: include_bytes!("../web/app/i18n/fr.js"),
+        path: "/app/i18n/fr.json",
+        content_type: JSON,
+        bytes: include_bytes!("../web/app/i18n/fr.json"),
     },
     Asset {
-        path: "/app/i18n/pt.js",
-        content_type: JS,
-        bytes: include_bytes!("../web/app/i18n/pt.js"),
+        path: "/app/i18n/pt.json",
+        content_type: JSON,
+        bytes: include_bytes!("../web/app/i18n/pt.json"),
     },
     Asset {
-        path: "/app/i18n/hi.js",
-        content_type: JS,
-        bytes: include_bytes!("../web/app/i18n/hi.js"),
+        path: "/app/i18n/hi.json",
+        content_type: JSON,
+        bytes: include_bytes!("../web/app/i18n/hi.json"),
     },
 ];
 
@@ -289,7 +290,7 @@ mod tests {
     #[test]
     fn embedded_has_all_six_seed_locales() {
         for locale in ["en", "sw", "ar", "fr", "pt", "hi"] {
-            let path = format!("/app/i18n/{locale}.js");
+            let path = format!("/app/i18n/{locale}.json");
             assert!(Assets::Embedded.get(&path).is_some(), "missing {path}");
         }
     }

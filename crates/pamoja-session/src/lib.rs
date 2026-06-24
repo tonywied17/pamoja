@@ -59,9 +59,11 @@
 
 mod aead;
 mod error;
+mod kdf;
 mod kex;
 mod session;
 
 pub use error::SessionError;
+pub use kdf::{hkdf_sha256, hmac_sha256};
 pub use kex::{AgreementKey, AgreementPublicKey};
 pub use session::{Role, Sealed, Session};

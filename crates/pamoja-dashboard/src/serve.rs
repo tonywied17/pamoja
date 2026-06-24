@@ -25,7 +25,11 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
+use serde::Deserialize;
+
 use crate::assets::Assets;
+use crate::auth::Auth;
+use crate::command::Command;
 use crate::source::StateSource;
 
 /// How connections reach the server: the seam that keeps the byte transport pluggable.
@@ -115,10 +119,17 @@ pub struct Server<S> {
     source: Arc<Mutex<S>>,
     assets: Assets,
     push_interval: Duration,
+    auth: Arc<Auth>,
 }
 
 impl<S: StateSource + Send + 'static> Server<S> {
     /// Creates a server that renders `source` with `assets`.
+    ///
+    /// Control is authenticated against a freshly generated pairing secret that nobody
+    /// holds yet, so no client can issue commands until [`with_pairing_secret`] sets the
+    /// secret the device actually shows. Read-only viewing needs no pairing.
+    ///
+    /// [`with_pairing_secret`]: Server::with_pairing_secret
     ///
     /// # Arguments
     ///
@@ -133,7 +144,25 @@ impl<S: StateSource + Send + 'static> Server<S> {
             source: Arc::new(Mutex::new(source)),
             assets,
             push_interval: Duration::from_secs(1),
+            auth: Arc::new(Auth::new(Auth::generate_secret())),
         }
+    }
+
+    /// Sets the pairing secret a client must know to issue commands.
+    ///
+    /// The secret is shown out of band (the device's screen, a QR code, or the dev
+    /// server's console) and never crosses the network.
+    ///
+    /// # Arguments
+    ///
+    /// * `secret` - the canonical pairing secret.
+    ///
+    /// # Returns
+    ///
+    /// The server, for chaining.
+    pub fn with_pairing_secret(mut self, secret: impl Into<String>) -> Self {
+        self.auth = Arc::new(Auth::new(secret));
+        self
     }
 
     /// Sets how often the `GET /events` stream pushes a fresh snapshot.
@@ -195,18 +224,39 @@ impl<S: StateSource + Send + 'static> Server<S> {
             let source = Arc::clone(&self.source);
             let assets = self.assets.clone();
             let interval = self.push_interval;
+            let auth = Arc::clone(&self.auth);
             thread::spawn(move || {
-                let _ = handle(conn, source, assets, interval);
+                let _ = handle(conn, source, assets, interval, auth);
             });
         }
     }
 }
 
-// One parsed request line: the method, the path, and the raw query string.
+// One parsed request line: the method, the path, the raw query string, and any body.
 struct Request {
     method: String,
     path: String,
     query: String,
+    body: Vec<u8>,
+}
+
+// A client's proof that it derived the session key during pairing.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ConfirmRequest {
+    session_id: String,
+    mac: String,
+}
+
+// An authenticated command: the session, its replay counter, the exact command string
+// that was signed, and the MAC over (counter, command).
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CommandRequest {
+    session_id: String,
+    counter: u64,
+    cmd: String,
+    mac: String,
 }
 
 fn handle<S: StateSource, C: Read + Write>(
@@ -214,6 +264,7 @@ fn handle<S: StateSource, C: Read + Write>(
     source: Arc<Mutex<S>>,
     assets: Assets,
     interval: Duration,
+    auth: Arc<Auth>,
 ) -> std::io::Result<()> {
     let request = match read_request(&mut conn)? {
         Some(request) => request,
@@ -239,25 +290,91 @@ fn handle<S: StateSource, C: Read + Write>(
             )
         }
         ("GET", "/events") => stream_events(&mut conn, &source, interval),
+        ("GET", "/pair/challenge") => {
+            let challenge = auth.challenge();
+            let json = format!(
+                r#"{{"sessionId":"{}","nonce":"{}"}}"#,
+                challenge.session_id, challenge.nonce
+            );
+            write_json(&mut conn, 200, "OK", &json)
+        }
+        ("POST", "/pair/confirm") => {
+            match serde_json::from_slice::<ConfirmRequest>(&request.body) {
+                Ok(confirm) => match auth.confirm(&confirm.session_id, &confirm.mac) {
+                    Ok(()) => write_json(&mut conn, 200, "OK", "{}"),
+                    Err(error) => write_json(
+                        &mut conn,
+                        401,
+                        "Unauthorized",
+                        &format!(r#"{{"error":"{}"}}"#, error.code()),
+                    ),
+                },
+                Err(_) => write_json(&mut conn, 400, "Bad Request", r#"{"error":"bad_request"}"#),
+            }
+        }
+        ("POST", "/command") => handle_command(&mut conn, &source, &auth, &request.body),
         ("GET", path) => match assets.get(path) {
             Some((content_type, bytes)) => {
                 write_response(&mut conn, 200, "OK", content_type, &bytes)
             }
             None => write_response(&mut conn, 404, "Not Found", "text/plain", b"not found"),
         },
-        ("POST", path) if path.starts_with("/command/") => write_response(
-            &mut conn,
-            501,
-            "Not Implemented",
-            "application/json; charset=utf-8",
-            br#"{"error":"control.not_yet_authenticated"}"#,
-        ),
         _ => write_response(
             &mut conn,
             405,
             "Method Not Allowed",
             "text/plain",
             b"method not allowed",
+        ),
+    }
+}
+
+// Authenticates a command, dispatches it to the source, and writes the result.
+fn handle_command<S: StateSource, W: Write>(
+    conn: &mut W,
+    source: &Arc<Mutex<S>>,
+    auth: &Arc<Auth>,
+    body: &[u8],
+) -> std::io::Result<()> {
+    let request: CommandRequest = match serde_json::from_slice(body) {
+        Ok(request) => request,
+        Err(_) => return write_json(conn, 400, "Bad Request", r#"{"error":"bad_request"}"#),
+    };
+    if let Err(error) = auth.verify_command(
+        &request.session_id,
+        request.counter,
+        &request.cmd,
+        &request.mac,
+    ) {
+        return write_json(
+            conn,
+            401,
+            "Unauthorized",
+            &format!(r#"{{"error":"{}"}}"#, error.code()),
+        );
+    }
+    let command: Command = match serde_json::from_str(&request.cmd) {
+        Ok(command) => command,
+        Err(_) => return write_json(conn, 400, "Bad Request", r#"{"error":"bad_request"}"#),
+    };
+    let outcome = match source.lock() {
+        Ok(mut source) => source.command(&command),
+        Err(_) => {
+            return write_json(
+                conn,
+                500,
+                "Internal Server Error",
+                r#"{"error":"internal"}"#,
+            )
+        }
+    };
+    match outcome {
+        Ok(()) => write_json(conn, 200, "OK", "{}"),
+        Err(error) => write_json(
+            conn,
+            422,
+            "Unprocessable Entity",
+            &format!(r#"{{"error":"{}"}}"#, error.code()),
         ),
     }
 }
@@ -291,12 +408,16 @@ fn read_request<C: Read>(conn: &mut C) -> std::io::Result<Option<Request>> {
         if header.is_empty() {
             break;
         }
-        if let Some(value) = header.strip_prefix("Content-Length:") {
-            content_length = value.trim().parse().unwrap_or(0);
+        // Header names are case-insensitive; clients send `content-length` in any case.
+        if let Some((name, value)) = header.split_once(':') {
+            if name.eq_ignore_ascii_case("content-length") {
+                content_length = value.trim().parse().unwrap_or(0);
+            }
         }
     }
+    let mut body = Vec::new();
     if content_length > 0 {
-        let mut body = vec![0u8; content_length];
+        body = vec![0u8; content_length];
         reader.read_exact(&mut body)?;
     }
 
@@ -304,6 +425,7 @@ fn read_request<C: Read>(conn: &mut C) -> std::io::Result<Option<Request>> {
         method: method.to_owned(),
         path,
         query,
+        body,
     }))
 }
 
@@ -354,6 +476,17 @@ fn stream_events<S: StateSource, W: Write>(
     Ok(())
 }
 
+// Writes a JSON response with the given status.
+fn write_json<W: Write>(conn: &mut W, code: u16, reason: &str, json: &str) -> std::io::Result<()> {
+    write_response(
+        conn,
+        code,
+        reason,
+        "application/json; charset=utf-8",
+        json.as_bytes(),
+    )
+}
+
 fn write_response<W: Write>(
     conn: &mut W,
     code: u16,
@@ -388,6 +521,20 @@ mod tests {
         assert_eq!(query_value("", "scenario"), None);
     }
 
+    fn handle_request(request: &[u8], auth: Arc<Auth>) -> String {
+        let mut conn = MemConn::new(request);
+        let source = Arc::new(Mutex::new(Mock::new(Scenario::Normal)));
+        handle(
+            &mut conn,
+            source,
+            Assets::Embedded,
+            Duration::from_millis(0),
+            auth,
+        )
+        .expect("handled");
+        String::from_utf8_lossy(&conn.output).into_owned()
+    }
+
     #[test]
     fn a_get_state_request_is_served_as_json_over_any_stream() {
         // The handler runs over an in-memory stream with no socket, proving it is
@@ -399,6 +546,7 @@ mod tests {
             source,
             Assets::Embedded,
             Duration::from_millis(0),
+            Arc::new(Auth::new("secret")),
         )
         .expect("handled");
         let written = String::from_utf8_lossy(&conn.output);
@@ -408,16 +556,51 @@ mod tests {
 
     #[test]
     fn an_unknown_path_is_a_404() {
-        let mut conn = MemConn::new(b"GET /nope HTTP/1.1\r\n\r\n");
-        let source = Arc::new(Mutex::new(Mock::new(Scenario::Normal)));
-        handle(
-            &mut conn,
-            source,
-            Assets::Embedded,
-            Duration::from_millis(0),
-        )
-        .expect("handled");
-        assert!(String::from_utf8_lossy(&conn.output).contains("404 Not Found"));
+        let written = handle_request(b"GET /nope HTTP/1.1\r\n\r\n", Arc::new(Auth::new("secret")));
+        assert!(written.contains("404 Not Found"));
+    }
+
+    #[test]
+    fn a_challenge_then_confirm_pairs_over_http() {
+        use pamoja_session::{hkdf_sha256, hmac_sha256};
+
+        let auth = Arc::new(Auth::new("s3cret"));
+
+        // The challenge returns a session id and nonce as JSON.
+        let challenge = handle_request(b"GET /pair/challenge HTTP/1.1\r\n\r\n", Arc::clone(&auth));
+        assert!(challenge.contains("200 OK"));
+        let body = challenge.split("\r\n\r\n").nth(1).expect("body");
+        let session_id = field(body, "sessionId");
+        let nonce = field(body, "nonce");
+
+        // The client derives the key from the known secret and the nonce, then proves it.
+        let mut key = [0u8; 32];
+        hkdf_sha256(
+            nonce.as_bytes(),
+            b"s3cret",
+            b"pamoja/dashboard/cmd v1",
+            &mut key,
+        );
+        let mac = hmac_sha256(&key, format!("confirm\n{session_id}").as_bytes())
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>();
+        let confirm_body = format!(r#"{{"sessionId":"{session_id}","mac":"{mac}"}}"#);
+        let request = format!(
+            "POST /pair/confirm HTTP/1.1\r\nContent-Length: {}\r\n\r\n{}",
+            confirm_body.len(),
+            confirm_body
+        );
+        let confirm = handle_request(request.as_bytes(), Arc::clone(&auth));
+        assert!(confirm.contains("200 OK"), "confirm response: {confirm}");
+    }
+
+    // Pulls a string field out of a small flat JSON object.
+    fn field(json: &str, key: &str) -> String {
+        let needle = format!("\"{key}\":\"");
+        let start = json.find(&needle).expect("key present") + needle.len();
+        let rest = &json[start..];
+        rest[..rest.find('"').expect("closing quote")].to_owned()
     }
 
     // An in-memory connection: reads from a fixed request, collects the response.

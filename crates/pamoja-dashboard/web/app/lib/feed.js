@@ -26,6 +26,13 @@ export const fleet = $.signal(null);
 /** Whether the feed is currently connected; drives the offline indicator. */
 export const connected = $.signal(true);
 
+/**
+ * Whether a real device is answering (vs the static-host snapshot fallback). When true the
+ * device is the source of truth and provisioning goes through authenticated commands; when
+ * false (the Pages showcase) provisioning stays a client-side localStorage overlay.
+ */
+export const live = $.signal(false);
+
 let es;
 let lastScenario;
 let replay;
@@ -58,14 +65,15 @@ async function open()
 
   // Probe the device endpoint once. If it answers we go live; if not, this is a static
   // host and we load the bundled snapshot for the chosen scenario.
-  let live = false;
+  let isLive = false;
   try
   {
     const res = await fetch('/state' + query, { cache: 'no-store' });
-    if (res.ok) { publish(await res.json()); connected.value = true; live = true; }
+    if (res.ok) { publish(await res.json()); connected.value = true; isLive = true; }
   } catch { /* no device endpoint here */ }
   if (lastScenario !== store.state.scenario) return; // a newer open() superseded this one
-  if (!live) { snapshot(); return; }
+  live.value = isLive;
+  if (!isLive) { snapshot(); return; }
 
   if (typeof EventSource !== 'undefined')
   {
@@ -125,6 +133,22 @@ function play(data)
   let i = 0;
   publish(frames[0]);
   if (frames.length > 1) replay = setInterval(() => { i = (i + 1) % frames.length; publish(frames[i]); }, 2000);
+}
+
+/**
+ * Fetches the current snapshot once and publishes it, so a control action shows its
+ * effect immediately instead of waiting for the next live tick. A no-op on a static host.
+ *
+ * @returns {Promise<void>} resolves once a fresh snapshot has been published, if available.
+ */
+export async function refresh()
+{
+  const query = '?scenario=' + encodeURIComponent(store.state.scenario);
+  try
+  {
+    const res = await fetch('/state' + query, { cache: 'no-store' });
+    if (res.ok) { publish(await res.json()); connected.value = true; }
+  } catch { /* static host or device unreachable; the live feed will catch up */ }
 }
 
 /**

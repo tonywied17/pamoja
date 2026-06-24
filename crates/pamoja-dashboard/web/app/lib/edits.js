@@ -7,9 +7,10 @@
 // The sensor types and link kinds a user can add come from the layout catalog (see
 // lib/catalog.js), so a device-supplied manifest changes what can be created.
 
-import { fleet } from './feed.js';
+import { fleet, live } from './feed.js';
 import { store } from '../store.js';
 import { catalog } from './catalog.js';
+import { sendCommand, unlocked } from './pair.js';
 
 /**
  * Generates a short, unique id with a caller-supplied prefix.
@@ -135,8 +136,69 @@ export function applyEdits(raw, edits)
 }
 
 /**
- * The live fleet with the user's edits applied; recomputed on each read.
+ * Reorders groups and sensors by the saved view order without adding or removing, so a
+ * user's drag-to-reorder preference still applies when the device owns the structure.
  *
- * @returns {object|null} the edited fleet, or `null` before the first frame.
+ * @param {object} raw - the raw fleet snapshot from the device.
+ * @param {object} edits - the store's edit set; only its orderings are used.
+ * @returns {object} a new fleet with only the orderings applied.
  */
-export const currentFleet = () => applyEdits(fleet.value, store.state.edits);
+function applyOrderOnly(raw, edits)
+{
+  const gOrder = edits.groupOrder || {}, sOrder = edits.sensorOrder || {};
+  return {
+    ...raw,
+    orgs: raw.orgs.map((o) => ({
+      ...o,
+      groups: applyOrder(o.groups, gOrder[o.id], (g) => g.id).map((g) => ({ ...g, sensors: applyOrder(g.sensors || [], sOrder[g.id], (s) => s.id) })),
+    })),
+  };
+}
+
+/**
+ * The fleet to render. Against a real device the device is the source of truth, so only
+ * the local ordering preference is layered on; on a static host the full client-side edit
+ * overlay applies. Recomputed on each read.
+ *
+ * @returns {object|null} the fleet to render, or `null` before the first frame.
+ */
+export const currentFleet = () =>
+{
+  const raw = fleet.value;
+  if (!raw) return raw;
+  return live.value ? applyOrderOnly(raw, store.state.edits) : applyEdits(raw, store.state.edits);
+};
+
+/**
+ * Builds the authenticated command for a provisioning operation.
+ *
+ * @param {string} kind - `'addGroup'`, `'addSensor'`, `'removeGroup'`, or `'removeSensor'`.
+ * @param {object|string} payload - the built group/sensor, or the id/path to remove.
+ * @returns {object} the command object to send.
+ */
+function toCommand(kind, payload)
+{
+  switch (kind)
+  {
+    case 'addGroup': return { type: 'addGroup', org: payload.orgId, group: payload };
+    case 'addSensor': return { type: 'addSensor', group: payload.groupId, sensor: payload };
+    case 'removeGroup': return { type: 'removeGroup', id: payload };
+    default: return { type: 'removeSensor', target: payload };
+  }
+}
+
+/**
+ * Applies a provisioning change: as an authenticated command when a device is present, or
+ * as a local edit on a static host. Entering manage mode is gated on being unlocked, so a
+ * live path here is already paired.
+ *
+ * @param {string} kind - the operation, matching a store edit action name.
+ * @param {object|string} payload - the built group/sensor, or the id/path to remove.
+ * @returns {Promise<{ok: boolean, error?: string}>} the outcome.
+ */
+export async function provision(kind, payload)
+{
+  if (!live.value) { store.dispatch(kind, payload); return { ok: true }; }
+  if (!unlocked.value) return { ok: false, error: 'auth.not_paired' };
+  return sendCommand(toCommand(kind, payload));
+}

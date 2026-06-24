@@ -8,6 +8,7 @@
 //! battery, a dropped link, a cold start - into the otherwise healthy fleet so each
 //! state is one click away.
 
+use crate::command::{Command, CommandError};
 use crate::source::StateSource;
 use crate::state::{
     EventLevel, EventRecord, Group, Link, LinkKind, Mode, Org, Reading, Sensor, State, Status,
@@ -95,6 +96,15 @@ pub struct Mock {
     scenario: Scenario,
     tick: u64,
     slot: u32,
+    // Actuator overrides applied to each snapshot, keyed by `"groupId/sensorId"`, so a
+    // commanded valve stays where it was set across the deterministic drift.
+    overrides: std::collections::HashMap<String, String>,
+    // Provisioning overlay: groups and sensors added or removed by authenticated commands,
+    // so the device is the shared source of truth every client sees.
+    added_groups: Vec<(String, Group)>,
+    added_sensors: Vec<(String, Sensor)>,
+    removed_groups: Vec<String>,
+    removed_sensors: Vec<String>,
 }
 
 // How many history samples each sensor carries.
@@ -115,6 +125,11 @@ impl Mock {
             scenario,
             tick: 0,
             slot: 0,
+            overrides: std::collections::HashMap::new(),
+            added_groups: Vec::new(),
+            added_sensors: Vec::new(),
+            removed_groups: Vec::new(),
+            removed_sensors: Vec::new(),
         }
     }
 
@@ -291,6 +306,80 @@ impl Mock {
         group.recompute_status();
         group
     }
+
+    // Applies the provisioning overlay (added and removed groups and sensors) onto a
+    // freshly built fleet, so authenticated provisioning persists and every client sees it.
+    fn apply_edits(&self, state: &mut State) {
+        if self.added_groups.is_empty()
+            && self.added_sensors.is_empty()
+            && self.removed_groups.is_empty()
+            && self.removed_sensors.is_empty()
+        {
+            return;
+        }
+        for org in &mut state.orgs {
+            org.groups.retain(|g| !self.removed_groups.contains(&g.id));
+            for (target_org, group) in &self.added_groups {
+                if *target_org == org.id && !self.removed_groups.contains(&group.id) {
+                    org.groups.push(group.clone());
+                }
+            }
+            for group in &mut org.groups {
+                group.sensors.retain(|s| {
+                    !self
+                        .removed_sensors
+                        .contains(&format!("{}/{}", group.id, s.id))
+                });
+                for (target_group, sensor) in &self.added_sensors {
+                    let path = format!("{target_group}/{}", sensor.id);
+                    if *target_group == group.id && !self.removed_sensors.contains(&path) {
+                        group.sensors.push(sensor.clone());
+                    }
+                }
+                group.recompute_status();
+            }
+        }
+    }
+
+    // Applies the recorded actuator overrides onto a freshly built fleet, so a commanded
+    // valve holds its position across the deterministic drift.
+    fn apply_overrides(&self, state: &mut State) {
+        if self.overrides.is_empty() {
+            return;
+        }
+        for org in &mut state.orgs {
+            for group in &mut org.groups {
+                for sensor in &mut group.sensors {
+                    let target = format!("{}/{}", group.id, sensor.id);
+                    let Some(action) = self.overrides.get(&target) else {
+                        continue;
+                    };
+                    let allowed = sensor
+                        .reading
+                        .actions
+                        .as_ref()
+                        .is_some_and(|actions| actions.iter().any(|a| a == action));
+                    if allowed {
+                        sensor.reading.state = Some(format!("state.{action}"));
+                        sensor.reading.value = if action == "open" { 1.0 } else { 0.0 };
+                    }
+                }
+                group.recompute_status();
+            }
+        }
+    }
+}
+
+// Finds a sensor by its `"groupId/sensorId"` path in a fleet snapshot.
+fn find_sensor<'a>(state: &'a State, target: &str) -> Option<&'a Sensor> {
+    let (group_id, sensor_id) = target.split_once('/')?;
+    state
+        .orgs
+        .iter()
+        .flat_map(|org| &org.groups)
+        .filter(|group| group.id == group_id)
+        .flat_map(|group| &group.sensors)
+        .find(|sensor| sensor.id == sensor_id)
 }
 
 // Maps a reading key to a stable, localizable event code for an out-of-band reading.
@@ -568,7 +657,7 @@ impl StateSource for Mock {
             (20.0, 100.0),
             None,
         );
-        let valve = self.chip_sensor(
+        let mut valve = self.chip_sensor(
             "valve",
             "drip_valve",
             if soil_dry {
@@ -578,6 +667,7 @@ impl StateSource for Mock {
             },
             Status::Ok,
         );
+        valve.reading = valve.reading.with_actions(["open", "closed"]);
         let farm_batt = self.sensor(
             "farm-batt",
             "battery_voltage",
@@ -826,6 +916,8 @@ impl StateSource for Mock {
             status: Status::Ok,
             uptime_secs: Some(uptime),
         };
+        self.apply_edits(&mut state);
+        self.apply_overrides(&mut state);
         state.recompute_status();
         state
     }
@@ -837,6 +929,56 @@ impl StateSource for Mock {
                 true
             }
             None => false,
+        }
+    }
+
+    fn command(&mut self, command: &Command) -> Result<(), CommandError> {
+        // Validate against the current fleet. Probing advances the mock's clock one tick,
+        // which is immaterial for a hardware-free source.
+        let fleet = self.snapshot();
+        match command {
+            Command::Actuate { target, action } => {
+                match find_sensor(&fleet, target).map(|sensor| &sensor.reading) {
+                    None => Err(CommandError::UnknownTarget),
+                    Some(reading) => match &reading.actions {
+                        Some(actions) if actions.iter().any(|a| a == action) => {
+                            self.overrides.insert(target.clone(), action.clone());
+                            Ok(())
+                        }
+                        Some(_) => Err(CommandError::InvalidAction),
+                        None => Err(CommandError::Unsupported),
+                    },
+                }
+            }
+            Command::AddGroup { org, group } => {
+                if fleet.orgs.iter().any(|o| o.id == *org) {
+                    self.added_groups.push((org.clone(), group.clone()));
+                    Ok(())
+                } else {
+                    Err(CommandError::UnknownTarget)
+                }
+            }
+            Command::RemoveGroup { id } => {
+                self.removed_groups.push(id.clone());
+                Ok(())
+            }
+            Command::AddSensor { group, sensor } => {
+                let known = fleet
+                    .orgs
+                    .iter()
+                    .flat_map(|o| &o.groups)
+                    .any(|g| g.id == *group);
+                if known {
+                    self.added_sensors.push((group.clone(), sensor.clone()));
+                    Ok(())
+                } else {
+                    Err(CommandError::UnknownTarget)
+                }
+            }
+            Command::RemoveSensor { target } => {
+                self.removed_sensors.push(target.clone());
+                Ok(())
+            }
         }
     }
 }
@@ -875,6 +1017,111 @@ mod tests {
             .find(|s| s.reading.key == "drip_valve")
             .expect("drip valve sensor");
         assert!(valve.reading.state.is_some(), "valve carries a state code");
+        assert!(
+            valve.reading.actions.is_some(),
+            "valve advertises its actions, so it is controllable"
+        );
+    }
+
+    #[test]
+    fn actuating_the_valve_holds_its_new_state() {
+        let mut fleet = Mock::new(Scenario::Normal);
+        fleet
+            .command(&Command::Actuate {
+                target: "farm-node/valve".to_owned(),
+                action: "closed".to_owned(),
+            })
+            .expect("valve accepts a valid action");
+        let closed = fleet.snapshot();
+        let valve = find_sensor(&closed, "farm-node/valve").expect("valve");
+        assert_eq!(valve.reading.state.as_deref(), Some("state.closed"));
+
+        fleet
+            .command(&Command::Actuate {
+                target: "farm-node/valve".to_owned(),
+                action: "open".to_owned(),
+            })
+            .expect("valve accepts the other action");
+        let opened = fleet.snapshot();
+        let valve = find_sensor(&opened, "farm-node/valve").expect("valve");
+        assert_eq!(valve.reading.state.as_deref(), Some("state.open"));
+    }
+
+    #[test]
+    fn provisioning_adds_and_removes_in_the_snapshot() {
+        let mut fleet = Mock::new(Scenario::Normal);
+        let org_id = fleet.snapshot().orgs[0].id.clone();
+        let group = Group {
+            id: "extra".to_owned(),
+            name: "Extra".to_owned(),
+            link: Link {
+                kind: LinkKind::Lora,
+                strength: 3,
+                online: true,
+            },
+            status: Status::Ok,
+            sensors: Vec::new(),
+        };
+        fleet
+            .command(&Command::AddGroup {
+                org: org_id.clone(),
+                group,
+            })
+            .expect("add group to a known org");
+        let added = fleet.snapshot();
+        let org = added.orgs.iter().find(|o| o.id == org_id).expect("org");
+        assert!(org.groups.iter().any(|g| g.id == "extra"), "group added");
+
+        fleet
+            .command(&Command::RemoveGroup {
+                id: "extra".to_owned(),
+            })
+            .expect("remove the group");
+        let removed = fleet.snapshot();
+        let org = removed.orgs.iter().find(|o| o.id == org_id).expect("org");
+        assert!(!org.groups.iter().any(|g| g.id == "extra"), "group removed");
+    }
+
+    #[test]
+    fn adding_a_group_to_an_unknown_org_is_refused() {
+        let mut fleet = Mock::new(Scenario::Normal);
+        let group = Group {
+            id: "x".to_owned(),
+            name: "X".to_owned(),
+            link: Link {
+                kind: LinkKind::Lora,
+                strength: 3,
+                online: true,
+            },
+            status: Status::Ok,
+            sensors: Vec::new(),
+        };
+        assert_eq!(
+            fleet.command(&Command::AddGroup {
+                org: "no-such-org".to_owned(),
+                group,
+            }),
+            Err(CommandError::UnknownTarget)
+        );
+    }
+
+    #[test]
+    fn a_command_to_an_unknown_or_invalid_target_is_refused() {
+        let mut fleet = Mock::new(Scenario::Normal);
+        assert_eq!(
+            fleet.command(&Command::Actuate {
+                target: "farm-node/nope".to_owned(),
+                action: "open".to_owned(),
+            }),
+            Err(CommandError::UnknownTarget)
+        );
+        assert_eq!(
+            fleet.command(&Command::Actuate {
+                target: "farm-node/valve".to_owned(),
+                action: "spin".to_owned(),
+            }),
+            Err(CommandError::InvalidAction)
+        );
     }
 
     #[test]

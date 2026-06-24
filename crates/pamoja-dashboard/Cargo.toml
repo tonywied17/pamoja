@@ -13,8 +13,10 @@ publish = false
 [features]
 # The data contract and the mock are always available; the host-side HTTP/SSE
 # server is opt-in (but on by default) so the contract can be reused without it.
+# Serving brings the command authenticator, which needs the keyed-hash primitives
+# and a system RNG.
 default = ["serve"]
-serve = []
+serve = ["dep:pamoja-session", "dep:getrandom"]
 
 [dependencies]
 # Only the data types are read from these crates to build the snapshot; the
@@ -22,6 +24,10 @@ serve = []
 pamoja-telemetry = { path = "../pamoja-telemetry", version = "0.1.10" }
 pamoja-profile = { path = "../pamoja-profile", version = "0.1.10" }
 pamoja-power = { path = "../pamoja-power", version = "0.1.10" }
+# The command authenticator reuses pamoja-session's HKDF/HMAC primitives so control
+# actions are gated without a second crypto stack; only used by the serving layer.
+pamoja-session = { path = "../pamoja-session", version = "0.1.10", optional = true }
+getrandom = { version = "0.2", optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
 

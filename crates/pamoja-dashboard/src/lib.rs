@@ -39,14 +39,18 @@
 //! ```
 
 mod assets;
+mod command;
 mod mock;
 mod source;
 mod state;
 
 #[cfg(feature = "serve")]
+mod auth;
+#[cfg(feature = "serve")]
 mod serve;
 
 pub use assets::Assets;
+pub use command::{Command, CommandError};
 pub use mock::{Mock, Scenario};
 pub use source::StateSource;
 pub use state::{
@@ -54,5 +58,7 @@ pub use state::{
     Trend,
 };
 
+#[cfg(feature = "serve")]
+pub use auth::{Auth, AuthError, Challenge};
 #[cfg(feature = "serve")]
 pub use serve::Server;

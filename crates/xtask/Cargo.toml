@@ -10,9 +10,9 @@ authors.workspace = true
 publish = false
 
 [dependencies]
-# The dashboard i18n emitter parses the canonical .ftl store and gzips the emitted
-# bundles to enforce the per-locale footprint budget.
-fluent-syntax = "0.12"
+# The dashboard i18n check parses the per-locale JSON bundles and gzips them to enforce
+# the per-locale footprint budget.
+serde_json = "1"
 flate2 = "1"
 
 [lints]
