@@ -106,10 +106,11 @@ $.component('dashboard-page', {
   scheduleLayout() { if (!this._raf) this._raf = requestAnimationFrame(() => this.layout()); },
 
   /**
-   * Masonry: place each card in the currently shortest column (so a tall card, like a mesh
-   * node with a stats strip, does not strand the next card - the add-group card flows in
-   * right after the last group). Placement is cached so render() re-emits it inline, since
-   * the morph strips JS-set styles. One column drops to natural stacking (see .groups.mono).
+   * Masonry: cards keep their reading order across columns (card i in column i%cols) and
+   * each stacks at its column's running bottom, so the only thing removed is the gap between
+   * rows; the add-group card, last in order, lands in the next cell after the final group.
+   * Placement is cached so render() re-emits it inline, since the morph strips JS-set styles.
+   * One column drops to natural stacking (see .groups.mono).
    *
    * @returns {void}
    */
@@ -136,19 +137,14 @@ $.component('dashboard-page', {
     }
     const gap = 18;
     const colBottom = new Array(cols).fill(1);
-    let lastCol = 0;
-    cards.forEach((c) =>
+    cards.forEach((c, i) =>
     {
-      // Groups pack into the shortest column; the add-group card follows the last group in
-      // its own column, so it sits right under the final card instead of stranded elsewhere.
-      const isAdd = c.classList.contains('add-card');
-      const col = isAdd ? lastCol : colBottom.indexOf(Math.min(...colBottom));
+      const col = i % cols;
       const h = Math.max(1, Math.ceil(c.offsetHeight));
       const row = colBottom[col];
       c.style.gridColumn = String(col + 1);
       c.style.gridRow = row + ' / span ' + h;
       colBottom[col] = row + h + gap;
-      if (!isAdd) lastCol = col;
       this._place[c.dataset.gid || '__add'] = { c: col + 1, r: row, s: h };
     });
   },
