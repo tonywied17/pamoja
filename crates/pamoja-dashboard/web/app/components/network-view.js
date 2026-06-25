@@ -18,7 +18,16 @@ import { t, nf } from '../lib/i18n.js';
 import { catalog } from '../lib/catalog.js';
 import { LINK_NAMES, LINK_COLORS, realSensors, esc } from '../lib/viz/index.js';
 
-const W = 1040, H = 660, SR = 60;
+const SR = 60;
+
+// The topology turns portrait on a phone so the graph fills a tall narrow screen instead of
+// being squeezed to the width. The map keeps its wide canvas (its backdrop art is drawn for
+// that aspect), and the topology ring becomes an ellipse to fill whichever shape is in use.
+function dims(map)
+{
+  const phone = !map && typeof matchMedia === 'function' && matchMedia('(max-width: 560px)').matches;
+  return phone ? { W: 680, H: 920 } : { W: 1040, H: 660 };
+}
 
 /**
  * Closes the network overlay one layer at a time: sensor panel, then inspect, then map.
@@ -144,6 +153,7 @@ $.component('network-view', {
    */
   positions(groups, map)
   {
+    const { W, H } = dims(map);
     if (map)
     {
       const ax = 100, ay = 70, aw = W - 200, ah = H - 170;
@@ -154,8 +164,10 @@ $.component('network-view', {
       gpos.forEach((p) => { p.ang = Math.atan2(p.y - hub.y, p.x - hub.x); });
       return { hub, gpos };
     }
-    const n = groups.length || 1, hub = { x: W / 2, y: H / 2 - 6 }, Rr = 232;
-    const gpos = groups.map((g, i) => { const ang = -Math.PI / 2 + (i / n) * Math.PI * 2; return { g, x: hub.x + Rr * Math.cos(ang), y: hub.y + Rr * Math.sin(ang), ang }; });
+    const n = groups.length || 1, hub = { x: W / 2, y: H / 2 - 6 };
+    const portrait = H > W;
+    const rx = portrait ? W * 0.36 : 232, ry = portrait ? H * 0.34 : 232;
+    const gpos = groups.map((g, i) => { const ang = -Math.PI / 2 + (i / n) * Math.PI * 2; return { g, x: hub.x + rx * Math.cos(ang), y: hub.y + ry * Math.sin(ang), ang }; });
     return { hub, gpos };
   },
 
@@ -218,6 +230,7 @@ $.component('network-view', {
    */
   mapBackdrop()
   {
+    const { W, H } = dims(true);
     const ax = 100, ay = 70, aw = W - 200, ah = H - 170;
     const P = (nx, ny) => [+(ax + nx * aw).toFixed(1), +(ay + ny * ah).toFixed(1)];
     const hub = P(...catalog.sitePositions.__gateway);
@@ -341,6 +354,7 @@ $.component('network-view', {
     const f = currentFleet();
     if (!f) return '<div hidden></div>';
     const map = this.state.tab === 'map';
+    const { W, H } = dims(map);
     return `
       <div class="net-overlay" @click="onOverlay">
         <div class="net-panel">

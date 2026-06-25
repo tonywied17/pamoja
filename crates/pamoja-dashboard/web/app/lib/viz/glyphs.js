@@ -44,7 +44,7 @@ export function mesh(r, big, nodeCount)
   for (let i = 0; i < peers - 1; i++) links.push([i, i + 1]);
   for (let i = 0; i < peers; i++) links.push([i, gw]);
   const packets = [];
-  for (let i = 0; i < peers; i += 2) packets.push([i, gw]);
+  for (let i = 0; i < peers; i++) packets.push([i, gw]);
   if (!packets.length) packets.push([0, gw]);
   const linkSvg = links.map((l, i) => `<line x1="${pts[l[0]][0].toFixed(1)}" y1="${pts[l[0]][1].toFixed(1)}" x2="${pts[l[1]][0].toFixed(1)}" y2="${pts[l[1]][1].toFixed(1)}" class="msh-link${learning && i === links.length - 1 ? ' weak' : ''}"/>`).join('');
   const pkSvg = packets.map((p, i) =>

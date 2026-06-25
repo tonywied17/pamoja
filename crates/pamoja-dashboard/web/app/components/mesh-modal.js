@@ -15,7 +15,13 @@ import { t, nf, fmt } from '../lib/i18n.js';
 import { catalog } from '../lib/catalog.js';
 import { LINK_NAMES, LINK_COLORS, LINK_RSSI, meshStations, meshPeerCount, esc } from '../lib/viz/index.js';
 
-const W = 900, H = 560;
+// The map is laid out in a viewBox that turns portrait on a phone, so a narrow screen gets a
+// tall graph that fills the panel instead of a short, wide one squeezed to the width.
+function dims()
+{
+  const phone = typeof matchMedia === 'function' && matchMedia('(max-width: 560px)').matches;
+  return phone ? { W: 620, H: 880 } : { W: 900, H: 560 };
+}
 
 /**
  * Finds a group and its owning org by group id.
@@ -167,6 +173,7 @@ $.component('mesh-modal', {
    */
   topology(group)
   {
+    const { W, H } = dims();
     const cx = W * 0.5, hubY = H * 0.6, gwY = H * 0.12;
     const stations = meshStations(group);
     const neighbours = meshPeerCount(group);
@@ -229,7 +236,7 @@ $.component('mesh-modal', {
     for (let j = 0; j < neighbours; j++) links.push(['hub', 'n' + j]);
 
     const packets = [routeKeys.slice()];
-    for (let j = 0; j < neighbours; j++) if (j % 2 === 0) packets.push(['n' + j, 'hub']);
+    for (let j = 0; j < neighbours; j++) packets.push(['n' + j, 'hub']);
 
     const pos = {}; nodes.forEach((nd) => { pos[nd.key] = nd; });
     return { nodes, links, packets, pos, neighbours, hops, geo };
@@ -301,6 +308,7 @@ $.component('mesh-modal', {
     const found = findGroup(f, id.split('/')[0]);
     if (!found) return '<div hidden></div>';
     const group = found.group;
+    const { W, H } = dims();
     const color = LINK_COLORS[group.link.kind] || '#38e1ff';
     const { nodes, links, packets, pos, neighbours, hops } = this.topology(group);
     const sel = store.state.meshNode;

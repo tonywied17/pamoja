@@ -68,8 +68,6 @@
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-/* Paint the root explicitly so the reserved scrollbar gutters are themed too, instead of
-   falling back to the UA canvas colour (which follows color-scheme and switches with a lag). */
 html { -webkit-text-size-adjust: 100%; scrollbar-gutter: stable both-edges; background: var(--bg-0); }
 
 body
@@ -84,6 +82,12 @@ body
   font-variant-numeric: tabular-nums;
   overflow-x: hidden;
 }
+
+* { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--line-2) 85%, transparent) transparent; }
+*::-webkit-scrollbar { inline-size: 10px; block-size: 10px; }
+*::-webkit-scrollbar-track, *::-webkit-scrollbar-corner { background: transparent; }
+*::-webkit-scrollbar-thumb { border-radius: 999px; border: 3px solid transparent; background: color-mix(in srgb, var(--line-2) 78%, transparent); background-clip: padding-box; }
+*::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--cyan) 45%, var(--line-2)); background-clip: padding-box; }
 
 #space-bg {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
@@ -172,19 +176,14 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .deck-seg .ic { inline-size: 17px; block-size: 17px; flex: none; }
 .deck-seg .chev { inline-size: 12px; block-size: 12px; opacity: 0.55; margin-inline-start: -0.1rem; transition: transform 0.25s var(--ease); }
 .deck-code { font-family: var(--mono); font-weight: 700; letter-spacing: 0.03em; }
-/* The scenario label holds a fixed, centred box (sized to the longest label) so picking a
-   longer debug scenario never resizes the deck, and a short one like "Normal" sits balanced. */
 .deck-pick { display: inline-block; inline-size: 5.9rem; overflow: hidden; text-overflow: ellipsis; text-align: center; white-space: nowrap; }
 .deck-div { inline-size: 1px; align-self: stretch; margin-block: 6px; background: var(--line-2); }
 .deck-dd { position: relative; display: inline-flex; }
 .deck-dd.open > .deck-seg { color: var(--text); background: color-mix(in srgb, var(--cyan) 14%, transparent); }
 .deck-dd.open .chev { transform: rotate(180deg); }
 
-/* theme toggle - the sun/moon glyph eases as it swaps and tilts on hover */
 .deck-seg.theme .ic { transition: transform 0.45s var(--ease); }
 .deck-seg.theme:hover .ic { transform: rotate(-22deg) scale(1.06); }
-
-/* alarms - the bell goes hot and softly rings while there is anything to attend to */
 .deck-seg.bell.has { color: var(--alarm); }
 .deck-seg.bell.has .ic { animation: bell-ring 4.5s ease-in-out infinite; transform-origin: 50% 3px; }
 @keyframes bell-ring { 0%, 86%, 100% { transform: rotate(0); } 89% { transform: rotate(11deg); } 92% { transform: rotate(-9deg); } 95% { transform: rotate(5deg); } }
@@ -196,19 +195,14 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
   box-shadow: 0 0 8px -1px var(--alarm), 0 0 0 2px var(--bg-0);
 }
 
-/* Below tablet the segment labels fall away, leaving a compact icon deck. */
 @media (max-width: 720px)
 {
   .deck-label { display: none; }
   .deck-seg { padding-inline: 0.6rem; }
 }
-/* On phones the deck condenses - dividers drop, segments tighten, the brand sheds its
-   subtitle - so brand + deck stay on one row. If a very narrow screen still can't fit both,
-   the deck wraps to its own right-aligned row (it never overflows). */
+
 @media (max-width: 560px)
 {
-  /* Reclaim the desktop 95vw inset and the reserved scrollbar gutters (phones use overlay
-     scrollbars) so the condensed brand + deck fit on a single row. */
   html { scrollbar-gutter: auto; }
   .topbar, .shell { max-inline-size: 100%; }
   .topbar { row-gap: 0.6rem; gap: 0.5rem; padding-inline: 0.85rem; }
@@ -284,8 +278,6 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .orgsel-item:hover { background: var(--tile); color: var(--text); }
 .orgsel-item.on { color: var(--text); background: color-mix(in srgb, var(--cyan) 16%, transparent); }
 .orgsel-item .dotc { inline-size: 7px; block-size: 7px; border-radius: 50%; background: currentColor; flex: none; }
-/* Org dots carry the org's worst status (see orgStatus), matching the group-modal tabs.
-   Placed after the btn/item dot rules so the status tint wins in both contexts. */
 .orgsel .dotc[data-status="warn"] { background: var(--warn); box-shadow: 0 0 8px var(--warn); }
 .orgsel .dotc[data-status="alarm"] { background: var(--alarm); box-shadow: 0 0 9px var(--alarm); animation: dotpulse 1.6s ease-in-out infinite; }
 @keyframes dotpulse { 50% { box-shadow: 0 0 13px 1px var(--alarm); } }
@@ -361,7 +353,7 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .strend { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); margin-inline-start: 0.3rem; }
 .strend[data-dir="rising"] { color: var(--coral); } .strend[data-dir="falling"] { color: var(--cyan); }
 
-.statstrip { margin-block-start: 0.85rem; padding-block-start: 0.7rem; border-block-start: 1px solid var(--line); display: flex; flex-direction: column; gap: 0.5rem; }
+.statstrip { margin-block-start: 0.6rem; display: flex; flex-direction: column; gap: 0.5rem; }
 .statstrip-h { display: flex; align-items: center; gap: 0.5rem; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); font-weight: 800; }
 .statstrip-h::after { content: ""; flex: 1; block-size: 1px; background: linear-gradient(90deg, var(--line-2), transparent); }
 .statcards { display: flex; flex-wrap: wrap; gap: 0.45rem; }
@@ -481,8 +473,6 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 
 /* Tamper-evident hash-chain log */
 .chn { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; inline-size: 100%; }
-/* One nowrap row that scales to fit any width, so the chain never ragged-wraps or squishes.
-   The blocks and arrows shrink together via clamped sizing; the newest block stays emphasised. */
 .chn-row { display: flex; align-items: center; justify-content: center; gap: clamp(0.15rem, 0.8vw, 0.3rem); inline-size: 100%; flex-wrap: nowrap; }
 .chn-blk { flex: 0 1 auto; min-inline-size: 0; font-family: var(--mono); font-size: clamp(0.66rem, 2.2vw, 0.78rem); font-weight: 600; padding: 0.3rem clamp(0.34rem, 1.4vw, 0.55rem); border-radius: 7px; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chn-blk.new { color: var(--text); border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); background: color-mix(in srgb, var(--accent) 12%, transparent); box-shadow: 0 0 9px -3px var(--accent); }
@@ -493,9 +483,6 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .chn.big .chn-blk { font-size: clamp(0.68rem, 2.3vw, 0.85rem); padding: 0.34rem clamp(0.36rem, 1.5vw, 0.7rem); }
 .chn.big .chn-count { font-size: 1.6rem; }
 
-/* Acoustic monitor. The caption is one fixed-height line that holds the state label and,
-   on a spike, the bearing inline - so swapping ambient <-> spike never changes the card or
-   modal height, and the waveform above it never shifts. */
 .wv { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; inline-size: 100%; padding-block-end: 0.1rem; }
 .wv-bars { display: flex; align-items: flex-end; justify-content: center; gap: 3px; inline-size: 100%; block-size: 50px; }
 .wv-bars i { flex: 1 1 0; max-inline-size: 6px; block-size: calc(var(--h, 0.5) * 100%); border-radius: 2px; transform-origin: bottom; background: color-mix(in srgb, var(--accent) 75%, transparent); animation: eq 1.1s ease-in-out infinite; }
@@ -566,13 +553,8 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .modal-close:hover { border-color: var(--alarm); color: var(--alarm); }
 .modal-hero { display: flex; align-items: center; gap: clamp(1rem, 3vw, 1.8rem); padding: 1.1rem 0.25rem 1.2rem; flex-wrap: wrap; }
 .modal-hero .tv-wrap.big { flex: none; inline-size: 190px; margin: 0; }
-/* The bar/trace hero shares its row with the readout: the bar flexes and shrinks while the
-   readout holds a fixed box on the right edge, so the value never wraps below or jerks the
-   bar as its digits and trend arrow change. */
 .modal-hero .tv-wrap.big.full { flex: 1 1 0; min-inline-size: 0; block-size: auto; }
 .modal-hero .tv-wrap.disc { flex: none; inline-size: min(58%, 360px); }
-/* The hash chain needs the full row, not the narrow discrete slot, so it lays out on one
-   line at any width instead of ragged-wrapping. */
 .modal-hero.hero-discrete .tv-wrap.tv-chain { inline-size: 100%; max-inline-size: 100%; }
 .modal-readout { display: flex; align-items: baseline; gap: 0.3rem; white-space: nowrap; }
 .modal-readout b { font-family: var(--mono); font-size: clamp(2rem, 7vw, 3rem); font-weight: 700; line-height: 1; }
@@ -645,7 +627,6 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .gv-page.on { color: var(--text); border-color: transparent; background: color-mix(in srgb, var(--cyan) 22%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cyan) 45%, transparent); }
 
 /* ---------- Manage (client-side CRUD) ---------- */
-/* A glass pill matching the control deck: muted until hovered, cyan-tinted while editing. */
 .manage-btn
 {
   display: inline-flex; align-items: center; gap: 0.5rem; margin-inline-start: auto; flex: none;
@@ -659,8 +640,6 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .manage-btn.on { color: var(--cyan); border-color: color-mix(in srgb, var(--cyan) 50%, transparent); background: color-mix(in srgb, var(--cyan) 14%, transparent); }
 .reset-btn:hover { color: var(--alarm); border-color: color-mix(in srgb, var(--alarm) 45%, var(--line-2)); }
 .reset-btn + .manage-btn { margin-inline-start: 0.6rem; }
-/* On phones the org switcher and Manage share one row: the switcher flexes (its name
-   ellipsises) and Manage collapses to its icon, so the bar never spills onto a new line. */
 @media (max-width: 560px)
 {
   .orgbar { flex-wrap: nowrap; gap: 0.6rem; }
@@ -701,10 +680,8 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .form-error { margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--alarm); }
 .pair-code { letter-spacing: 0.14em; font-family: var(--mono); }
 
-/* control lock - tints teal once a session is paired and control is unlocked */
 .deck-seg.control.is-unlocked { color: var(--teal); }
 
-/* actuator control - the gated open/close row at the foot of an actuator's detail */
 .actuator { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin-block-start: 1rem; padding-block-start: 0.9rem; border-block-start: 1px solid var(--line-2); }
 .actuator-label { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 700; }
 .actuator-actions { display: flex; gap: 0.4rem; margin-inline-start: auto; }
@@ -724,6 +701,8 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .net-stage { position: relative; flex: 1; min-block-size: 0; }
 .net-svg { inline-size: 100%; block-size: auto; max-block-size: 68dvh; margin-block: 0.4rem; touch-action: none; cursor: grab; }
 .net-svg:active { cursor: grabbing; }
+/* On a phone the panel goes near full-height and the portrait graph fills it. */
+@media (max-width: 560px) { .net-panel { inline-size: 100%; max-block-size: 94dvh; } .net-svg { max-block-size: 80dvh; } }
 .net-grat { stroke: var(--line); stroke-width: 1; opacity: 0.4; }
 .net-field { fill: color-mix(in srgb, var(--teal) 7%, transparent); stroke: color-mix(in srgb, var(--teal) 16%, transparent); stroke-width: 1; }
 .net-field.b { fill: color-mix(in srgb, var(--amber) 6%, transparent); stroke: color-mix(in srgb, var(--amber) 14%, transparent); }
@@ -772,7 +751,6 @@ h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; letter-sp
 .ins-issue[data-level="error"] { color: var(--alarm); background: color-mix(in srgb, var(--alarm) 14%, transparent); }
 .ins-ok { font-size: 0.76rem; color: var(--ok); }
 
-/* docked sensor detail panel inside the network view */
 .net-detail { position: absolute; inset-block: 0.6rem; inset-inline-end: 0.4rem; inline-size: 340px; max-inline-size: 82%; overflow-y: auto; border-radius: var(--r-md); border: 1px solid var(--line-2); background: color-mix(in srgb, var(--bg-1) 97%, transparent); backdrop-filter: blur(8px); box-shadow: var(--shadow); padding: 0.8rem 0.9rem; --accent: var(--ok); }
 .net-detail[data-status="warn"] { --accent: var(--warn); }
 .net-detail[data-status="alarm"] { --accent: var(--alarm); }
