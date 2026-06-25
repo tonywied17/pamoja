@@ -55,6 +55,11 @@ code { font-family: var(--mono); font-size: 0.92em; color: var(--cream); }
   transition: opacity 0.7s ease; z-index: 5;
 }
 #loader.gone { opacity: 0; pointer-events: none; }
+
+/* Render gate: hold the nav and content behind the loader until fonts + first paint, then
+   fade in together, so text never flashes in a fallback face. */
+#nav, main { opacity: 0; transition: opacity 0.5s ease; }
+body.ready #nav, body.ready main { opacity: 1; }
 .loader-mark {
   width: 16px; height: 16px; border-radius: 50%;
   background: radial-gradient(circle at 40% 38%, var(--cream), var(--amber) 45%, var(--coral));
@@ -120,6 +125,8 @@ section { position: relative; }
 .nav-links a { transition: color 0.2s ease; }
 .nav-links a:hover { color: var(--cream); }
 .nav-cta { padding: 0.6rem 1.1rem; font-size: 0.88rem; }
+.nav-gh { display: inline-flex; align-items: center; justify-content: center; color: var(--muted); transition: color 0.2s ease, transform 0.2s ease; }
+.nav-gh:hover { color: var(--cream); transform: translateY(-1px); }
 .nav-toggle {
   display: none; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
   width: 42px; height: 38px; padding: 0; cursor: pointer; flex: none;
@@ -363,6 +370,8 @@ section { position: relative; }
 .pkg-btn.nuget { --dot: #4c9bd6; }
 .pkg-btn.nuget:hover { border-color: #4c9bd6; }
 .pkg-none { font-size: 0.76rem; color: var(--muted); }
+.pkg-btn.docs { margin-inline-start: auto; --dot: var(--cream); }
+.pkg-btn.docs:hover { border-color: var(--cream); }
 
 .crate-filter {
   display: flex; gap: 0.3rem; width: fit-content; margin: -0.4rem auto 2rem; padding: 0.3rem;
@@ -605,6 +614,7 @@ section { position: relative; }
 
 @media (max-width: 760px) {
   .nav-toggle { display: flex; }
+  .nav-gh { margin-inline-start: auto; }
   .nav-cta { margin-left: auto; }
   .nav-links {
     position: absolute; top: 100%; left: 0; right: 0; margin: 0; padding: 0.4rem 6vw 1.1rem;

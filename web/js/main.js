@@ -12,11 +12,26 @@ const fovRad = MathUtils.degToRad(CAM.fov);
 
 function hideLoader() { loader.classList.add('gone'); setTimeout(() => (loader.style.display = 'none'), 800); }
 
+// Render gate: hold the nav and page content behind the loader until the webfonts are in and
+// the scene has painted a frame, then reveal everything at once - no flash of fallback fonts.
+let painted = false, fontsReady = false, revealed = false;
+function reveal()
+{
+  if (revealed || !painted || !fontsReady) return;
+  revealed = true;
+  document.body.classList.add('ready');
+  hideLoader();
+}
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { fontsReady = true; reveal(); });
+// Safety net: never leave the page gated if a font or the GPU stalls.
+setTimeout(() => { painted = true; fontsReady = true; reveal(); }, 2500);
+
 function fail(reason)
 {
   console.warn('[pamoja] running without the 3D stage:', reason);
   document.body.classList.add('no-webgl');
-  hideLoader();
+  painted = true;
+  reveal();
   initUI({ onScene: (name) => setAccent(SCENES[name] && SCENES[name].theme) });
 }
 
@@ -79,7 +94,6 @@ async function boot()
   initUI({ onScene: (name) => director.setScene(name) });
 
   let last = performance.now();
-  let started = false;
   const minFrame = isMobile ? 1000 / 36 : 0;
   const loop = (now) =>
   {
@@ -89,7 +103,7 @@ async function boot()
     last = now;
     director.update(now / 1000, dt);
     renderer.render(scene, camera);
-    if (!started) { started = true; hideLoader(); }
+    if (!painted) { painted = true; reveal(); }
   };
   requestAnimationFrame(loop);
 

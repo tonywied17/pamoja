@@ -71,14 +71,17 @@ function countUp()
 {
   $$('#stat-row .num').forEach((node) =>
   {
-    const to = +node.dataset.to;
+    const to = +node.dataset.to || 0;
     const prefix = node.textContent.startsWith('$') ? '$' : '';
     if (prefersReducedMotion) { node.textContent = `${prefix}${to}`; return; }
-    const start = performance.now();
+    let start = null;
     const dur = 1300;
     const tick = (now) =>
     {
-      const p = Math.min(1, (now - start) / dur);
+      // Seed the clock from the first frame's own timestamp; clamp to [0,1] so the count
+      // never reads negative if that timestamp predates a separately sampled start.
+      if (start === null) start = now;
+      const p = Math.max(0, Math.min(1, (now - start) / dur));
       const e = 1 - Math.pow(1 - p, 3);
       node.textContent = `${prefix}${Math.round(to * e)}`;
       if (p < 1) requestAnimationFrame(tick);
@@ -153,6 +156,13 @@ function pkgButtons(crate)
     a.setAttribute('aria-label', `${crate.name} on ${p.label}`);
     box.appendChild(a);
   });
+  // Getting started: the crate's own README on GitHub (its richer overview, with a docs.rs
+  // button), set apart on the right from the package-registry links.
+  const docs = el('a', 'pkg-btn docs', 'README');
+  docs.href = `https://github.com/molexxxx/pamoja/blob/main/crates/${crate.id}/README.md#${crate.id}`;
+  docs.target = '_blank'; docs.rel = 'noopener';
+  docs.setAttribute('aria-label', `${crate.name} README - getting started`);
+  box.appendChild(docs);
   return box;
 }
 
