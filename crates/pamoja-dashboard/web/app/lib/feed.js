@@ -16,7 +16,7 @@
 
 import { store } from '../store.js';
 import { extendCatalog } from './catalog.js';
-import { registerLabels } from './i18n.js';
+import { registerLabels, registerMessages } from './i18n.js';
 
 /** The mock scenarios the dev server and static fallback expose, in menu order. */
 export const SCENARIOS = ['normal', 'alarm', 'sensor-fault', 'low-battery', 'link-lost', 'cold-start'];
@@ -53,7 +53,7 @@ let replay;
  */
 function publish(snap)
 {
-  if (snap && snap.catalog) { extendCatalog(snap.catalog); registerLabels(snap.catalog.sensorPresets); }
+  if (snap && snap.catalog) { extendCatalog(snap.catalog); registerLabels(snap.catalog.sensorPresets); registerMessages(snap.catalog.messages); }
   demo.value = !!(snap && snap.demo);
   fleet.value = snap;
 }

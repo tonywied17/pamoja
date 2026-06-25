@@ -33,7 +33,14 @@ fn profile() -> Profile {
                 ElementSpec::new("packets_dropped", "count", "Packets dropped", Viz::Count)
                     .as_stat()
                     .on(Scope::Links(vec!["lora".to_owned(), "mesh".to_owned()])),
-            ),
+            )
+            .with_element(
+                ElementSpec::new("filter_state", "state", "Water filter", Viz::Switch)
+                    .with_state("state.clean"),
+            )
+            // Localize the custom states this profile emits, so the page shows words, not codes.
+            .with_message("state.clean", "Clean")
+            .with_message("state.flushing", "Flushing"),
     )
 }
 
@@ -81,6 +88,14 @@ fn build_fleet() -> Fleet {
                     .with_viz(Viz::Gauge),
             ),
         )
+        // A discrete sensor whose state code the profile localizes (see its presentation).
+        .sensor(
+            "field",
+            Sensor::new(
+                "filter",
+                Reading::new("filter_state", 0.0, "state").with_state("state.clean"),
+            ),
+        )
         .build()
 }
 
@@ -97,6 +112,20 @@ fn main() -> std::process::ExitCode {
 
     let prof = profile();
     let fleet = build_fleet();
+
+    // A real device only takes the sensor types it can actually bind a driver to; an add of
+    // anything else is refused and the dashboard says the device does not support it. Discovery
+    // (Fleet::add_sensor) is the device's own and is never gated.
+    fleet.allow_sensors([
+        "soil_moisture",
+        "drip_valve",
+        "water_turbidity",
+        "packets_dropped",
+        "humidity",
+        "filter_state",
+        "well_level",
+        "battery_voltage",
+    ]);
 
     // The sampling loop. A real project ticks its profile here on the power schedule; this
     // drifts a stand-in soil reading, judges it with the profile's controller, surfaces a

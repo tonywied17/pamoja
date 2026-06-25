@@ -7,7 +7,7 @@
 // live in app/; feature and helper modules live under app/lib/.
 
 import { store } from './store.js';
-import { initI18n, t, registerLabels } from './lib/i18n.js';
+import { initI18n, t, registerLabels, registerMessages } from './lib/i18n.js';
 import { initNav, back } from './nav.js';
 import { connectFeed, connected, fleet } from './lib/feed.js';
 import { catalog, extendCatalog } from './lib/catalog.js';
@@ -57,6 +57,7 @@ async function loadCatalog()
     const served = await res.json();
     extendCatalog(served);
     registerLabels(served.sensorPresets);
+    registerMessages(served.messages);
     applyTheme(catalog.theme);
   } catch { /* no device endpoint here; the built-in catalog stands */ }
 }

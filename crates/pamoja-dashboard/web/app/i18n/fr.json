@@ -200,6 +200,7 @@
     "ui.pairFailed": "Ce code n'a pas fonctionné",
     "ui.pairOffline": "Appareil injoignable",
     "ui.commandFailed": "Échec de l'action",
+    "ui.sensorUnsupported": "Cet appareil ne prend pas en charge ce capteur",
     "ui.binding": "Liaison matérielle",
     "ui.bindingHint": "Facultatif : comment l'appareil trouve ce capteur (ex. i2c:0x76)"
   }

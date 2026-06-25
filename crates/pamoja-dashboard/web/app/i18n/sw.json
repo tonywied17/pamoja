@@ -200,6 +200,7 @@
     "ui.pairFailed": "Msimbo huo haukufanya kazi",
     "ui.pairOffline": "Kifaa hakipatikani",
     "ui.commandFailed": "Kitendo kimeshindwa",
+    "ui.sensorUnsupported": "Kifaa hiki hakitumii kitambuzi hicho",
     "ui.binding": "Kifungo cha vifaa",
     "ui.bindingHint": "Hiari: jinsi kifaa kinavyopata kitambuzi hiki (mf. i2c:0x76)"
   }

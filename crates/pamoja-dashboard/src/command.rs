@@ -66,6 +66,9 @@ pub enum CommandError {
     UnknownTarget,
     /// The target exists but does not accept the requested action.
     InvalidAction,
+    /// The sensor being added is not one this device supports, so it was not added. A real
+    /// device only accepts the sensor types it can actually bind a driver to.
+    UnknownSensor,
 }
 
 impl CommandError {
@@ -79,6 +82,7 @@ impl CommandError {
             CommandError::Unsupported => "command.unsupported",
             CommandError::UnknownTarget => "command.unknown_target",
             CommandError::InvalidAction => "command.invalid_action",
+            CommandError::UnknownSensor => "command.unknown_sensor",
         }
     }
 }

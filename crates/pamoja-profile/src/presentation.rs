@@ -307,6 +307,43 @@ pub struct Theme {
     pub track: Option<String>,
 }
 
+/// A piece of human-facing text a profile supplies, either one string for every locale or
+/// a per-locale map.
+///
+/// Used for the messages a profile localizes for the dashboard - its custom discrete state
+/// codes and event codes. In a manifest it is a bare string for the simple case or an
+/// object keyed by locale tag:
+///
+/// ```json
+/// { "state.flushing": "Flushing", "event.filter_clog": { "en": "Filter clogged", "sw": "Kichujio kimeziba" } }
+/// ```
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum LocalizedText {
+    /// One text shown in every locale that has no specific translation.
+    Plain(String),
+    /// Per-locale text, keyed by locale tag (`"en"`, `"sw"`, ...).
+    PerLocale(BTreeMap<String, String>),
+}
+
+impl From<String> for LocalizedText {
+    fn from(text: String) -> Self {
+        LocalizedText::Plain(text)
+    }
+}
+
+impl From<&str> for LocalizedText {
+    fn from(text: &str) -> Self {
+        LocalizedText::Plain(text.to_owned())
+    }
+}
+
+impl From<BTreeMap<String, String>> for LocalizedText {
+    fn from(map: BTreeMap<String, String>) -> Self {
+        LocalizedText::PerLocale(map)
+    }
+}
+
 /// How a profile presents itself on the dashboard: its custom elements and theme.
 ///
 /// A [`Profile`](crate::Profile) carries an optional `presentation`, so a deployment's
@@ -321,6 +358,12 @@ pub struct Presentation {
     /// An optional theme that tints the dashboard.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub theme: Option<Theme>,
+    /// Localized text for the stable codes this profile introduces, keyed by the page's
+    /// message key (a discrete state such as `"state.flushing"` or an event such as
+    /// `"event.filter_clog"`). The dashboard ships no translation for a code it never knew,
+    /// so a profile that emits a custom state or event supplies its wording here.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub messages: BTreeMap<String, LocalizedText>,
 }
 
 impl Presentation {
@@ -358,6 +401,24 @@ impl Presentation {
     /// The presentation, for chaining.
     pub fn with_theme(mut self, theme: Theme) -> Self {
         self.theme = Some(theme);
+        self
+    }
+
+    /// Supplies localized text for a stable code this profile introduces.
+    ///
+    /// Use this for a custom discrete state or event the dashboard ships no wording for, so
+    /// the page renders it as words rather than the raw code.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - the page message key, such as `"state.flushing"` or `"event.filter_clog"`.
+    /// * `text` - the text, one string for every locale or a per-locale map.
+    ///
+    /// # Returns
+    ///
+    /// The presentation, for chaining.
+    pub fn with_message(mut self, key: impl Into<String>, text: impl Into<LocalizedText>) -> Self {
+        self.messages.insert(key.into(), text.into());
         self
     }
 }
@@ -418,9 +479,33 @@ mod tests {
             .with_theme(Theme {
                 accent: Some("#3fb1c8".into()),
                 ..Theme::default()
-            });
+            })
+            .with_message("state.flushing", "Flushing")
+            .with_message(
+                "event.filter_clog",
+                BTreeMap::from([
+                    ("en".to_owned(), "Filter clogged".to_owned()),
+                    ("sw".to_owned(), "Kichujio kimeziba".to_owned()),
+                ]),
+            );
         let json = serde_json::to_string(&presentation).unwrap();
         let restored: Presentation = serde_json::from_str(&json).unwrap();
         assert_eq!(presentation, restored);
+    }
+
+    #[cfg(feature = "json")]
+    #[test]
+    fn a_message_is_a_bare_string_or_a_locale_map_on_the_wire() {
+        let presentation = Presentation::new()
+            .with_message("state.flushing", "Flushing")
+            .with_message(
+                "event.filter_clog",
+                BTreeMap::from([("en".to_owned(), "Filter clogged".to_owned())]),
+            );
+        let json = serde_json::to_string(&presentation.messages).unwrap();
+        assert_eq!(
+            json,
+            r#"{"event.filter_clog":{"en":"Filter clogged"},"state.flushing":"Flushing"}"#
+        );
     }
 }

@@ -128,7 +128,8 @@ $.component('manage-modal', {
     }
     const result = await provision(c.mode === 'group' ? 'addGroup' : 'addSensor', built);
     if (result.ok) { back(); return; }
-    this.state.error = t('ui.commandFailed');
+    // A real device refuses a sensor type it cannot bind; say so rather than the generic failure.
+    this.state.error = result.error === 'command.unknown_sensor' ? t('ui.sensorUnsupported') : t('ui.commandFailed');
     this.setState({});
   },
 

@@ -132,7 +132,19 @@ add-sensor dialog offers them (only on the groups their scope allows) and render
 chosen graphic and label. A live reading can also pin its own graphic -
 `Reading::new(...).with_viz(Viz::Gauge)` - so a value flows straight into the instrument the
 profile intends. A small `Theme` on the presentation tints the console (accent and status
-colors). A complete, runnable version is in [`examples/gateway.rs`](examples/gateway.rs).
+colors), and `Presentation::with_message` localizes any custom state or event code the profile
+emits, so the page shows words instead of raw codes.
+
+**Only the sensors a device can bind.** The hardware-free demo lets you add any sensor type (it
+fills with placeholder data); a real device should not. Call `Fleet::allow_sensors([...])` and a
+client add of anything outside that set is refused with a clear "device does not support that
+sensor" message instead of a tile that never reports. Gateway discovery - `Fleet::add_sensor`,
+how a real node surfaces a sensor it actually found - stays unrestricted.
+
+A complete, runnable version is in [`examples/gateway.rs`](examples/gateway.rs). For the full
+profile authoring guide - presets, JSON manifests, control policies, presentation, theme, and
+messages, from the simplest use to a fully themed catalog - see the
+[`pamoja-profile`](../pamoja-profile/README.md) crate.
 
 ## Authenticated control
 

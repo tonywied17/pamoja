@@ -9,54 +9,179 @@ Named, ready-to-run device profiles for pamoja: assemble a sensor, actuator, tra
 
 Device profiles: named, ready-to-run nodes assembled from pamoja capabilities.
 
-Most people who can put a sensor to good use are not electrical engineers, and
-the gap between "I can read a sensor" and "I built something that works and warns
-me when it fails" is wiring, tuning, and glue code. A device profile closes that
-gap. It is a named, pre-wired bundle - a control policy, a publish topic, and a
-power schedule - that a builder instantiates instead of choosing algorithms and
-constants by hand.
+Most people who can put a sensor to good use are not electrical engineers, and the
+gap between "I can read a sensor" and "I built something that works and warns me when
+it fails" is wiring, tuning, and glue code. A device profile closes that gap. It is a
+named, pre-wired bundle - a control policy, a publish topic, and a power schedule -
+that a builder instantiates instead of choosing algorithms and constants by hand.
 
-A profile has two halves:
+This guide runs from the simplest use to a fully themed dashboard. Skip to
+[Which pieces do I need?](#which-pieces-do-i-need) for a one-line map.
 
-- [`Profile`] is the manifest: plain data a community can publish and share,
-  carrying a [`ControlSpec`] and a [`PowerSchedule`]. It serializes to and from
-  JSON with [`Profile::to_json`] and [`Profile::from_json`], so a profile can ship
-  as a file and be loaded onto a device. The presets
+# The shape of a profile
+
+- [`Profile`] is the manifest: plain data a community can publish and share, carrying
+  a [`ControlSpec`], a [`PowerSchedule`], and an optional [`Presentation`]. It
+  serializes to and from JSON with [`Profile::to_json`] and [`Profile::from_json`], so
+  a profile ships as a file and loads onto a device. The presets
   [`Profile::vaccine_fridge_monitor`], [`Profile::irrigation_node`],
-  [`Profile::well_level`], and [`Profile::flood_sensor`] are convenience
-  constructors for the same data.
+  [`Profile::well_level`], and [`Profile::flood_sensor`] are convenience constructors
+  for the same data.
 - [`Node`] is what the runtime assembles from a profile and real components: a
   [`Sensor`](pamoja_core::Sensor), an [`Actuator`](pamoja_core::Actuator), a
-  [`Transport`](pamoja_core::Transport), and a [`Codec`](pamoja_codec::Codec).
-  Each [`tick`](Node::tick) reads, decides, drives the output, and publishes.
+  [`Transport`](pamoja_core::Transport), and a [`Codec`](pamoja_codec::Codec). Each
+  [`tick`](Node::tick) reads, decides, drives the output, and publishes.
 
-The decision logic is a [`Controller`] that composes the `pamoja-kit` helpers, so
-a profile is glue over field-tested math rather than new behavior. The node's I/O
-is async; its decisions are synchronous and hardware-free, so the whole control
-policy is unit-testable with no devices and no network.
+The decision logic is a [`Controller`] that composes the `pamoja-kit` helpers, so a
+profile is glue over field-tested math rather than new behavior. Its I/O is async; its
+decisions are synchronous and hardware-free, so a whole control policy is unit-testable
+with no devices and no network.
 
-A profile may also carry an optional [`Presentation`]: a declaration of the custom
-sensors and node stats it introduces to the local-first dashboard - the graphic to
-draw each with ([`Viz`]), its band, label, and which groups it is offered on
-([`Scope`]) - plus a small [`Theme`]. The dashboard turns these declarations into the
-catalog it serves, so a community can add a sensor we never anticipated (a turbidity
-probe, a pH meter) with no code and no page change.
+# Start simple: pick a preset
 
-**Examples**
-
-Assemble a cold-chain monitor's policy and evaluate a reading, no hardware needed:
+The quickest path is a named preset. Hand its controller a reading and it decides:
 
 ```rust
 use pamoja_profile::{Alert, Profile};
 
-let profile = Profile::vaccine_fridge_monitor();
-let mut control = profile.controller();
+let mut control = Profile::vaccine_fridge_monitor().controller();
 
 // A warm fridge: the cooler runs and a spoilage excursion is flagged.
 let reaction = control.evaluate(9.0);
 assert_eq!(reaction.actuator, Some(true));
 assert!(matches!(reaction.alert, Some(Alert::OutOfRange { .. })));
 ```
+
+# The manifest: write it, share it, load it
+
+A profile is just data, so a community can write one as JSON, store it in a file, and
+share it - no code. [`Profile::from_json`] loads it and [`Profile::to_json`] writes it
+back; the power thresholds are optional and default when omitted.
+
+```rust
+use pamoja_profile::Profile;
+
+let manifest = r#"{
+    "name": "rain-tank",
+    "topic": "water/tank/level",
+    "control": { "kind": "level", "empty": 0.0, "warn_within": 5 },
+    "power": { "active_secs": 600, "saver_secs": 1800, "critical_secs": 3600 }
+}"#;
+
+let profile = Profile::from_json(manifest).expect("a valid manifest");
+assert_eq!(profile.name, "rain-tank");
+assert!(profile.to_json().unwrap().contains("rain-tank"));
+```
+
+# Control policies
+
+Every profile names one [`ControlSpec`], the rule applied to each reading:
+
+- `Setpoint` holds a value by switching an output on and off (a fridge's cooler, an
+  irrigation valve) and alerts when the reading leaves a safe band.
+- `Level` watches a falling level and warns before it reaches empty.
+- `Surge` warns when a reading changes faster than a safe rate (a flash flood).
+- `Monitor` only reports, with no output and no alert.
+
+Every field is public, so a deployment can build or tune a policy in place:
+
+```rust
+use pamoja_profile::{ControlSpec, PowerSchedule, Profile};
+
+// Hold soil moisture near 35% by opening a valve - a "heater" for moisture.
+let profile = Profile {
+    name: "drip-node".to_owned(),
+    topic: "farm/soil-moisture".to_owned(),
+    control: ControlSpec::Setpoint { setpoint: 35.0, hysteresis: 5.0, cooling: false, safe_band: 25.0 },
+    power: PowerSchedule::new(300, 1800, 3600),
+    presentation: None,
+};
+let mut control = profile.controller();
+assert_eq!(control.evaluate(28.0).actuator, Some(true)); // dry: the valve opens
+```
+
+# Power: sampling that follows the battery
+
+A [`PowerSchedule`] sets how often a node samples as its battery drains - often when
+healthy, sparingly when low - and eases back toward the active cadence while charging.
+[`Node::schedule`] turns it into the power mode and the interval to wait before the
+next [`tick`](Node::tick).
+
+# Custom dashboard elements
+
+The local-first dashboard (the `pamoja-dashboard` crate) draws a built-in set of sensor
+types. When a deployment measures something beyond it, the profile *declares* the extra
+as a [`Presentation`], and the dashboard renders it with no page change. Each
+[`ElementSpec`] names a stable key and unit, the graphic to draw it with ([`Viz`] - a
+gauge, bar, dial, sparkline, switch, valve, and so on), an optional safe band, a label
+(with optional per-locale labels), whether it is a node stat, and which groups it is
+offered on ([`Scope`]). A [`Theme`] tints the console, and
+[`with_message`](Presentation::with_message) localizes any custom state or event code
+the profile emits.
+
+```rust
+use pamoja_profile::{ElementSpec, Presentation, Profile, Scope, Theme, Viz};
+
+let profile = Profile::well_level().with_presentation(
+    Presentation::new()
+        // A turbidity probe drawn as a gauge. WHO drinking-water turbidity stays under 5 NTU.
+        .with_element(
+            ElementSpec::new("water_turbidity", "ntu", "Turbidity", Viz::Gauge)
+                .with_band(0.0, 5.0)
+                .with_locale_label("fr", "Turbidité"),
+        )
+        // A node stat (telemetry about the node itself), offered only on mesh links.
+        .with_element(
+            ElementSpec::new("packets_dropped", "count", "Packets dropped", Viz::Count)
+                .as_stat()
+                .on(Scope::Links(vec!["mesh".to_owned()])),
+        )
+        // Words for a custom state the profile emits, and a brand accent.
+        .with_message("state.flushing", "Flushing")
+        .with_theme(Theme { accent: Some("#3fb1c8".to_owned()), ..Theme::default() }),
+);
+
+let turbidity = &profile.presentation.as_ref().unwrap().elements[0];
+assert_eq!(turbidity.viz.kind(), "radial"); // the gauge kind the page draws
+```
+
+# Show it on a dashboard, wire it to your project
+
+The dashboard side lives in the `pamoja-dashboard` crate: build a catalog from your
+profiles and serve it, gate which sensors a client may add, and feed live readings into
+the graphic a profile chose. This is the whole loop (its `examples/gateway.rs` is a
+runnable version):
+
+```text
+use pamoja_dashboard::{Assets, Catalog, Fleet, LinkKind, Reading, Sensor, Server, Viz};
+
+let fleet = Fleet::builder()
+    .org("farm", "Pamoja farm")
+    .group("farm", "field", "Field node", LinkKind::Lora)
+    .sensor("field", Sensor::new("turbidity",
+        Reading::new("water_turbidity", 2.4, "ntu").with_band(0.0, 5.0).with_viz(Viz::Gauge)))
+    .build();
+
+// A real device only accepts the sensors it can bind; anything else is refused.
+fleet.allow_sensors(["water_turbidity", "drip_valve"]);
+
+Server::new(fleet, Assets::Embedded)
+    .with_catalog(Catalog::from_profiles(&[&profile])) // served at GET /catalog
+    .run("0.0.0.0:80")
+    .unwrap();
+```
+
+From your own sampling loop you push each real reading in with `report_reading`, and the
+dashboard reads it; control actions queue back for you to apply. See the
+`pamoja-dashboard` crate for the full push model, pairing, and the served catalog.
+
+# Which pieces do I need?
+
+- **Just want it to work?** Pick a preset and call [`controller`](Profile::controller).
+- **Sharing a recipe?** Write a JSON manifest and load it with [`Profile::from_json`].
+- **A sensor we do not draw?** Add an [`ElementSpec`] with the [`Viz`] you want.
+- **Your own look and words?** Add a [`Theme`] and
+  [`with_message`](Presentation::with_message) for custom states and events.
 
 ## License
 

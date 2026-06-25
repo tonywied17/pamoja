@@ -38,6 +38,7 @@
 //! assert_eq!(handle.snapshot().status, Status::Alarm);
 //! ```
 
+use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
@@ -52,6 +53,10 @@ struct Inner {
     state: State,
     commands: Vec<Command>,
     started: Instant,
+    // The sensor element keys a client may add. `None` accepts any (the default); `Some`
+    // rejects a client `AddSensor` whose key is not listed, so a real device only takes the
+    // sensor types it can actually bind. Gateway-initiated discovery is never gated.
+    allowed: Option<HashSet<String>>,
 }
 
 /// A real fleet a project fills and the dashboard renders. Clone to share one between the
@@ -88,8 +93,28 @@ impl Fleet {
                 state,
                 commands: Vec::new(),
                 started: Instant::now(),
+                allowed: None,
             })),
         }
+    }
+
+    /// Restricts which sensor types a client may add, so a real device only accepts the
+    /// sensors it can bind a driver to.
+    ///
+    /// Without this, an `AddSensor` from the dashboard is always accepted (which suits the
+    /// hardware-free demo). With it, a client `AddSensor` whose element key is not listed is
+    /// rejected with [`CommandError::UnknownSensor`], and the dashboard reports that the
+    /// device does not support that sensor. Discovery through [`add_sensor`](Fleet::add_sensor)
+    /// is the device's own and stays unrestricted. Set this after building or restoring the
+    /// fleet; the keys are the element keys a deployment supports, the same ones its
+    /// presentation declares.
+    ///
+    /// # Arguments
+    ///
+    /// * `keys` - the sensor element keys a client may add, such as `"soil_moisture"`.
+    pub fn allow_sensors(&self, keys: impl IntoIterator<Item = impl Into<String>>) {
+        let mut inner = self.inner.lock().expect("fleet lock");
+        inner.allowed = Some(keys.into_iter().map(Into::into).collect());
     }
 
     /// Pushes a fresh reading for a sensor, appending it to the sensor's history.
@@ -238,6 +263,15 @@ impl StateSource for Fleet {
 
     fn command(&mut self, command: &Command) -> Result<(), CommandError> {
         let mut inner = self.inner.lock().expect("fleet lock");
+        // A real device only takes the sensor types it can bind; reject an add of anything else
+        // so the dashboard says so instead of showing a sensor that will never report.
+        if let Command::AddSensor { sensor, .. } = command {
+            if let Some(allowed) = &inner.allowed {
+                if !allowed.contains(&sensor.reading.key) {
+                    return Err(CommandError::UnknownSensor);
+                }
+            }
+        }
         let outcome = apply(&mut inner.state, command);
         if outcome.is_ok() {
             inner.commands.push(command.clone());
@@ -567,6 +601,39 @@ mod tests {
                 .any(|g| g.id == "ward"),
             "removed group is gone"
         );
+    }
+
+    #[test]
+    fn an_allow_list_rejects_unsupported_client_adds_but_not_discovery() {
+        let mut fleet = fleet();
+        fleet.allow_sensors(["fridge_temp"]);
+
+        // A supported type is accepted.
+        fleet
+            .command(&Command::AddSensor {
+                group: "fridges".to_owned(),
+                sensor: Sensor::new("f2", Reading::new("fridge_temp", 5.0, "celsius")),
+                binding: None,
+            })
+            .expect("a supported sensor is added");
+
+        // An unsupported type is rejected and not added.
+        assert_eq!(
+            fleet.command(&Command::AddSensor {
+                group: "fridges".to_owned(),
+                sensor: Sensor::new("w", Reading::new("wind_speed", 3.0, "meter_per_second")),
+                binding: None,
+            }),
+            Err(CommandError::UnknownSensor)
+        );
+        assert!(!sensor_present(&fleet, "fridges", "w"));
+
+        // Gateway-initiated discovery is the device's own and stays unrestricted.
+        fleet.add_sensor(
+            "fridges",
+            Sensor::new("disc", Reading::new("wind_speed", 3.0, "meter_per_second")),
+        );
+        assert!(sensor_present(&fleet, "fridges", "disc"));
     }
 
     #[test]

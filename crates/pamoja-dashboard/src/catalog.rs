@@ -15,7 +15,7 @@ use std::collections::BTreeMap;
 
 use serde::Serialize;
 
-use pamoja_profile::{Profile, Scope, Theme};
+use pamoja_profile::{LocalizedText, Profile, Scope, Theme};
 
 /// One custom sensor or stat the page should add to its built-in catalog.
 ///
@@ -56,6 +56,8 @@ pub struct Catalog {
     sensor_presets: Vec<Preset>,
     #[serde(skip_serializing_if = "Option::is_none")]
     theme: Option<Theme>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    messages: BTreeMap<String, LocalizedText>,
 }
 
 impl Catalog {
@@ -75,12 +77,16 @@ impl Catalog {
     pub fn from_profiles(profiles: &[&Profile]) -> Self {
         let mut sensor_presets: Vec<Preset> = Vec::new();
         let mut theme: Option<Theme> = None;
+        let mut messages: BTreeMap<String, LocalizedText> = BTreeMap::new();
         for profile in profiles {
             let Some(presentation) = &profile.presentation else {
                 continue;
             };
             if theme.is_none() {
                 theme = presentation.theme.clone();
+            }
+            for (key, text) in &presentation.messages {
+                messages.entry(key.clone()).or_insert_with(|| text.clone());
             }
             for element in &presentation.elements {
                 if sensor_presets.iter().any(|p| p.key == element.key) {
@@ -105,6 +111,7 @@ impl Catalog {
         Self {
             sensor_presets,
             theme,
+            messages,
         }
     }
 
@@ -112,9 +119,10 @@ impl Catalog {
     ///
     /// # Returns
     ///
-    /// `true` when there are no custom presets and no theme, so a gateway can skip serving it.
+    /// `true` when there are no custom presets, theme, or messages, so a gateway can skip
+    /// serving it.
     pub fn is_empty(&self) -> bool {
-        self.sensor_presets.is_empty() && self.theme.is_none()
+        self.sensor_presets.is_empty() && self.theme.is_none() && self.messages.is_empty()
     }
 
     /// Serializes the catalog to the JSON served at `GET /catalog`.
@@ -152,7 +160,8 @@ mod tests {
                 .with_element(
                     ElementSpec::new("packets_dropped", "count", "Packets dropped", Viz::Count)
                         .as_stat(),
-                ),
+                )
+                .with_message("event.filter_clog", "Filter clogged"),
         )
     }
 
@@ -195,5 +204,7 @@ mod tests {
         // A scoped element carries its links; an always element omits the form entirely.
         assert!(json.contains("\"scope\":{\"links\":[\"mesh\"]}"));
         assert!(json.contains("\"scope\":\"always\""));
+        // A profile-supplied message for a custom code rides along for the page to localize.
+        assert!(json.contains("\"messages\":{\"event.filter_clog\":\"Filter clogged\"}"));
     }
 }

@@ -86,6 +86,25 @@ export function registerLabels(presets)
 }
 
 /**
+ * Registers localized text for stable codes a device-served catalog supplies (its custom
+ * discrete states and events), so `t('state.x')` / `t('event.y')` resolve to words instead
+ * of the raw code. A value may be one string (shown in every locale) or a per-locale object.
+ * Shipped bundles still win.
+ *
+ * @param {Object<string, (string|Object<string,string>)>} [messages] - code -> text or per-locale map.
+ * @returns {void}
+ */
+export function registerMessages(messages)
+{
+  for (const [key, val] of Object.entries(messages || {}))
+  {
+    if (val == null) continue;
+    if (typeof val === 'string') (labelExtra['*'] ??= {})[key] = val;
+    else for (const [loc, text] of Object.entries(val)) (labelExtra[loc] ??= {})[key] = text;
+  }
+}
+
+/**
  * Returns the active locale bundle, falling back to English.
  *
  * @returns {object} the active message bundle.
