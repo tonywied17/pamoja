@@ -6,7 +6,7 @@
 // scrollable event log; each caller wraps it with its own header.
 
 import { t, nf, fmt, ago } from './i18n.js';
-import { tileViz, detailGraph, trendArrow, isDiscrete, vizFor, esc } from './viz/index.js';
+import { tileViz, detailGraph, trendArrow, isDiscrete, vizOf, esc } from './viz/index.js';
 
 /**
  * Keeps each event log scrolled to its newest line unless the user has scrolled up.
@@ -57,7 +57,7 @@ export function sensorDetailBody(s)
     return `<div class="dlog-line" data-level="${e.level}"><span class="lt">${time}</span><span class="lm">${esc(t('event.' + e.code))}${v}</span></div>`;
   }).join('') || `<div class="dlog-line"><span class="lm">${t('ui.noEvents')}</span></div>`;
 
-  if (isDiscrete(r) && vizFor(r.key, r.unit) !== 'wave')
+  if (isDiscrete(r) && vizOf(r) !== 'wave')
   {
     return `
       <div class="modal-hero hero-discrete">

@@ -133,6 +133,9 @@ export const t = (k, args = {}) =>
   if (m == null) m = labelExtra[b.locale]?.[k];
   if (m == null) m = labelExtra.en?.[k];
   if (m == null) m = labelExtra['*']?.[k];
+  // A unit we do not ship a symbol for (a profile's custom unit, such as `ntu`) degrades to
+  // its bare, language-neutral token rather than the raw `unit.ntu` key.
+  if (m == null && k.startsWith('unit.')) return k.slice(5);
   if (m == null) return k;
   if (typeof m === 'object')
   {
