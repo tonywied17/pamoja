@@ -4,7 +4,8 @@
 
 MQTT transport for the pamoja device SDK, built on rumqttc.
 
-[crates.io](https://crates.io/crates/pamoja-mqtt) · [API docs](https://docs.rs/pamoja-mqtt) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-mqtt"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-mqtt"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 MQTT transport for the pamoja SDK.
 

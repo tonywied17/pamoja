@@ -77,17 +77,61 @@ fn crate_description(krate: &str) -> Option<String> {
     None
 }
 
-// The concise crates.io-facing README for a crate: its name, description, links, and the
-// lib.rs overview - not the full item dump, which is on docs.rs and in the docs/ hub.
+// The crates that also ship language bindings, with their package id on (npm, PyPI, NuGet),
+// so the README links the registries that actually have the crate.
+fn bindings(krate: &str) -> Option<(&'static str, &'static str, &'static str)> {
+    match krate {
+        "pamoja-core" => Some(("@pamoja/core", "pamoja-core", "Pamoja.Core")),
+        _ => None,
+    }
+}
+
+// One gradient button linking a registry, as inline HTML (renders on crates.io and GitHub).
+fn button(href: &str, alt: &str, file: &str) -> String {
+    format!(
+        "<a href=\"{href}\"><img height=\"28\" alt=\"{alt}\" src=\"https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/{file}\"></a>"
+    )
+}
+
+// The concise crates.io-facing README for a crate: its name, description, registry buttons,
+// and the lib.rs overview - not the full item dump, which is on docs.rs and in the docs/ hub.
 fn crate_readme(krate: &str, overview: &str) -> String {
     let mut out = format!("{GEN_MARKER}\n\n# {krate}\n\n");
     if let Some(description) = crate_description(krate) {
         out.push_str(&description);
         out.push_str("\n\n");
     }
-    out.push_str(&format!(
-        "[crates.io](https://crates.io/crates/{krate}) · [API docs](https://docs.rs/{krate}) · [repository](https://github.com/molexxxx/pamoja)\n\n"
-    ));
+    let mut buttons = vec![
+        button(
+            &format!("https://crates.io/crates/{krate}"),
+            "crates.io",
+            "btn-cratesio.svg",
+        ),
+        button(
+            &format!("https://docs.rs/{krate}"),
+            "docs.rs",
+            "btn-docsrs.svg",
+        ),
+    ];
+    if let Some((npm, pypi, nuget)) = bindings(krate) {
+        buttons.push(button(
+            &format!("https://www.npmjs.com/package/{npm}"),
+            "npm",
+            "btn-npm.svg",
+        ));
+        buttons.push(button(
+            &format!("https://pypi.org/project/{pypi}/"),
+            "PyPI",
+            "btn-pypi.svg",
+        ));
+        buttons.push(button(
+            &format!("https://www.nuget.org/packages/{nuget}"),
+            "NuGet",
+            "btn-nuget.svg",
+        ));
+    }
+    out.push_str(&buttons.join("\n"));
+    out.push_str("\n\n");
     if !overview.is_empty() {
         out.push_str(overview);
         out.push_str("\n\n");
@@ -159,6 +203,12 @@ fn render_all() -> Result<Rendered, String> {
         let mut crate_index = format!("# {krate}\n\n");
         crate_index
             .push_str("Generated from rustdoc by `cargo xtask docs` - do not edit by hand.\n\n");
+        // When the crate carries a fuller hand-written README (the dashboard's), link to it.
+        if is_handwritten(&repo_root().join(format!("crates/{krate}/README.md"))) {
+            crate_index.push_str(&format!(
+                "For a fuller written guide, see the [crate README](../../crates/{krate}/README.md).\n\n"
+            ));
+        }
         let overview = doc_of(&lib_parsed.attrs);
         readmes.push((
             format!("crates/{krate}/README.md"),

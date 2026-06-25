@@ -4,7 +4,8 @@
 
 On-board bus addressing and pin logic for pamoja: I2C 7-bit and 10-bit address-frame encoding (NXP UM10204) with reserved-range checks, the four SPI clock modes from CPOL/CPHA, and a GPIO pin model with active-high/active-low logical levels, no_std and allocation-free. The addressing-and-mode half ahead of the GPIO/I2C/SPI driver.
 
-[crates.io](https://crates.io/crates/pamoja-gpio) · [API docs](https://docs.rs/pamoja-gpio) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-gpio"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-gpio"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 On-board bus addressing and pin logic for the pamoja SDK.
 

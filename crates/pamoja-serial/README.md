@@ -4,7 +4,8 @@
 
 Serial-line packet framing for pamoja: SLIP (RFC 1055) and COBS byte-stuffing with streaming frame decoders, so a raw UART byte stream carries discrete, self-delimiting packets to and from motor controllers, GPS, and LiDAR, no_std and allocation-free. The framing half ahead of the serial driver.
 
-[crates.io](https://crates.io/crates/pamoja-serial) · [API docs](https://docs.rs/pamoja-serial) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-serial"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-serial"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 Serial-line packet framing for the pamoja SDK.
 

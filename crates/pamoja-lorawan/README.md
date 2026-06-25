@@ -4,7 +4,8 @@
 
 LoRaWAN 1.0.x MAC framing for pamoja: build and parse data-frame PHYPayloads with the message integrity code and payload encryption the spec mandates, plus the over-the-air-activation join exchange, so a long-range node speaks LoRaWAN, no_std and allocation-free. The secured-packet half ahead of the radio driver.
 
-[crates.io](https://crates.io/crates/pamoja-lorawan) · [API docs](https://docs.rs/pamoja-lorawan) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-lorawan"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-lorawan"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 LoRaWAN 1.0.x MAC framing for the pamoja SDK.
 

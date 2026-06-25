@@ -4,7 +4,8 @@
 
 Goal-named helper math for the pamoja device SDK: smoothing/filtering, calibration and units, PID and on/off control, prediction and anomaly detection, rolling stats, wheel kinematics (differential, Ackermann, skid-steer, mecanum), odometry, waypoint guidance, motion safety, and geo/IMU/weather helpers; no_std-friendly.
 
-[crates.io](https://crates.io/crates/pamoja-kit) · [API docs](https://docs.rs/pamoja-kit) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-kit"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-kit"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 Goal-named helper math for the pamoja SDK.
 

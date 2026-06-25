@@ -4,7 +4,8 @@
 
 Cost-aware transport ladder for the pamoja device SDK: try the cheapest link first, buffer offline.
 
-[crates.io](https://crates.io/crates/pamoja-ladder) · [API docs](https://docs.rs/pamoja-ladder) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-ladder"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-ladder"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 Cost-aware transport ladder for the pamoja SDK.
 

@@ -4,7 +4,8 @@
 
 Curated C ABI surface over the pamoja device SDK, for C, C++, and .NET.
 
-[crates.io](https://crates.io/crates/pamoja-ffi) · [API docs](https://docs.rs/pamoja-ffi) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-ffi"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-ffi"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 The curated C ABI surface for the pamoja SDK.
 

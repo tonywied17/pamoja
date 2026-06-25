@@ -4,7 +4,8 @@
 
 Named, ready-to-run device profiles for pamoja: assemble a sensor, actuator, transport, codec, and power schedule into a working node.
 
-[crates.io](https://crates.io/crates/pamoja-profile) · [API docs](https://docs.rs/pamoja-profile) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-profile"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-profile"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 Device profiles: named, ready-to-run nodes assembled from pamoja capabilities.
 

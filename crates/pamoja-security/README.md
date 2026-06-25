@@ -4,7 +4,8 @@
 
 Device identity and signed telemetry for pamoja: ed25519 keys that sign payloads and verify them, for data integrity and audit trails.
 
-[crates.io](https://crates.io/crates/pamoja-security) · [API docs](https://docs.rs/pamoja-security) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-security"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-security"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 Device identity and signed telemetry for the pamoja SDK.
 

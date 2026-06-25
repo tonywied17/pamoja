@@ -4,7 +4,8 @@
 
 Cost-aware mesh routing for pamoja: a bounded routing table that learns reverse-path routes from the traffic it hears and decides whether to deliver, relay toward a destination, or fall back to flooding, so a mesh forwards instead of blindly flooding, no_std and allocation-free.
 
-[crates.io](https://crates.io/crates/pamoja-routing) · [API docs](https://docs.rs/pamoja-routing) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-routing"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-routing"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 Cost-aware mesh routing for the pamoja SDK.
 

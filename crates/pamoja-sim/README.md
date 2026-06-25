@@ -4,7 +4,8 @@
 
 Hardware-free device simulators for pamoja: fake sensors with configurable noise and drift, a recording actuator, a lossy-link transport, and a drivable differential-drive robot, behind the core Sensor and Actuator traits.
 
-[crates.io](https://crates.io/crates/pamoja-sim) · [API docs](https://docs.rs/pamoja-sim) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-sim"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-sim"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 Hardware-free device simulators for the pamoja SDK.
 

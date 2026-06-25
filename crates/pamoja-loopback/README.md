@@ -4,7 +4,8 @@
 
 In-process loopback transport for pamoja: a broker-free Transport for tests, examples, and simulators.
 
-[crates.io](https://crates.io/crates/pamoja-loopback) · [API docs](https://docs.rs/pamoja-loopback) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-loopback"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-loopback"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 An in-process loopback transport for hardware-free testing and examples.
 

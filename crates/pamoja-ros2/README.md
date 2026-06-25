@@ -4,7 +4,8 @@
 
 ROS 2 bridge logic for the pamoja SDK: topic/service name validation and DDS mapping, RIHS01 type-hash and DDS type-name handling, rmw_zenoh key-expression assembly, and CDR message encoding, no_std and allocation-light. The pure-logic half ahead of the live r2r/Zenoh bridge.
 
-[crates.io](https://crates.io/crates/pamoja-ros2) · [API docs](https://docs.rs/pamoja-ros2) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-ros2"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-ros2"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 ROS 2 bridge logic for the pamoja SDK.
 

@@ -4,7 +4,8 @@
 
 In-memory typed publish/subscribe event bus implementing the core EventBus trait.
 
-[crates.io](https://crates.io/crates/pamoja-bus) · [API docs](https://docs.rs/pamoja-bus) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-bus"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-bus"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 An in-memory typed publish/subscribe event bus.
 

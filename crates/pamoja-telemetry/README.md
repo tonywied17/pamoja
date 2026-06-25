@@ -4,7 +4,8 @@
 
 Device-side observability for pamoja: structured leveled events and counters that degrade gracefully on metered links, no_std and allocation-free.
 
-[crates.io](https://crates.io/crates/pamoja-telemetry) · [API docs](https://docs.rs/pamoja-telemetry) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-telemetry"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-telemetry"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 Device-side observability for the pamoja SDK.
 

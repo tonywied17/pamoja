@@ -4,7 +4,8 @@
 
 Power-aware scheduling for the pamoja device SDK: duty cycling and an energy-aware governor, no_std-friendly.
 
-[crates.io](https://crates.io/crates/pamoja-power) · [API docs](https://docs.rs/pamoja-power) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-power"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-power"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 Power-aware scheduling for the pamoja SDK.
 

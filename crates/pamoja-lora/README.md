@@ -4,7 +4,8 @@
 
 LoRa link math for pamoja: exact time-on-air and duty-cycle off-time, so a long-range node stays within regulations and budgets its power, no_std and allocation-free.
 
-[crates.io](https://crates.io/crates/pamoja-lora) · [API docs](https://docs.rs/pamoja-lora) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-lora"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-lora"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 LoRa link math for the pamoja SDK.
 

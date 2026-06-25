@@ -2,6 +2,8 @@
 
 Generated from rustdoc by `cargo xtask docs` - do not edit by hand.
 
+For a fuller written guide, see the [crate README](../../crates/pamoja-dashboard/README.md).
+
 Local-first dashboard for a pamoja node.
 
 A node serves its own dashboard over its own WiFi hotspot, so a clinic worker, a

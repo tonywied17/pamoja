@@ -4,7 +4,8 @@
 
 CoAP transport for the pamoja device SDK, built on coap-lite over UDP.
 
-[crates.io](https://crates.io/crates/pamoja-coap) · [API docs](https://docs.rs/pamoja-coap) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-coap"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-coap"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 CoAP transport for the pamoja SDK.
 

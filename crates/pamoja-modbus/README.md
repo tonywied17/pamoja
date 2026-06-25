@@ -4,7 +4,8 @@
 
 Modbus RTU framing for pamoja: CRC-16/Modbus, the RTU ADU envelope, the standard request PDUs, and response decoding, so a long-cable RS485 field sensor speaks Modbus, no_std and allocation-free. The framing half ahead of the serial driver.
 
-[crates.io](https://crates.io/crates/pamoja-modbus) · [API docs](https://docs.rs/pamoja-modbus) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-modbus"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-modbus"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 Modbus RTU framing for the pamoja SDK.
 

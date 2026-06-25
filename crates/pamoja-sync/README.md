@@ -4,7 +4,8 @@
 
 Offline-first store-and-forward buffering for pamoja: durable queues behind the core Store trait.
 
-[crates.io](https://crates.io/crates/pamoja-sync) · [API docs](https://docs.rs/pamoja-sync) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-sync"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-sync"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 Offline-first store-and-forward buffering for pamoja.
 

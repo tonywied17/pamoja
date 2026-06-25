@@ -4,7 +4,8 @@
 
 Concrete sensor drivers for pamoja: the decode-and-configure half of common parts - BME280 temperature/pressure/humidity (Bosch compensation), DS18B20 1-Wire thermometer (datasheet temperature table + Maxim CRC-8), INA219 current/voltage/power monitor (TI calibration math), and ADS1115 ADC (config register and full-scale conversion) - each turning raw register bytes into physical readings exactly as the manufacturer datasheet specifies, no_std and allocation-free. The decode half ahead of the bus driver.
 
-[crates.io](https://crates.io/crates/pamoja-sensors) · [API docs](https://docs.rs/pamoja-sensors) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-sensors"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-sensors"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 Concrete sensor drivers for the pamoja SDK.
 

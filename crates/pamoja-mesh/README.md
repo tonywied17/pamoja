@@ -4,7 +4,8 @@
 
 Mesh packet framing for pamoja: an addressed, hop-limited, CRC-checked frame for cheap local and mesh radio (ESP-NOW and nRF24 style), with the relay and duplicate-suppression primitives that turn it into a flooding mesh, no_std and allocation-free. The framing half ahead of the radio driver.
 
-[crates.io](https://crates.io/crates/pamoja-mesh) · [API docs](https://docs.rs/pamoja-mesh) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-mesh"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-mesh"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 Mesh packet framing for the pamoja SDK.
 

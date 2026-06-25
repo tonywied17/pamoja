@@ -4,7 +4,8 @@
 
 CAN bus framing for pamoja: classic CAN 2.0 and CAN-FD frames with 11-bit and 29-bit identifiers and the discrete CAN-FD length encoding, plus J1939 identifier decoding for trucks, tractors, and gensets, no_std and allocation-free. The framing half ahead of the CAN controller.
 
-[crates.io](https://crates.io/crates/pamoja-can) · [API docs](https://docs.rs/pamoja-can) · [repository](https://github.com/molexxxx/pamoja)
+<a href="https://crates.io/crates/pamoja-can"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-can"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
 
 CAN bus framing for the pamoja SDK.
 
