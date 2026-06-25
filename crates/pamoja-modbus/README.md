@@ -52,15 +52,6 @@ let registers: Vec<u16> = reply.response().registers()?.collect();
 assert_eq!(registers, [0x022B, 0x0000, 0x0064]);
 ```
 
-## Modules
-
-- [adu](../../docs/pamoja-modbus/adu.md)
-- [crc](../../docs/pamoja-modbus/crc.md)
-- [error](../../docs/pamoja-modbus/error.md)
-- [function](../../docs/pamoja-modbus/function.md)
-- [pdu](../../docs/pamoja-modbus/pdu.md)
-- [response](../../docs/pamoja-modbus/response.md)
-
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

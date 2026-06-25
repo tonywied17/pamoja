@@ -62,13 +62,6 @@ assert_eq!(forwarded.hop_limit(), received.hop_limit() - 1);
 assert!(!seen.record(received.dedup_key()));
 ```
 
-## Modules
-
-- [crc](../../docs/pamoja-mesh/crc.md)
-- [error](../../docs/pamoja-mesh/error.md)
-- [frame](../../docs/pamoja-mesh/frame.md)
-- [seen](../../docs/pamoja-mesh/seen.md)
-
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

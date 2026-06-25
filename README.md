@@ -13,7 +13,7 @@
 
 <a href="https://pamoja.molex.cloud"><img height="34" alt="website" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-website.svg"></a>
 &nbsp;<a href="https://pamoja.molex.cloud/dashboard"><img height="34" alt="dashboard demo" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-dashboard.svg"></a>
-&nbsp;<a href="https://github.com/molexxxx/pamoja/tree/main/docs#api-reference"><img height="34" alt="API docs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docs.svg"></a>
+&nbsp;<a href="https://docs.rs/pamoja-core"><img height="34" alt="API docs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docs.svg"></a>
 
 </div>
 
@@ -229,7 +229,6 @@ Reach. Bindings beyond Node: Python, C#/.NET, Lua, WebAssembly, Kotlin, Swift, a
 ```
 crates/      Rust engine and capability crates (each crate's README is its doc landing)
 bindings/    per-language bindings (Node, Python, .NET today; more to come)
-docs/        generated per-module API pages and an index (cargo xtask docs)
 assets/      brand and logo
 ```
 

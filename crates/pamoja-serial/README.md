@@ -60,12 +60,6 @@ let m = cobs::decode(&framed[..n], &mut restored)?;
 assert_eq!(&restored[..m], payload);
 ```
 
-## Modules
-
-- [cobs](../../docs/pamoja-serial/cobs.md)
-- [error](../../docs/pamoja-serial/error.md)
-- [slip](../../docs/pamoja-serial/slip.md)
-
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

@@ -58,13 +58,6 @@ assert_eq!(Mode::Mode0.cpol_cpha(), (false, false));
 assert_eq!(Polarity::ActiveLow.level(true), Level::Low);
 ```
 
-## Modules
-
-- [error](../../docs/pamoja-gpio/error.md)
-- [i2c](../../docs/pamoja-gpio/i2c.md)
-- [pin](../../docs/pamoja-gpio/pin.md)
-- [spi](../../docs/pamoja-gpio/spi.md)
-
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

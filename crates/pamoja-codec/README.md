@@ -51,13 +51,6 @@ let encoded = codec.encode(&42).unwrap();
 assert_eq!(codec.decode(&encoded).unwrap(), 42);
 ```
 
-## Modules
-
-- [bytes](../../docs/pamoja-codec/bytes.md)
-- [cbor](../../docs/pamoja-codec/cbor.md)
-- [delta](../../docs/pamoja-codec/delta.md)
-- [json](../../docs/pamoja-codec/json.md)
-
 ## trait `Codec`
 
 Encodes and decodes values of type `T` to and from byte buffers.

@@ -42,11 +42,6 @@ assert!(!matches("room275/*/temperature", "room275/temperature"));
 assert_eq!(canonize("robot/sensor/**/*").as_deref(), Some("robot/sensor/*/**"));
 ```
 
-## Modules
-
-- [keyexpr](../../docs/pamoja-zenoh/keyexpr.md)
-- [transport](../../docs/pamoja-zenoh/transport.md)
-
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

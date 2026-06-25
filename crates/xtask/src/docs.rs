@@ -1,17 +1,13 @@
-//! Generate scoped Markdown API docs for the workspace crates from their rustdoc comments.
+//! Generate each crate's README from its rustdoc, for crates.io and GitHub.
 //!
-//! The crates carry thorough `///` and `//!` documentation; this turns that into committed,
-//! browsable Markdown under a single root `docs/` hub - one folder per crate, one file per
-//! module, plus an index - so the whole API is readable on GitHub without building rustdoc
-//! HTML. It parses the source with `syn` (no nightly needed), so it runs on the scoop
-//! toolchain. `cargo xtask docs` regenerates the tree; `cargo xtask docs --check`
-//! re-generates in memory and fails if the committed docs are stale, the way the dashboard
-//! i18n bundles are guarded. Each crate's own `README.md` (in its directory) is the single
-//! landing doc - the crates.io page and the scoped-doc entry point - carrying the registry
-//! buttons, the lib.rs overview, and links into the per-module pages under `docs/`; there is
-//! no duplicate crate index under `docs/`. A hand-written crate README (the dashboard's) is
-//! detected by the absence of the generated marker and left untouched. The canonical
-//! per-crate API stays on docs.rs.
+//! The crates carry thorough `///` and `//!` documentation. This turns each crate's lib.rs
+//! overview and the items it defines into a committed `README.md` in the crate directory -
+//! the crates.io page and the crate's landing doc - with registry buttons at the top. It
+//! parses the source with `syn` (no nightly needed), so it runs on the scoop toolchain.
+//! `cargo xtask docs` regenerates the READMEs; `cargo xtask docs --check` re-generates in
+//! memory and fails if a committed README is stale, the way the dashboard i18n bundles are
+//! guarded. A hand-written crate README (the dashboard's) is detected by the absence of the
+//! generated marker and left untouched. The full per-module API reference is docs.rs.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -20,30 +16,23 @@ use std::process::ExitCode;
 use quote::ToTokens;
 use syn::{Fields, ImplItem, Item, TraitItem, Visibility};
 
-/// Where the generated docs live, relative to the repo root.
-const DOCS_DIR: &str = "docs";
-
-/// The rendered output: the docs-hub files and the per-crate READMEs, each a list of
-/// (relative path, contents).
-type Rendered = (Vec<(String, String)>, Vec<(String, String)>);
-
-/// Run the `docs` task: generate the API Markdown, or `--check` to verify it is in sync.
+/// Run the `docs` task: regenerate the crate READMEs, or `--check` to verify they are in sync.
 ///
 /// # Arguments
 ///
-/// * `args` - `--check` verifies without writing; otherwise the docs are regenerated.
+/// * `args` - `--check` verifies without writing; otherwise the READMEs are regenerated.
 ///
 /// # Returns
 ///
-/// Success when the docs were written, or when the check found them in sync.
+/// Success when the READMEs were written, or when the check found them in sync.
 pub fn run(args: &[String]) -> ExitCode {
     let check = args.iter().any(|arg| arg == "--check");
     match render_all() {
-        Ok((docs, readmes)) => {
+        Ok(readmes) => {
             let ok = if check {
-                verify(&docs) & verify_crate_readmes(&readmes)
+                verify_crate_readmes(&readmes)
             } else {
-                write(&docs) & write_crate_readmes(&readmes)
+                write_crate_readmes(&readmes)
             };
             if ok {
                 ExitCode::SUCCESS
@@ -95,10 +84,10 @@ fn button(href: &str, alt: &str, file: &str) -> String {
     )
 }
 
-// The single per-crate README - the crates.io page and the scoped-doc landing in one file:
-// name, description, registry buttons, the lib.rs overview, links to the per-module API pages
-// under docs/, and the items lib.rs defines. The deep per-module reference stays under docs/.
-fn crate_readme(krate: &str, overview: &str, modules: &[String], items: &str) -> String {
+// The single per-crate README - the crates.io page and the crate's doc landing in one file:
+// name, description, registry buttons, the lib.rs overview, and the items lib.rs defines. The
+// full per-module API reference is docs.rs (linked by the buttons).
+fn crate_readme(krate: &str, overview: &str, items: &str) -> String {
     let mut out = format!("{GEN_MARKER}\n\n# {krate}\n\n");
     if let Some(description) = crate_description(krate) {
         out.push_str(&description);
@@ -139,13 +128,6 @@ fn crate_readme(krate: &str, overview: &str, modules: &[String], items: &str) ->
         out.push_str(overview);
         out.push_str("\n\n");
     }
-    if !modules.is_empty() {
-        out.push_str("## Modules\n\n");
-        for module in modules {
-            out.push_str(&format!("- [{module}](../../docs/{krate}/{module}.md)\n"));
-        }
-        out.push('\n');
-    }
     out.push_str(items);
     out.push_str("## License\n\nMIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.\n");
     out
@@ -173,41 +155,14 @@ fn lib_crates() -> Result<Vec<String>, String> {
     Ok(names)
 }
 
-// Renders every output file as (relative path under DOCS_DIR, contents).
-fn render_all() -> Result<Rendered, String> {
+// Renders the per-crate README for every library crate, as (path, contents).
+fn render_all() -> Result<Vec<(String, String)>, String> {
     let crates_root = repo_root().join("crates");
     let crates = lib_crates()?;
-    let mut files = Vec::new();
     let mut readmes = Vec::new();
-    let mut index = String::from("# API reference\n\n");
-    index.push_str("Each crate's own README (in its directory) is its landing page; the per-module pages below mirror its rustdoc. Generated by `cargo xtask docs` - do not edit by hand. The canonical per-crate reference is docs.rs.\n\n## Crates\n\n");
 
     for krate in &crates {
-        let src = crates_root.join(krate).join("src");
-        let mut modules = module_files(&src)?;
-        modules.sort();
-
-        for module in &modules {
-            let source = fs::read_to_string(src.join(format!("{module}.rs")))
-                .map_err(|e| format!("reading {krate}/{module}.rs: {e}"))?;
-            let parsed = syn::parse_file(&source)
-                .map_err(|e| format!("parsing {krate}/{module}.rs: {e}"))?;
-            let mut body = format!("# {krate}::{module}\n\n");
-            body.push_str(
-                "Generated from rustdoc by `cargo xtask docs` - do not edit by hand.\n\n",
-            );
-            let module_doc = doc_of(&parsed.attrs);
-            if !module_doc.is_empty() {
-                body.push_str(&module_doc);
-                body.push_str("\n\n");
-            }
-            body.push_str(&render_items(&parsed.items));
-            files.push((format!("{krate}/{module}.md"), body));
-        }
-
-        // The crate's own README is its single landing doc: overview, links to the module
-        // pages, and the items lib.rs defines itself. No duplicate index lives under docs/.
-        let lib = fs::read_to_string(src.join("lib.rs"))
+        let lib = fs::read_to_string(crates_root.join(krate).join("src/lib.rs"))
             .map_err(|e| format!("reading {krate}/lib.rs: {e}"))?;
         let lib_parsed =
             syn::parse_file(&lib).map_err(|e| format!("parsing {krate}/lib.rs: {e}"))?;
@@ -215,28 +170,13 @@ fn render_all() -> Result<Rendered, String> {
         let items = render_items(&lib_parsed.items);
         readmes.push((
             format!("crates/{krate}/README.md"),
-            crate_readme(krate, &overview, &modules, &items),
+            crate_readme(krate, &overview, &items),
         ));
-
-        index.push_str(&format!("- [{krate}](../crates/{krate}/README.md)\n"));
     }
-
-    files.push(("README.md".to_owned(), index));
-    Ok((files, readmes))
+    Ok(readmes)
 }
 
-// The top-level module source files of a crate (`src/*.rs` except lib.rs and main.rs).
-fn module_files(src: &Path) -> Result<Vec<String>, String> {
-    Ok(fs::read_dir(src)
-        .map_err(|e| format!("reading {}: {e}", src.display()))?
-        .filter_map(|entry| entry.ok().map(|e| e.path()))
-        .filter(|path| path.extension().and_then(|e| e.to_str()) == Some("rs"))
-        .filter_map(|path| path.file_stem().and_then(|s| s.to_str()).map(str::to_owned))
-        .filter(|name| name != "lib" && name != "main")
-        .collect())
-}
-
-// Renders the public items of a module (or lib.rs) to Markdown, in source order.
+// Renders the public items of lib.rs to Markdown, in source order.
 fn render_items(items: &[Item]) -> String {
     let mut out = String::new();
     for item in items {
@@ -458,46 +398,6 @@ fn tidy(sig: String) -> String {
         .replace("  ", " ")
 }
 
-fn write(files: &[(String, String)]) -> bool {
-    let base = repo_root().join(DOCS_DIR);
-    for (name, body) in files {
-        let path = base.join(name);
-        if let Some(parent) = path.parent() {
-            if let Err(err) = fs::create_dir_all(parent) {
-                eprintln!("xtask docs: creating {}: {err}", parent.display());
-                return false;
-            }
-        }
-        if let Err(err) = fs::write(&path, body) {
-            eprintln!("xtask docs: writing {}: {err}", path.display());
-            return false;
-        }
-    }
-    println!("docs: wrote {} files under {DOCS_DIR}/", files.len());
-    true
-}
-
-fn verify(files: &[(String, String)]) -> bool {
-    let base = repo_root().join(DOCS_DIR);
-    let mut stale = Vec::new();
-    for (name, body) in files {
-        match fs::read_to_string(base.join(name)) {
-            Ok(on_disk) if &on_disk == body => {}
-            _ => stale.push(name.clone()),
-        }
-    }
-    if stale.is_empty() {
-        println!("docs: API Markdown is in sync ({} files)", files.len());
-        true
-    } else {
-        eprintln!(
-            "xtask docs: stale or missing: {}\n  run `cargo xtask docs` and commit the result",
-            stale.join(", ")
-        );
-        false
-    }
-}
-
 // Whether a crate README on disk is hand-written (so the generator must not touch it).
 fn is_handwritten(path: &Path) -> bool {
     match fs::read_to_string(path) {
@@ -506,7 +406,7 @@ fn is_handwritten(path: &Path) -> bool {
     }
 }
 
-// Writes the per-crate crates.io READMEs, leaving any hand-written one (no marker) in place.
+// Writes the per-crate READMEs, leaving any hand-written one (no marker) in place.
 fn write_crate_readmes(readmes: &[(String, String)]) -> bool {
     let base = repo_root();
     let mut written = 0;

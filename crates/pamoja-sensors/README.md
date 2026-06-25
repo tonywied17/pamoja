@@ -35,14 +35,6 @@ sizes.
 - [`ina219`] - Texas Instruments high-side current, voltage, and power monitor.
 - [`ads1115`] - Texas Instruments 16-bit I2C analog-to-digital converter.
 
-## Modules
-
-- [ads1115](../../docs/pamoja-sensors/ads1115.md)
-- [bme280](../../docs/pamoja-sensors/bme280.md)
-- [ds18b20](../../docs/pamoja-sensors/ds18b20.md)
-- [error](../../docs/pamoja-sensors/error.md)
-- [ina219](../../docs/pamoja-sensors/ina219.md)
-
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

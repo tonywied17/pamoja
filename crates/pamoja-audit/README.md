@@ -55,11 +55,6 @@ let entries: Vec<Entry> = stored
 assert!(verify_chain(&public, &entries).is_ok());
 ```
 
-## Modules
-
-- [entry](../../docs/pamoja-audit/entry.md)
-- [log](../../docs/pamoja-audit/log.md)
-
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

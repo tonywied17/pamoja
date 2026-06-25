@@ -29,10 +29,6 @@ never fall behind the Rust surface.
 - All strings crossing the boundary are UTF-8. Inputs are borrowed for the
   duration of the call; returned pointers document their own lifetime.
 
-## Modules
-
-- [mqtt](../../docs/pamoja-ffi/mqtt.md)
-
 ## enum `PamojaStatus`
 
 The result of a fallible pamoja call.

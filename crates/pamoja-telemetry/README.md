@@ -47,11 +47,6 @@ assert_eq!(reporter.total(), 2);
 assert_eq!(reporter.snapshot().dropped, 1);
 ```
 
-## Modules
-
-- [event](../../docs/pamoja-telemetry/event.md)
-- [reporter](../../docs/pamoja-telemetry/reporter.md)
-
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.
