@@ -7,7 +7,8 @@
 //! `cargo xtask docs` regenerates the READMEs; `cargo xtask docs --check` re-generates in
 //! memory and fails if a committed README is stale, the way the dashboard i18n bundles are
 //! guarded. A hand-written crate README (the dashboard's) is detected by the absence of the
-//! generated marker and left untouched. The full per-module API reference is docs.rs.
+//! generated marker and left untouched. It also writes `docs/README.md`, a one-file API index
+//! that links each crate's docs.rs. The full per-module API reference is docs.rs.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -155,11 +156,15 @@ fn lib_crates() -> Result<Vec<String>, String> {
     Ok(names)
 }
 
-// Renders the per-crate README for every library crate, as (path, contents).
+// Renders the per-crate READMEs plus a top API index (a TOC linking each crate's docs.rs),
+// as (path, contents).
 fn render_all() -> Result<Vec<(String, String)>, String> {
     let crates_root = repo_root().join("crates");
     let crates = lib_crates()?;
     let mut readmes = Vec::new();
+    let mut index = format!(
+        "{GEN_MARKER}\n\n# API reference\n\nThe full API for each crate is on docs.rs; this index links them all. Each crate's own README (in its directory) is its overview and crates.io page.\n\n## Crates\n\n"
+    );
 
     for krate in &crates {
         let lib = fs::read_to_string(crates_root.join(krate).join("src/lib.rs"))
@@ -172,7 +177,14 @@ fn render_all() -> Result<Vec<(String, String)>, String> {
             format!("crates/{krate}/README.md"),
             crate_readme(krate, &overview, &items),
         ));
+        match crate_description(krate) {
+            Some(desc) => {
+                index.push_str(&format!("- [{krate}](https://docs.rs/{krate}) - {desc}\n"))
+            }
+            None => index.push_str(&format!("- [{krate}](https://docs.rs/{krate})\n")),
+        }
     }
+    readmes.push(("docs/README.md".to_owned(), index));
     Ok(readmes)
 }
 
@@ -415,13 +427,19 @@ fn write_crate_readmes(readmes: &[(String, String)]) -> bool {
         if path.exists() && is_handwritten(&path) {
             continue;
         }
+        if let Some(parent) = path.parent() {
+            if let Err(err) = fs::create_dir_all(parent) {
+                eprintln!("xtask docs: creating {}: {err}", parent.display());
+                return false;
+            }
+        }
         if let Err(err) = fs::write(&path, body) {
             eprintln!("xtask docs: writing {}: {err}", path.display());
             return false;
         }
         written += 1;
     }
-    println!("docs: wrote {written} crate READMEs (hand-written ones kept)");
+    println!("docs: wrote {written} files (crate READMEs + API index; hand-written ones kept)");
     true
 }
 
