@@ -59,6 +59,26 @@ pub enum Viz {
 }
 
 impl Viz {
+    /// Every graphic, in a stable order, so a caller can enumerate the available
+    /// visualizations (and a build can check each one still renders).
+    pub const ALL: [Viz; 15] = [
+        Viz::Spark,
+        Viz::Gauge,
+        Viz::Dial,
+        Viz::Bar,
+        Viz::Thermometer,
+        Viz::Droplet,
+        Viz::Battery,
+        Viz::Wind,
+        Viz::Sun,
+        Viz::Wave,
+        Viz::Switch,
+        Viz::Valve,
+        Viz::Chain,
+        Viz::Mesh,
+        Viz::Count,
+    ];
+
     /// Returns the dashboard visualization kind this graphic renders as.
     ///
     /// The dashboard's renderer dispatches on a small set of internal kind strings; a
@@ -428,11 +448,38 @@ mod tests {
     use super::*;
 
     #[test]
-    fn viz_kinds_map_friendly_names_to_render_kinds() {
-        assert_eq!(Viz::Gauge.kind(), "radial");
-        assert_eq!(Viz::Thermometer.kind(), "therm");
-        assert_eq!(Viz::Switch.kind(), "chip");
-        assert_eq!(Viz::Bar.kind(), "bar");
+    fn every_viz_maps_to_its_documented_render_kind() {
+        // The full set of graphics and the render kind each draws as. ALL and this table must
+        // agree, and every kind is distinct, so a new graphic cannot silently collide or be
+        // left out of the enumerated set.
+        let table = [
+            (Viz::Spark, "spark"),
+            (Viz::Gauge, "radial"),
+            (Viz::Dial, "dial"),
+            (Viz::Bar, "bar"),
+            (Viz::Thermometer, "therm"),
+            (Viz::Droplet, "droplet"),
+            (Viz::Battery, "battery"),
+            (Viz::Wind, "wind"),
+            (Viz::Sun, "sun"),
+            (Viz::Wave, "wave"),
+            (Viz::Switch, "chip"),
+            (Viz::Valve, "valve"),
+            (Viz::Chain, "chain"),
+            (Viz::Mesh, "mesh"),
+            (Viz::Count, "count"),
+        ];
+        assert_eq!(
+            table.len(),
+            Viz::ALL.len(),
+            "the table covers every variant in ALL"
+        );
+        let mut kinds = std::collections::HashSet::new();
+        for (viz, kind) in table {
+            assert_eq!(viz.kind(), kind);
+            assert!(Viz::ALL.contains(&viz), "{kind} is in ALL");
+            assert!(kinds.insert(kind), "{kind} is unique");
+        }
     }
 
     #[test]

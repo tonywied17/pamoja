@@ -196,10 +196,10 @@ into the binary with `include_bytes!`.
 - `cargo run -p pamoja-dashboard --example gateway` - run the real-`Fleet` reference gateway.
 - `cargo xtask dashboard i18n --check` - validate the locale bundles.
 - `cargo xtask dashboard footprint` - check the gzipped page-load budget.
-- `cargo xtask docs` - regenerate the workspace API reference under the repo's `docs/`.
+- `cargo xtask docs` - regenerate the crate READMEs and the workspace API index under `docs/`.
 
 ## API reference
 
-The canonical per-item API is on docs.rs once the crate is published. A Markdown mirror of the
-whole workspace, generated from the rustdoc by `cargo xtask docs`, lives in the repo under
-[`docs/pamoja-dashboard/`](../../docs/pamoja-dashboard/README.md).
+The canonical per-item API is on docs.rs once the crate is published. `cargo xtask docs`
+regenerates each crate's README from its rustdoc, plus a workspace API index that links every
+crate's docs, under [`docs/`](../../docs/README.md).

@@ -103,12 +103,19 @@
 //! The local-first dashboard (the `pamoja-dashboard` crate) draws a built-in set of sensor
 //! types. When a deployment measures something beyond it, the profile *declares* the extra
 //! as a [`Presentation`], and the dashboard renders it with no page change. Each
-//! [`ElementSpec`] names a stable key and unit, the graphic to draw it with ([`Viz`] - a
-//! gauge, bar, dial, sparkline, switch, valve, and so on), an optional safe band, a label
-//! (with optional per-locale labels), whether it is a node stat, and which groups it is
-//! offered on ([`Scope`]). A [`Theme`] tints the console, and
+//! [`ElementSpec`] names a stable key and unit, the graphic to draw it with ([`Viz`]), an
+//! optional safe band, a label (with optional per-locale labels), whether it is a node
+//! stat, and which groups it is offered on ([`Scope`]). A [`Theme`] tints the console, and
 //! [`with_message`](Presentation::with_message) localizes any custom state or event code
 //! the profile emits.
+//!
+//! The full set of graphics is [`Viz::ALL`], fifteen hand-drawn instruments: a
+//! [`Spark`](Viz::Spark)line, a 270-degree [`Gauge`](Viz::Gauge), a needle
+//! [`Dial`](Viz::Dial), a [`Bar`](Viz::Bar), a [`Thermometer`](Viz::Thermometer), a
+//! [`Droplet`](Viz::Droplet), a [`Battery`](Viz::Battery), a [`Wind`](Viz::Wind) rotor, a
+//! [`Sun`](Viz::Sun), an acoustic [`Wave`](Viz::Wave), a [`Switch`](Viz::Switch) chip, a
+//! [`Valve`](Viz::Valve), a hash [`Chain`](Viz::Chain), a [`Mesh`](Viz::Mesh) map, and a
+//! [`Count`](Viz::Count). Each renders to a stable kind ([`Viz::kind`]) the page draws.
 //!
 //! ```
 //! use pamoja_profile::{ElementSpec, Presentation, Profile, Scope, Theme, Viz};
@@ -133,7 +140,8 @@
 //! );
 //!
 //! let turbidity = &profile.presentation.as_ref().unwrap().elements[0];
-//! assert_eq!(turbidity.viz.kind(), "radial"); // the gauge kind the page draws
+//! assert_eq!(turbidity.viz.kind(), "radial"); // Gauge draws as the radial arch
+//! assert_eq!(Viz::ALL.len(), 15);             // fifteen graphics to choose from
 //! ```
 //!
 //! # Show it on a dashboard, wire it to your project

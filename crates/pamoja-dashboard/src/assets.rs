@@ -334,6 +334,26 @@ mod tests {
     }
 
     #[test]
+    fn every_viz_kind_is_known_to_the_page_renderer() {
+        // The Rust `Viz` vocabulary and the page's renderer are one contract across languages:
+        // every kind a profile can choose must be one `viz/index.js` can draw, or a custom
+        // element would silently fall back to a sparkline. This checks the embedded renderer
+        // references each kind, so the two cannot drift apart unnoticed.
+        let (_, bytes) = Assets::Embedded
+            .get("/app/lib/viz/index.js")
+            .expect("viz/index.js is embedded");
+        let js = String::from_utf8(bytes).expect("viz/index.js is utf8");
+        for viz in pamoja_profile::Viz::ALL {
+            let token = format!("'{}'", viz.kind());
+            assert!(
+                js.contains(&token),
+                "the page renderer does not know viz kind {}",
+                viz.kind()
+            );
+        }
+    }
+
+    #[test]
     fn embedded_has_all_six_seed_locales() {
         for locale in ["en", "sw", "ar", "fr", "pt", "hi"] {
             let path = format!("/app/i18n/{locale}.json");
