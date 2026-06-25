@@ -30,7 +30,7 @@ You do not have to be an engineer to use it, and you do not give anything up if 
 **Where to start**
 
 - **Try it with no hardware.** The simulators (`pamoja-sim`) stand in for real sensors, radios, and even a robot, so you can build and test with nothing plugged in.
-- **Building something?** Skip to [A quick look](#a-quick-look) and the [crate list](#engine-and-capability-crates), and add only the pieces you need.
+- **Building something?** Skip to the [crate list](#engine-and-capability-crates) and add only the pieces you need - each crate's README is its getting-started guide.
 - **On a microcontroller or in a rural clinic?** That is the design target, not an afterthought - see [Why it exists](#why-it-exists).
 
 ## What is pamoja
@@ -111,77 +111,11 @@ today.
 
 CI runs formatting, clippy, and tests for the workspace, builds the Node, Python, and .NET bindings, and fails if any generated surface (the binding contracts and the C header) drifts from the Rust source. Release workflows publish to crates.io, npm, PyPI, and NuGet on a version tag. Everything past this is on the roadmap below.
 
-## A quick look
-
-TypeScript, through the ergonomic facade:
-
-```ts
-import { MqttClient } from '@pamoja/core'
-
-const client = new MqttClient({ clientId: 'sensor-1', host: 'localhost', port: 1883 })
-await client.connect()
-await client.subscribe('sensors/+/temperature')
-await client.publish('sensors/1/temperature', '21.5')
-
-for await (const message of client) {
-  console.log(message.topic, message.payload.toString())
-}
-```
-
-The same shape in Python, through its async facade:
-
-```python
-import asyncio
-from pamoja import MqttClient
-
-async def main():
-    async with MqttClient(client_id="sensor-1", host="localhost", port=1883) as client:
-        await client.subscribe("sensors/+/temperature")
-        await client.publish("sensors/1/temperature", "21.5")
-        async for message in client:
-            print(message.topic, message.payload.decode())
-
-asyncio.run(main())
-```
-
-The same shape in C#, through its async facade:
-
-```csharp
-using Pamoja.Core;
-
-await using var client = new MqttClient(new MqttClientOptions
-{
-    ClientId = "sensor-1",
-    Host = "localhost",
-    Port = 1883,
-});
-await client.ConnectAsync();
-await client.SubscribeAsync("sensors/+/temperature");
-await client.PublishAsync("sensors/1/temperature", "21.5");
-
-await foreach (var message in client)
-{
-    Console.WriteLine($"{message.Topic}: {message.Payload.Length} bytes");
-}
-```
-
-The same thing in Rust:
-
-```rust
-use pamoja_core::Transport;
-use pamoja_mqtt::{MqttConfig, MqttTransport};
-
-let mut transport = MqttTransport::new(MqttConfig::new("sensor-1", "localhost", 1883));
-transport.connect().await?;
-transport.subscribe("sensors/+/temperature").await?;
-transport.send("sensors/1/temperature", b"21.5").await?;
-```
-
 ## Architecture
 
 Every domain capability is a separate crate behind a trait defined in the core. The core knows about `Transport`, `Device`, `Sensor`, `Actuator`, `Store`, and the event bus; it knows nothing about MQTT or CAN specifically. Concrete crates implement those traits and are pulled in only when needed, so nobody pays for what they do not use, and on a microcontroller you compile in two crates and nothing else.
 
-This separation is literal in Rust: `pamoja-core` defines the traits, and each transport (`pamoja-mqtt`, `pamoja-coap`) is its own crate. That is why the Rust example above pulls `MqttTransport` from `pamoja-mqtt`, not from the core. The language bindings are heading to the same shape, with capability-scoped packages (`@pamoja/mqtt`, `pamoja-mqtt`, `Pamoja.Mqtt`) sitting next to the core package. Today, while the polyglot release pipeline is being proven end to end with a single capability, that first transport ships inside each language's `core` package, which is why the TypeScript, Python, and C# examples above import `MqttClient` from it. Splitting the bindings into scoped packages is on the roadmap.
+This separation is literal in Rust: `pamoja-core` defines the traits, and each transport (`pamoja-mqtt`, `pamoja-coap`) is its own crate, so Rust code pulls `MqttTransport` from `pamoja-mqtt`, not from the core. The language bindings are heading to the same shape, with capability-scoped packages (`@pamoja/mqtt`, `pamoja-mqtt`, `Pamoja.Mqtt`) sitting next to the core package. Today, while the polyglot release pipeline is being proven end to end with a single capability, that first transport ships inside each language's `core` package, so the bindings import `MqttClient` from core for now. Splitting the bindings into scoped packages is on the roadmap.
 
 ```
         bindings (two tiers: generated contract + hand-written facade)
@@ -229,7 +163,7 @@ Reach. Bindings beyond Node: Python, C#/.NET, Lua, WebAssembly, Kotlin, Swift, a
 ```
 crates/      Rust engine and capability crates (each crate's README is its doc landing)
 bindings/    per-language bindings (Node, Python, .NET today; more to come)
-docs/        a generated API index linking each crate's docs.rs (cargo xtask docs)
+docs/        a generated API index linking each crate's README (cargo xtask docs)
 assets/      brand and logo
 ```
 

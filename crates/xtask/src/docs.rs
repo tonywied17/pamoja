@@ -8,7 +8,7 @@
 //! memory and fails if a committed README is stale, the way the dashboard i18n bundles are
 //! guarded. A hand-written crate README (the dashboard's) is detected by the absence of the
 //! generated marker and left untouched. It also writes `docs/README.md`, a one-file API index
-//! that links each crate's docs.rs. The full per-module API reference is docs.rs.
+//! that links each crate's README (which in turn buttons through to docs.rs).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -156,14 +156,14 @@ fn lib_crates() -> Result<Vec<String>, String> {
     Ok(names)
 }
 
-// Renders the per-crate READMEs plus a top API index (a TOC linking each crate's docs.rs),
+// Renders the per-crate READMEs plus a top API index (a TOC linking each crate's README),
 // as (path, contents).
 fn render_all() -> Result<Vec<(String, String)>, String> {
     let crates_root = repo_root().join("crates");
     let crates = lib_crates()?;
     let mut readmes = Vec::new();
     let mut index = format!(
-        "{GEN_MARKER}\n\n# API reference\n\nThe full API for each crate is on docs.rs; this index links them all. Each crate's own README (in its directory) is its overview and crates.io page.\n\n## Crates\n\n"
+        "{GEN_MARKER}\n\n# API reference\n\nEach crate's README is its overview, examples, and crates.io page, with a button to the full per-item API on docs.rs. This index links them all.\n\n## Crates\n\n"
     );
 
     for krate in &crates {
@@ -178,10 +178,10 @@ fn render_all() -> Result<Vec<(String, String)>, String> {
             crate_readme(krate, &overview, &items),
         ));
         match crate_description(krate) {
-            Some(desc) => {
-                index.push_str(&format!("- [{krate}](https://docs.rs/{krate}) - {desc}\n"))
-            }
-            None => index.push_str(&format!("- [{krate}](https://docs.rs/{krate})\n")),
+            Some(desc) => index.push_str(&format!(
+                "- [{krate}](../crates/{krate}/README.md) - {desc}\n"
+            )),
+            None => index.push_str(&format!("- [{krate}](../crates/{krate}/README.md)\n")),
         }
     }
     readmes.push(("docs/README.md".to_owned(), index));
