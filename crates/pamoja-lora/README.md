@@ -45,6 +45,10 @@ let airtime = link.airtime_us(20); // time on air of a 20-byte payload
 assert_eq!(link.min_off_time_us(20, 10), airtime * 99);
 ```
 
+## Modules
+
+- [link](../../docs/pamoja-lora/link.md)
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

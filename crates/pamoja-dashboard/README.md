@@ -1,5 +1,8 @@
 # pamoja-dashboard
 
+<a href="https://crates.io/crates/pamoja-dashboard"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
+<a href="https://docs.rs/pamoja-dashboard"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
+
 A local-first dashboard a device serves over its own WiFi hotspot. A clinic worker, a
 farmer, or a water committee opens a page on whatever cheap phone they have and sees their
 fleet - sensors, alarms, battery, signal - in their own language, with no internet and no

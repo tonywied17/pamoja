@@ -49,6 +49,141 @@ match ladder.send("sensors/1/temperature", b"21.5").await? {
 }
 ```
 
+## enum `Delivery`
+
+The outcome of a [`TransportLadder::send`].
+
+- `Sent` - The message was delivered immediately over one of the ladder's rungs.
+- `Buffered` - No rung accepted the message, so it was buffered for a later [`flush`](TransportLadder::flush).
+
+## struct `TransportLadder`
+
+An ordered set of transports backed by an offline buffer.
+
+Rungs are tried in the order they are added, so the cheapest, most-preferred
+link is added first. A send that no rung accepts is buffered in the
+[`Store`](pamoja_core::Store) and replayed by [`flush`](Self::flush).
+
+### `TransportLadder <S>::new`
+
+Creates an empty ladder that buffers into `buffer`.
+
+**Arguments**
+
+* `buffer` - the durable queue that holds messages while no rung is
+  reachable.
+
+**Returns**
+
+A ladder with no rungs; add them with [`rung`](Self::rung).
+
+```rust
+fn new(buffer: S) -> Self
+```
+
+### `TransportLadder <S>::rung`
+
+Adds a rung, lowest-cost first.
+
+**Arguments**
+
+* `transport` - a transport to try. Rungs added earlier are preferred, so
+  add the cheapest link first and the costliest fallback last.
+
+**Returns**
+
+The ladder, for chaining.
+
+```rust
+fn rung(mut self, transport: impl Transport + 'static) -> Self
+```
+
+### `TransportLadder <S>::connect`
+
+Connects every rung, best-effort.
+
+A rung that fails to connect is left unreachable rather than failing the
+whole ladder; sends simply fall through to the next rung or the buffer.
+
+**Returns**
+
+`Ok(())` once every rung has been given the chance to connect.
+
+**Errors**
+
+This call is best-effort and currently always returns `Ok(())`.
+
+```rust
+async fn connect(&mut self) -> Result <()>
+```
+
+### `TransportLadder <S>::send`
+
+Sends a payload, falling back down the rungs and then to the buffer.
+
+If the buffer is empty, each rung is tried in order and the first to accept
+the message delivers it. If every rung fails, or the buffer already holds a
+backlog, the message is buffered to preserve order.
+
+**Arguments**
+
+* `topic` - the destination topic.
+* `payload` - the bytes to send.
+
+**Returns**
+
+[`Delivery::Sent`] if a rung delivered the message, or [`Delivery::Buffered`]
+if it was queued for a later [`flush`](Self::flush).
+
+**Errors**
+
+Returns [`Error::Io`](pamoja_core::Error::Io) if the message must be buffered
+but the store cannot be written.
+
+```rust
+async fn send(&mut self, topic: &str, payload: &[u8]) -> Result <Delivery>
+```
+
+### `TransportLadder <S>::flush`
+
+Drains the buffer across the rungs, oldest record first.
+
+Each record is sent before it is removed, so the first record no rung can
+deliver halts the drain and leaves it, and everything after it, buffered in
+order for a later retry.
+
+**Returns**
+
+The number of records forwarded before the buffer emptied or a rung refused
+one.
+
+**Errors**
+
+Returns [`Error::Io`](pamoja_core::Error::Io) if the store cannot be read or
+written, or [`Error::Codec`](pamoja_core::Error::Codec) if a buffered record
+cannot be decoded.
+
+```rust
+async fn flush(&mut self) -> Result <usize>
+```
+
+### `TransportLadder <S>::buffered`
+
+Returns how many messages are currently buffered.
+
+**Returns**
+
+The number of records waiting for a [`flush`](Self::flush).
+
+**Errors**
+
+Returns [`Error::Io`](pamoja_core::Error::Io) if the store length cannot be
+read.
+
+```rust
+async fn buffered(&self) -> Result <usize>
+```
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

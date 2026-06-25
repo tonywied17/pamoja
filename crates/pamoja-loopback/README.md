@@ -22,6 +22,12 @@ on any transport is delivered to every transport whose subscriptions match.
 [`Faulty`] decorates any transport to inject send failures, so degraded-link
 behavior such as store-and-forward retry can be tested deterministically.
 
+## Modules
+
+- [broker](../../docs/pamoja-loopback/broker.md)
+- [faulty](../../docs/pamoja-loopback/faulty.md)
+- [transport](../../docs/pamoja-loopback/transport.md)
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

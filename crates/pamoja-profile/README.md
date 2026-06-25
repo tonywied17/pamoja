@@ -51,6 +51,12 @@ assert_eq!(reaction.actuator, Some(true));
 assert!(matches!(reaction.alert, Some(Alert::OutOfRange { .. })));
 ```
 
+## Modules
+
+- [control](../../docs/pamoja-profile/control.md)
+- [node](../../docs/pamoja-profile/node.md)
+- [profile](../../docs/pamoja-profile/profile.md)
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

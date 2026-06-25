@@ -48,6 +48,14 @@ let bytes = cmd.to_cdr();
 assert_eq!(Twist::from_cdr(&bytes), Some(cmd));
 ```
 
+## Modules
+
+- [bridge](../../docs/pamoja-ros2/bridge.md)
+- [key](../../docs/pamoja-ros2/key.md)
+- [msg](../../docs/pamoja-ros2/msg.md)
+- [name](../../docs/pamoja-ros2/name.md)
+- [typehash](../../docs/pamoja-ros2/typehash.md)
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

@@ -26,6 +26,12 @@ a [`Transport`](pamoja_core::Transport) to forward them when a link appears.
 transport in order, removing each only after it is sent, so a failed link
 loses nothing.
 
+## Modules
+
+- [file](../../docs/pamoja-sync/file.md)
+- [forward](../../docs/pamoja-sync/forward.md)
+- [memory](../../docs/pamoja-sync/memory.md)
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

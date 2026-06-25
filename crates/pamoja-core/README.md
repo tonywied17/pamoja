@@ -51,6 +51,14 @@ impl Sensor for Thermometer {
 let _probe = Thermometer { celsius: 20.5 };
 ```
 
+## Modules
+
+- [bus](../../docs/pamoja-core/bus.md)
+- [device](../../docs/pamoja-core/device.md)
+- [error](../../docs/pamoja-core/error.md)
+- [store](../../docs/pamoja-core/store.md)
+- [transport](../../docs/pamoja-core/transport.md)
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

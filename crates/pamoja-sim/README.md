@@ -49,6 +49,13 @@ while let Ok(reading) = probe.read().await {
 assert_eq!(log.commands(), vec![false, true]);
 ```
 
+## Modules
+
+- [actuator](../../docs/pamoja-sim/actuator.md)
+- [link](../../docs/pamoja-sim/link.md)
+- [robot](../../docs/pamoja-sim/robot.md)
+- [sensor](../../docs/pamoja-sim/sensor.md)
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

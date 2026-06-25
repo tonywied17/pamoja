@@ -51,6 +51,55 @@ let encoded = codec.encode(&42).unwrap();
 assert_eq!(codec.decode(&encoded).unwrap(), 42);
 ```
 
+## Modules
+
+- [bytes](../../docs/pamoja-codec/bytes.md)
+- [cbor](../../docs/pamoja-codec/cbor.md)
+- [delta](../../docs/pamoja-codec/delta.md)
+- [json](../../docs/pamoja-codec/json.md)
+
+## trait `Codec`
+
+Encodes and decodes values of type `T` to and from byte buffers.
+
+A codec is the bridge between in-memory values and the bytes carried by a
+[`Transport`](pamoja_core::Transport) or persisted by a
+[`Store`](pamoja_core::Store).
+
+### `fn encode(&self, value: &T) -> Result <Vec <u8>>`
+
+Encodes a value into a byte buffer.
+
+**Arguments**
+
+* `value` - the value to serialize.
+
+**Returns**
+
+A byte buffer containing the encoded representation of `value`.
+
+**Errors**
+
+Returns [`Error::Codec`](pamoja_core::Error::Codec) if the value cannot
+be encoded.
+
+### `fn decode(&self, bytes: &[u8]) -> Result <T>`
+
+Decodes a value from a byte buffer.
+
+**Arguments**
+
+* `bytes` - the encoded representation to deserialize.
+
+**Returns**
+
+The value decoded from `bytes`.
+
+**Errors**
+
+Returns [`Error::Codec`](pamoja_core::Error::Codec) if `bytes` is not a
+valid encoding of `T`.
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

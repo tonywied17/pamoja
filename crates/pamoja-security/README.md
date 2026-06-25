@@ -48,6 +48,11 @@ assert!(public.verify(reading, &signature).is_ok());
 assert!(public.verify(b"fridge-1: 9.9C @ 1700", &signature).is_err());
 ```
 
+## Modules
+
+- [identity](../../docs/pamoja-security/identity.md)
+- [signature](../../docs/pamoja-security/signature.md)
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

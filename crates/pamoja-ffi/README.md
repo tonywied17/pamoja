@@ -29,6 +29,56 @@ never fall behind the Rust surface.
 - All strings crossing the boundary are UTF-8. Inputs are borrowed for the
   duration of the call; returned pointers document their own lifetime.
 
+## Modules
+
+- [mqtt](../../docs/pamoja-ffi/mqtt.md)
+
+## enum `PamojaStatus`
+
+The result of a fallible pamoja call.
+
+A return of [`PamojaStatus::Ok`] means success; any other value indicates a
+failure whose description is available from [`pamoja_last_error_message`] on
+the same thread.
+
+- `Ok` - The call succeeded.
+- `Transport` - A transport-level failure while connecting, sending, or receiving.
+- `Io` - A device or peripheral input/output operation failed.
+- `Codec` - A payload could not be encoded or decoded.
+- `Closed` - The operation targeted a resource that is closed or disconnected.
+- `Unsupported` - The requested capability is not compiled into this build.
+- `InvalidArgument` - An argument was null or otherwise invalid, for example non-UTF-8 text.
+- `Other` - A failure that does not map onto a more specific status.
+- `Panic` - A Rust panic was caught at the boundary; the call had no effect.
+
+## fn `pamoja_last_error_message`
+
+Returns the calling thread's most recent error message, or null if none.
+
+**Returns**
+
+A pointer to a null-terminated UTF-8 string owned by the library, valid until
+the next failing call on the same thread, or null if no error has been
+recorded. The caller must not free it and should copy it before making another
+pamoja call on this thread.
+
+```rust
+extern "C" fn pamoja_last_error_message() -> * const c_char
+```
+
+## fn `pamoja_version`
+
+Returns the version string of the native pamoja library.
+
+**Returns**
+
+A pointer to a static null-terminated UTF-8 string owned by the library. The
+caller must not free it; it is valid for the lifetime of the process.
+
+```rust
+extern "C" fn pamoja_version() -> * const c_char
+```
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

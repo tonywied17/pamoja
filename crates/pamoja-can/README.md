@@ -43,6 +43,13 @@ assert_eq!(message.pgn(), 61_444);
 assert!(message.is_broadcast());
 ```
 
+## Modules
+
+- [error](../../docs/pamoja-can/error.md)
+- [frame](../../docs/pamoja-can/frame.md)
+- [id](../../docs/pamoja-can/id.md)
+- [j1939](../../docs/pamoja-can/j1939.md)
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

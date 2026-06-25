@@ -64,6 +64,14 @@ assert_eq!(&reading, b"tank: 18%");
 assert!(b.open(&sealed, &mut reading.clone(), b"well-3").is_err());
 ```
 
+## Modules
+
+- [aead](../../docs/pamoja-session/aead.md)
+- [error](../../docs/pamoja-session/error.md)
+- [kdf](../../docs/pamoja-session/kdf.md)
+- [kex](../../docs/pamoja-session/kex.md)
+- [session](../../docs/pamoja-session/session.md)
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

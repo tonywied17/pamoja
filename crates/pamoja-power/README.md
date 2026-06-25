@@ -42,6 +42,11 @@ assert_eq!(plan.mode(0.8), PowerMode::Active);
 assert_eq!(plan.interval(0.1), Duration::from_secs(3600));
 ```
 
+## Modules
+
+- [duty](../../docs/pamoja-power/duty.md)
+- [plan](../../docs/pamoja-power/plan.md)
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

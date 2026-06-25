@@ -76,6 +76,36 @@ let cooler_on = fridge.update(probe.update(7.8));
 assert!(cooler_on);
 ```
 
+## Modules
+
+- [anomaly](../../docs/pamoja-kit/anomaly.md)
+- [arm](../../docs/pamoja-kit/arm.md)
+- [calibration](../../docs/pamoja-kit/calibration.md)
+- [chassis](../../docs/pamoja-kit/chassis.md)
+- [complementary](../../docs/pamoja-kit/complementary.md)
+- [debounce](../../docs/pamoja-kit/debounce.md)
+- [depletion](../../docs/pamoja-kit/depletion.md)
+- [drive](../../docs/pamoja-kit/drive.md)
+- [drivers](../../docs/pamoja-kit/drivers.md)
+- [geo](../../docs/pamoja-kit/geo.md)
+- [imu](../../docs/pamoja-kit/imu.md)
+- [kalman](../../docs/pamoja-kit/kalman.md)
+- [median](../../docs/pamoja-kit/median.md)
+- [motion](../../docs/pamoja-kit/motion.md)
+- [navigate](../../docs/pamoja-kit/navigate.md)
+- [odometry](../../docs/pamoja-kit/odometry.md)
+- [pid](../../docs/pamoja-kit/pid.md)
+- [ramp](../../docs/pamoja-kit/ramp.md)
+- [safety](../../docs/pamoja-kit/safety.md)
+- [shape](../../docs/pamoja-kit/shape.md)
+- [smoothing](../../docs/pamoja-kit/smoothing.md)
+- [surge](../../docs/pamoja-kit/surge.md)
+- [thermostat](../../docs/pamoja-kit/thermostat.md)
+- [trend](../../docs/pamoja-kit/trend.md)
+- [units](../../docs/pamoja-kit/units.md)
+- [weather](../../docs/pamoja-kit/weather.md)
+- [window](../../docs/pamoja-kit/window.md)
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

@@ -55,6 +55,14 @@ assert!(rx.confirmed());
 assert_eq!(rx.payload(), b"temp=4.8");
 ```
 
+## Modules
+
+- [crypto](../../docs/pamoja-lorawan/crypto.md)
+- [error](../../docs/pamoja-lorawan/error.md)
+- [frame](../../docs/pamoja-lorawan/frame.md)
+- [join](../../docs/pamoja-lorawan/join.md)
+- [session](../../docs/pamoja-lorawan/session.md)
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

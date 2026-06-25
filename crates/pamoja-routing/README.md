@@ -55,6 +55,10 @@ assert_eq!(router.forward(0x09), Forward::Relay(0x07));
 assert_eq!(router.forward(0x20), Forward::Flood);
 ```
 
+## Modules
+
+- [router](../../docs/pamoja-routing/router.md)
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

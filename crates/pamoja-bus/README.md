@@ -19,6 +19,56 @@ events it missed and resumes from the most recent ones. This keeps a slow
 consumer from holding memory without bound, which matters on constrained
 devices.
 
+## struct `BroadcastBus`
+
+A typed publish/subscribe bus that broadcasts each event to all subscribers.
+
+Every handle can both publish and receive. Use [`subscribe`](BroadcastBus::subscribe)
+to add an independent consumer; an event published after a handle subscribes
+is delivered to it. A subscriber only sees events published after it
+subscribed, mirroring a live pub/sub channel.
+
+**Examples**
+
+```
+use pamoja_core::EventBus;
+use pamoja_bus::BroadcastBus;
+
+let bus = BroadcastBus::new(16);
+let mut subscriber = bus.subscribe();
+bus.publish("reading").await?;
+assert_eq!(subscriber.next_event().await?, Some("reading"));
+```
+
+### `BroadcastBus <E>::new`
+
+Creates a bus buffering up to `capacity` unread events per subscriber.
+
+**Arguments**
+
+* `capacity` - the per-subscriber buffer depth; a subscriber further behind
+  than this drops the events it missed. Values below one are raised to one.
+
+**Returns**
+
+A bus with one handle that can publish and receive.
+
+```rust
+fn new(capacity: usize) -> Self
+```
+
+### `BroadcastBus <E>::subscribe`
+
+Creates another handle to the same bus with its own independent subscription.
+
+**Returns**
+
+A handle that receives events published after this call and can also publish.
+
+```rust
+fn subscribe(&self) -> Self
+```
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.

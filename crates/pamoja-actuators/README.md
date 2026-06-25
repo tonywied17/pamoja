@@ -27,6 +27,11 @@ Simple on/off actuators (relays, solenoid valves, a pump switched through a
 transistor) need no driver of their own: they are a GPIO line, modelled by the pin
 and logic-level types in [`pamoja-gpio`](https://docs.rs/pamoja-gpio).
 
+## Modules
+
+- [pca9685](../../docs/pamoja-actuators/pca9685.md)
+- [stepper](../../docs/pamoja-actuators/stepper.md)
+
 ## License
 
 MIT - part of the [pamoja](https://github.com/molexxxx/pamoja) workspace: one memory-safe Rust core with bindings for every language.
