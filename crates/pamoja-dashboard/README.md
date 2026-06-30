@@ -205,6 +205,35 @@ The page asks the device which languages it embedded (`GET /locales`) and offers
 so a dropped locale never appears in the switcher. A static host with no device keeps the full
 built-in list. The embedded image size is guarded by a flash budget in the crate's tests.
 
+## Embedded targets (ESP32)
+
+There are two ways onto a microcontroller, and this is honest about where each stands today.
+
+**std on ESP32 (works today).** The ESP-IDF Rust toolchain gives the chip a real `std` with
+`TcpListener` and threads (over lwIP and pthreads), so `Server` runs unchanged - implement the
+`Transport` seam over the board's TCP stack, or use the plain-TCP default. Build a constrained
+image with the tier and locale features, for example the floor page only, or the full app with
+just the languages that fit flash:
+
+```
+cargo build -p pamoja-dashboard --no-default-features --features "serve,tier-c"
+cargo build -p pamoja-dashboard --no-default-features --features "serve,tier-b,locale-sw"
+```
+
+The `serve` feature pulls `flate2` (gzip, pure-Rust `miniz_oxide` backend) and `getrandom`
+(the pairing-secret RNG); both have ESP-IDF support, so this path needs no extra glue. The
+per-tier footprint and the flash-budget test keep the image small, and the server is
+thread-per-connection, which is ample for the handful of clients a node sees over its hotspot.
+
+**Bare-metal no_std (not yet, but the surface is ready).** The crate is `std` today - the
+threaded `Server` and `serde_json`'s default `std`. The portable surface is already isolated,
+though: the data contract (`state`, `source`, `command`) and the floor renderer (`lite`) use no
+`std::` paths (only `alloc`'s `String`/`Vec`), and `Assets::Embedded` is just `include_bytes!`
+slices. A bare-metal port reuses those and the request/response writing, driven from the
+device's own single-threaded socket loop rather than `Server::run_on` (which spawns a thread
+per connection). Reaching it means turning on `serde_json`'s `alloc` feature, supplying a
+no_std `getrandom` source, and building `flate2`/`miniz_oxide` in no_std+alloc mode.
+
 ## Build modes: real vs demo
 
 The crate is feature-gated so a real firmware build ships no demo:
