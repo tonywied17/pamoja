@@ -96,6 +96,11 @@ const EMBEDDED: &[Asset] = &[
         bytes: include_bytes!("../web/app/lib/catalog.js"),
     },
     Asset {
+        path: "/app/lib/discovery.js",
+        content_type: JS,
+        bytes: include_bytes!("../web/app/lib/discovery.js"),
+    },
+    Asset {
         path: "/app/lib/parallax.js",
         content_type: JS,
         bytes: include_bytes!("../web/app/lib/parallax.js"),
@@ -401,6 +406,7 @@ mod tests {
         // into app/lib/viz), so the embedded bundle must resolve those nested paths.
         assert!(Assets::Embedded.get("/app/lib/feed.js").is_some());
         assert!(Assets::Embedded.get("/app/lib/catalog.js").is_some());
+        assert!(Assets::Embedded.get("/app/lib/discovery.js").is_some());
         assert!(Assets::Embedded.get("/app/lib/viz/index.js").is_some());
     }
 

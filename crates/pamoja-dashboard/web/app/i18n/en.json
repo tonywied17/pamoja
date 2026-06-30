@@ -78,6 +78,7 @@
     "ui.night": "Night",
     "ui.tierFull": "Full",
     "ui.tierLite": "Lite",
+    "ui.new": "New",
     "ui.disconnected": "Reconnecting…",
     "status.ok": "OK",
     "status.warn": "Warning",

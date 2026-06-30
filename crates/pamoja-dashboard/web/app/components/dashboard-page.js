@@ -13,6 +13,7 @@ import { currentFleet, provision, hasLocalEdits } from '../lib/edits.js';
 import { live } from '../lib/feed.js';
 import { unlocked, promptUnlock } from '../lib/pair.js';
 import { conn, tileViz, bannerRing, trendArrow, isDiscrete, isStat, realSensors, groupStats, meshPeerCount, vizOf, isWide, esc } from '../lib/viz/index.js';
+import { isNew } from '../lib/discovery.js';
 import { openMeshOverlay } from './mesh-modal.js';
 
 const ICON_EDIT = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19.5l-4 1 1-4z"/></svg>';
@@ -391,11 +392,12 @@ $.component('dashboard-page', {
     const addS = editing ? `<button class="stile add-tile" data-gid="${g.id}" z-key="__addtile" @click="onAddSensor"><span class="add-plus">+</span><span>${t('ui.addSensor')}</span></button>` : '';
     const p = this._place && this._place[g.id];
     const style = p ? `grid-column:${p.c};grid-row:${p.r} / span ${p.s}` : 'grid-row:auto / span 320';
+    const fresh = isNew(g.id);
     return `
-      <article class="gcard" data-status="${g.status}" data-gid="${g.id}" z-key="${g.id}" style="${style}"${editing ? ' draggable="true"' : ''}>
+      <article class="gcard${fresh ? ' is-new' : ''}" data-status="${g.status}" data-gid="${g.id}" z-key="${g.id}" style="${style}"${editing ? ' draggable="true"' : ''}>
         <div class="ghead">
           <div class="gtitle-wrap">
-            <div class="gtitle">${esc(g.name)}</div>
+            <div class="gtitle">${esc(g.name)}${fresh ? `<span class="new-badge">${esc(t('ui.new'))}</span>` : ''}</div>
             <div class="gmeta"><span class="gstatus"><span class="dotc"></span>${t('status.' + g.status)}</span></div>
           </div>
           <div class="ghead-conn">${conn(g.link)}</div>
@@ -432,10 +434,11 @@ $.component('dashboard-page', {
     const vk = vizOf(r);
     const span = isWide(r) ? ' span' : '';
     const nodes = vk === 'mesh' ? meshPeerCount(g) : undefined;
+    const fresh = isNew(sid);
     return `
-      <article class="stile${span} ${store.state.selected === sid ? 'open' : ''}" data-status="${r.status}" data-sid="${sid}" z-key="${s.id}" @click="onSensor" tabindex="0" role="button"${editing ? ' draggable="true"' : ''}>
+      <article class="stile${span}${fresh ? ' is-new' : ''} ${store.state.selected === sid ? 'open' : ''}" data-status="${r.status}" data-sid="${sid}" z-key="${s.id}" @click="onSensor" tabindex="0" role="button"${editing ? ' draggable="true"' : ''}>
         ${rm}
-        <div class="stop"><span class="slabel">${esc(t('label.' + r.key))}</span><span class="sdot"></span></div>
+        <div class="stop"><span class="slabel">${esc(t('label.' + r.key))}${fresh ? `<span class="new-badge">${esc(t('ui.new'))}</span>` : ''}</span><span class="sdot"></span></div>
         ${battery}
         ${readout}
         ${tileViz(s, false, nodes)}
@@ -475,10 +478,11 @@ $.component('dashboard-page', {
     const rm = editing ? `<button class="tile-rm" data-key="${sid}" @click="onRemoveSensor" aria-label="${esc(t('ui.remove'))}">✕</button>` : '';
     const unit = t('unit.' + r.unit);
     const value = r.state ? t(r.state) : `${fmt(r.value)}${unit ? ' ' + unit : ''}`;
-    return `<article class="statcard" data-status="${r.status}" data-sid="${sid}" z-key="${s.id}" @click="onSensor" tabindex="0" role="button"${editing ? ' draggable="true"' : ''}>
+    const fresh = isNew(sid);
+    return `<article class="statcard${fresh ? ' is-new' : ''}" data-status="${r.status}" data-sid="${sid}" z-key="${s.id}" @click="onSensor" tabindex="0" role="button"${editing ? ' draggable="true"' : ''}>
         ${rm}
         <span class="statcard-dot"></span>
-        <div class="statcard-text"><span class="statlabel">${esc(t('label.' + r.key))}</span>
+        <div class="statcard-text"><span class="statlabel">${esc(t('label.' + r.key))}${fresh ? `<span class="new-badge">${esc(t('ui.new'))}</span>` : ''}</span>
         <span class="statval">${esc(value)}</span></div>
       </article>`;
   },
