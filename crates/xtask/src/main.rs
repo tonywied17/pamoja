@@ -73,6 +73,8 @@ const RELEASE_ORDER: &[&str] = &[
     "pamoja-actuators",
     "pamoja-audit",
     "pamoja-telemetry",
+    // Depends on telemetry, profile, power, and session, all published above.
+    "pamoja-dashboard",
     "pamoja-lora",
     "pamoja-modbus",
     "pamoja-mesh",
