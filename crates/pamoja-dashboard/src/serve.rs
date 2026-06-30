@@ -331,6 +331,20 @@ fn handle<S: StateSource, C: Read + Write>(
                 b"",
             ),
         },
+        ("GET", "/locales") => {
+            // The locales this build actually embeds, so the page offers only the languages a
+            // Tier B firmware kept in flash. A static host has no device and the page keeps its
+            // full built-in list.
+            let tags = crate::assets::embedded_locales();
+            let json = format!(
+                "[{}]",
+                tags.iter()
+                    .map(|tag| format!("\"{tag}\""))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            );
+            write_json(&mut conn, 200, "OK", &json)
+        }
         ("GET", "/lite") => {
             // The no-JavaScript floor: a status table built once on the device, refreshed by
             // a meta tag. The embedded floor page bounces here when scripting is off.
@@ -684,6 +698,15 @@ mod tests {
     fn a_get_catalog_is_no_content_without_a_catalog() {
         let written = handle_request(b"GET /catalog HTTP/1.1\r\n\r\n", Arc::new(Auth::new("s")));
         assert!(written.contains("204 No Content"));
+    }
+
+    #[cfg(not(feature = "tier-c"))]
+    #[test]
+    fn a_get_locales_lists_the_embedded_locales() {
+        let written = handle_request(b"GET /locales HTTP/1.1\r\n\r\n", Arc::new(Auth::new("s")));
+        assert!(written.contains("200 OK"));
+        // English is always embedded, so it is always listed; the page narrows to this set.
+        assert!(written.contains("\"en\""));
     }
 
     #[test]

@@ -162,7 +162,8 @@ Translations live once, as one JSON file per locale under
 [`web/app/i18n/`](web/app/i18n/) - the single source the browser fetches and renders with its
 own CLDR-backed `Intl` (plurals, numbering systems, right-to-left). There is no generation
 step and nothing to keep in sync by hand. `cargo xtask dashboard i18n` validates the bundles
-(key, placeholder, and metadata parity; gzipped footprint).
+(key, placeholder, and metadata parity; gzipped footprint). A constrained build embeds only
+the locales it needs (see [Capability tiers](#capability-tiers)).
 
 ## Performance
 
@@ -180,19 +181,27 @@ page written for one tier reads another tier's data.
 
 | Tier | Feature | What ships | Budget |
 | --- | --- | --- | --- |
-| A / B | `tier-a` (default), `tier-b` | the full localized app: hand-built visuals, six locales, history, authenticated control | ~150 KB gzipped, including one locale |
-| C | `tier-c` | a single self-contained **floor page** for the smallest hardware | ~50 KB gzipped |
+| A | `tier-a` (default) | the full localized app: hand-built visuals, every seed locale, history, authenticated control | ~150 KB gzipped page load, including one locale |
+| B | `tier-b` | the same full app, but only the locales a deployment selects, to fit constrained flash | same page load; smaller flash image |
+| C | `tier-c` | a single self-contained **floor page** for the smallest hardware | ~50 KB gzipped page load |
 
 The floor page renders the status table with the smallest possible script; when scripting is
 off entirely it falls back to `GET /lite`, a server-rendered, meta-refreshing table with no
-script at all. It is plain, but it is legible and it works on any browser. Build a non-default
-tier with `--no-default-features`:
+script at all. It is plain, but it is legible and it works on any browser.
+
+Build a non-default tier with `--no-default-features`. Tier B selects its locales with the
+`locale-*` features (English is always embedded as the fallback):
 
 ```
+# the floor page only
 cargo build -p pamoja-dashboard --no-default-features --features "serve,tier-c"
+# the full app, English + Swahili only, to fit flash
+cargo build -p pamoja-dashboard --no-default-features --features "serve,tier-b,locale-sw"
 ```
 
-Tier B shares Tier A's full bundle today; its flash-fit locale subset is a later refinement.
+The page asks the device which languages it embedded (`GET /locales`) and offers only those,
+so a dropped locale never appears in the switcher. A static host with no device keeps the full
+built-in list. The embedded image size is guarded by a flash budget in the crate's tests.
 
 ## Build modes: real vs demo
 
@@ -200,8 +209,8 @@ The crate is feature-gated so a real firmware build ships no demo:
 
 | Build | Features | What you get |
 | --- | --- | --- |
-| Real device | `--no-default-features --features serve` | `Fleet`, `Server`, control - no mock fleet, no scenario switcher |
-| Development / showcase | default (`serve`, `mock`) | `Mock` + the dev server + the static snapshot generator |
+| Real device | `--no-default-features --features "serve,<locales>"` | `Fleet`, `Server`, control - no mock fleet, no scenario switcher. Add the `locale-*` features (or `all-locales`) for the languages to embed; English alone if none. |
+| Development / showcase | default (`serve`, `mock`, `tier-a`, `all-locales`) | `Mock` + the dev server + the static snapshot generator, every locale |
 
 Snapshots from the mock carry a `demo` flag; the page shows demo-only affordances (the
 scenario switcher) only when it is set, so a real device never exposes them.

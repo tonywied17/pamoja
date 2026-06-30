@@ -63,6 +63,11 @@ jobs:
       - name: Dashboard Tier C build
         run: cargo build -p pamoja-dashboard --no-default-features --features "serve,tier-c"
 
+      # A Tier B build embeds only the locales it selects (here English plus Swahili); build it
+      # so the per-locale feature gating keeps compiling under a real flash-fit subset.
+      - name: Dashboard Tier B locale-subset build
+        run: cargo build -p pamoja-dashboard --no-default-features --features "serve,tier-b,locale-sw"
+
       # Each crate's README is generated from its rustdoc; this fails if any is stale, so the
       # crates.io pages stay in sync with the code.
       - name: Crate READMEs in sync

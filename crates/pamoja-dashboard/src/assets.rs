@@ -203,37 +203,82 @@ const EMBEDDED: &[Asset] = &[
         content_type: JS,
         bytes: include_bytes!("../web/app/components/alarm-bar.js"),
     },
+    // English is always embedded as the fallback locale; the other seed locales are
+    // feature-gated so a constrained build embeds only the languages it needs (see
+    // `locale_asset`).
     Asset {
         path: "/app/i18n/en.json",
         content_type: JSON,
         bytes: include_bytes!("../web/app/i18n/en.json"),
     },
-    Asset {
-        path: "/app/i18n/sw.json",
-        content_type: JSON,
-        bytes: include_bytes!("../web/app/i18n/sw.json"),
-    },
-    Asset {
-        path: "/app/i18n/ar.json",
-        content_type: JSON,
-        bytes: include_bytes!("../web/app/i18n/ar.json"),
-    },
-    Asset {
-        path: "/app/i18n/fr.json",
-        content_type: JSON,
-        bytes: include_bytes!("../web/app/i18n/fr.json"),
-    },
-    Asset {
-        path: "/app/i18n/pt.json",
-        content_type: JSON,
-        bytes: include_bytes!("../web/app/i18n/pt.json"),
-    },
-    Asset {
-        path: "/app/i18n/hi.json",
-        content_type: JSON,
-        bytes: include_bytes!("../web/app/i18n/hi.json"),
-    },
 ];
+
+// The optional seed-locale bundles, each baked in only when its feature is on, so Tier B can
+// drop the languages a deployment does not need from flash. English is not here; it is always
+// embedded in `EMBEDDED`.
+#[cfg(not(feature = "tier-c"))]
+fn locale_asset(path: &str) -> Option<(&'static str, &'static [u8])> {
+    let bytes: &'static [u8] = match path {
+        #[cfg(feature = "locale-sw")]
+        "/app/i18n/sw.json" => include_bytes!("../web/app/i18n/sw.json"),
+        #[cfg(feature = "locale-ar")]
+        "/app/i18n/ar.json" => include_bytes!("../web/app/i18n/ar.json"),
+        #[cfg(feature = "locale-fr")]
+        "/app/i18n/fr.json" => include_bytes!("../web/app/i18n/fr.json"),
+        #[cfg(feature = "locale-pt")]
+        "/app/i18n/pt.json" => include_bytes!("../web/app/i18n/pt.json"),
+        #[cfg(feature = "locale-hi")]
+        "/app/i18n/hi.json" => include_bytes!("../web/app/i18n/hi.json"),
+        _ => return None,
+    };
+    Some((JSON, bytes))
+}
+
+/// The locale tags this build actually embeds, in menu order (English first).
+///
+/// The page reads this from `GET /locales` and offers only these languages, so a Tier B build
+/// that dropped a locale from flash never shows it in the switcher.
+///
+/// # Returns
+///
+/// The embedded locale tags; empty on a floor (`tier-c`) build, which ships no locale bundles.
+#[cfg(not(feature = "tier-c"))]
+pub(crate) fn embedded_locales() -> Vec<&'static str> {
+    let mut tags = vec!["en"];
+    #[cfg(feature = "locale-sw")]
+    tags.push("sw");
+    #[cfg(feature = "locale-ar")]
+    tags.push("ar");
+    #[cfg(feature = "locale-fr")]
+    tags.push("fr");
+    #[cfg(feature = "locale-pt")]
+    tags.push("pt");
+    #[cfg(feature = "locale-hi")]
+    tags.push("hi");
+    tags
+}
+
+/// The locale tags this build embeds; empty on a floor (`tier-c`) build.
+///
+/// # Returns
+///
+/// An empty list: the floor page bakes in a single English page and serves no locale bundles.
+#[cfg(feature = "tier-c")]
+pub(crate) fn embedded_locales() -> Vec<&'static str> {
+    Vec::new()
+}
+
+// Resolves an embedded asset: the fixed bundle first, then any feature-gated locale bundle.
+fn embedded_get(path: &str) -> Option<(&'static str, Vec<u8>)> {
+    if let Some(asset) = EMBEDDED.iter().find(|a| a.path == path) {
+        return Some((asset.content_type, asset.bytes.to_vec()));
+    }
+    #[cfg(not(feature = "tier-c"))]
+    if let Some((content_type, bytes)) = locale_asset(path) {
+        return Some((content_type, bytes.to_vec()));
+    }
+    None
+}
 
 // The MIME type for a file, by extension, for the directory (development) mode.
 fn mime_for(path: &str) -> &'static str {
@@ -282,10 +327,7 @@ impl Assets {
     /// The MIME type and the file's bytes, or `None` if no asset matches.
     pub fn get(&self, path: &str) -> Option<(&'static str, Vec<u8>)> {
         match self {
-            Assets::Embedded => EMBEDDED
-                .iter()
-                .find(|a| a.path == path)
-                .map(|a| (a.content_type, a.bytes.to_vec())),
+            Assets::Embedded => embedded_get(path),
             #[cfg(feature = "serve")]
             Assets::Dir(root) => {
                 let relative = if path == "/" {
@@ -382,13 +424,54 @@ mod tests {
         }
     }
 
+    #[cfg(all(not(feature = "tier-c"), feature = "all-locales"))]
+    #[test]
+    fn the_full_build_embeds_all_six_seed_locales() {
+        assert_eq!(embedded_locales(), ["en", "sw", "ar", "fr", "pt", "hi"]);
+    }
+
     #[cfg(not(feature = "tier-c"))]
     #[test]
-    fn embedded_has_all_six_seed_locales() {
-        for locale in ["en", "sw", "ar", "fr", "pt", "hi"] {
+    fn english_is_embedded_and_every_listed_locale_is_served() {
+        // English is always the fallback, and whatever a build reports it embeds must actually
+        // resolve - so a Tier B subset and its `GET /locales` list can never disagree.
+        assert_eq!(embedded_locales().first(), Some(&"en"));
+        for locale in embedded_locales() {
             let path = format!("/app/i18n/{locale}.json");
-            assert!(Assets::Embedded.get(&path).is_some(), "missing {path}");
+            assert!(
+                Assets::Embedded.get(&path).is_some(),
+                "listed but not served: {locale}"
+            );
         }
+    }
+
+    #[cfg(feature = "tier-c")]
+    #[test]
+    fn tier_c_embeds_no_locale_bundles() {
+        // The floor page bakes in a single English page and serves no locale JSON.
+        assert!(embedded_locales().is_empty());
+        assert!(Assets::Embedded.get("/app/i18n/en.json").is_none());
+    }
+
+    #[cfg(not(feature = "tier-c"))]
+    #[test]
+    fn the_embedded_bundle_fits_the_flash_budget() {
+        // A regression tripwire for the firmware image: the embedded bundle (the app plus the
+        // locales this build kept) stays small enough to fit a constrained flash partition.
+        const FLASH_BUDGET: usize = 600 * 1024;
+        let mut total: usize = EMBEDDED.iter().map(|a| a.bytes.len()).sum();
+        for locale in embedded_locales() {
+            if locale == "en" {
+                continue;
+            }
+            if let Some((_, bytes)) = locale_asset(&format!("/app/i18n/{locale}.json")) {
+                total += bytes.len();
+            }
+        }
+        assert!(
+            total <= FLASH_BUDGET,
+            "embedded bundle is {total} bytes, over the {FLASH_BUDGET}-byte flash budget"
+        );
     }
 
     #[test]

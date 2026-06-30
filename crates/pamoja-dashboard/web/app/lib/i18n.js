@@ -11,8 +11,20 @@
 
 import { store } from '../store.js';
 
-/** The locales shipped as JSON bundles, in menu order. */
+/** Every locale the page knows how to offer, in menu order. */
 export const LOCALES = ['en', 'sw', 'ar', 'fr', 'pt', 'hi'];
+
+// The locales actually offered: a device reports the subset it embedded (GET /locales) so a
+// Tier B build that dropped a language from flash never shows it; a static host keeps the full
+// list. Set during initI18n, before the top bar renders.
+let available = LOCALES.slice();
+
+/**
+ * The locales the active source offers, in menu order.
+ *
+ * @returns {string[]} the available locale tags.
+ */
+export function availableLocales() { return available; }
 
 const bundles = {};
 let fallback;
@@ -47,19 +59,42 @@ async function load(l)
 export async function initI18n()
 {
   fallback = bundles.en = await load('en');
+  await discoverLocales();
+  if (!available.includes(store.state.locale)) store.dispatch('setLocale', 'en');
   await load(store.state.locale);
   applyDir();
 }
 
 /**
+ * Asks the device which locales it embedded (GET /locales) and narrows the offered set to
+ * those, preserving menu order. A static host or a device without the endpoint keeps the full
+ * built-in list.
+ *
+ * @returns {Promise<void>} resolves once the available set is settled.
+ */
+async function discoverLocales()
+{
+  try
+  {
+    const res = await fetch('/locales', { cache: 'no-store' });
+    if (res.ok)
+    {
+      const tags = await res.json();
+      if (Array.isArray(tags) && tags.length) available = LOCALES.filter((l) => tags.includes(l));
+    }
+  } catch { /* static host or no endpoint: keep the full built-in list */ }
+  if (!available.length) available = LOCALES.slice();
+}
+
+/**
  * Switches the active locale, loading its bundle on demand and updating direction.
  *
- * @param {string} l - the locale tag to switch to; ignored if not in {@link LOCALES}.
+ * @param {string} l - the locale tag to switch to; ignored if not currently available.
  * @returns {Promise<void>} resolves once the locale is active.
  */
 export async function setLocale(l)
 {
-  if (!LOCALES.includes(l)) return;
+  if (!available.includes(l)) return;
   await load(l);
   store.dispatch('setLocale', l);
   applyDir();

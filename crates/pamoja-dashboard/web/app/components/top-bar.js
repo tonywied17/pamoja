@@ -8,7 +8,7 @@
 // they behave like the framework expects, with no custom z-index or document listeners.
 
 import { store } from '../store.js';
-import { t, nf, LOCALES, setLocale, localeName } from '../lib/i18n.js';
+import { t, nf, availableLocales, setLocale, localeName } from '../lib/i18n.js';
 import { SCENARIOS, demo, live } from '../lib/feed.js';
 import { currentFleet } from '../lib/edits.js';
 import { open } from '../nav.js';
@@ -95,7 +95,7 @@ $.component('top-bar', {
     const alarmCount = problems(currentFleet()).length;
     const night = store.state.theme === 'night';
     const code = store.state.locale.slice(0, 2).toUpperCase();
-    const locales = LOCALES.map((l) => `<li class="dd-option" aria-selected="${l === store.state.locale}" @click="pickLocale('${l}')">${esc(localeName(l))}</li>`).join('');
+    const locales = availableLocales().map((l) => `<li class="dd-option" aria-selected="${l === store.state.locale}" @click="pickLocale('${l}')">${esc(localeName(l))}</li>`).join('');
     const scenarios = SCENARIOS.map((sc) => `<li class="dd-option" aria-selected="${sc === store.state.scenario}" @click="pickScenario('${sc}')">${esc(t('scenario.' + sc))}</li>`).join('');
     return `
       <header class="topbar">

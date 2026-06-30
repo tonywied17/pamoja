@@ -30,7 +30,10 @@
 //! page written for one tier reads another tier's data:
 //!
 //! - Tiers A and B (`tier-a`, the default, and `tier-b`) embed the full localized app: the
-//!   hand-built visuals, six locales, history, and authenticated control.
+//!   hand-built visuals, history, authenticated control, and the seed locales. A Tier B build
+//!   trims flash by embedding only the locales it needs (the `locale-*` features, English
+//!   always included); the page learns the embedded set from `GET /locales` and offers only
+//!   those languages.
 //! - Tier C (`tier-c`) embeds only a single self-contained floor page for the smallest
 //!   hardware. It renders the status table with the smallest possible script, and when
 //!   scripting is off entirely it falls back to `GET /lite`, a server-rendered,
