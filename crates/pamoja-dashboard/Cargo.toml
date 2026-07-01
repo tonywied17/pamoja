@@ -8,13 +8,20 @@ license.workspace = true
 repository.workspace = true
 authors.workspace = true
 
+# Build the docs with the demo fleet compiled in, so the `Mock`/`Scenario` references in the
+# doc comments resolve on docs.rs even though `mock` is off by default.
+[package.metadata.docs.rs]
+features = ["mock"]
+
 [features]
 # The data contract is always available; the host-side HTTP/SSE server is opt-in (but on
 # by default) so the contract can be reused without it, and brings the command
 # authenticator (keyed-hash primitives + a system RNG) and asset compression. The `mock`
-# feature is the hardware-free demo fleet: on by default for development and the showcase,
-# off in a real firmware build that ships only its own real source.
-default = ["serve", "mock", "tier-a", "all-locales"]
+# feature is the hardware-free demo fleet, kept OFF by default so a default build carries no
+# demo scaffolding; turn it on for development, the dev server, and the showcase with
+# `--features mock`. A real node never serves demo data regardless (only a `Mock` sets the
+# demo flag), but keeping it opt-in means the shipped default is real source only.
+default = ["serve", "tier-a", "all-locales"]
 serve = ["dep:pamoja-session", "dep:getrandom", "dep:flate2"]
 mock = []
 

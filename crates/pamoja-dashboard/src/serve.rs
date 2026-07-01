@@ -113,9 +113,18 @@ impl Transport for TcpTransport {
 /// # Examples
 ///
 /// ```no_run
-/// use pamoja_dashboard::{Assets, Mock, Scenario, Server};
+/// use pamoja_dashboard::{Assets, Server, State, StateSource, Status};
 ///
-/// let server = Server::new(Mock::new(Scenario::Normal), Assets::Embedded);
+/// // Any StateSource works; a real node produces its live State here, and the
+/// // `mock` feature's `Mock` is the hardware-free stand-in for development.
+/// struct Node;
+/// impl StateSource for Node {
+///     fn snapshot(&mut self) -> State {
+///         State { orgs: Vec::new(), status: Status::Ok, uptime_secs: None, demo: false }
+///     }
+/// }
+///
+/// let server = Server::new(Node, Assets::Embedded);
 /// server.run("127.0.0.1:8080").expect("serve");
 /// ```
 pub struct Server<S> {
@@ -610,7 +619,9 @@ fn write_response<W: Write>(
     conn.flush()
 }
 
-#[cfg(test)]
+// The server tests drive the handler with the demo fleet as their state source, so they
+// build only with the `mock` feature; CI runs them with `--features mock`.
+#[cfg(all(test, feature = "mock"))]
 mod tests {
     use super::*;
     use crate::{Mock, Scenario};

@@ -45,7 +45,7 @@ jobs:
           mkdir -p dist/dashboard
           cp -r web/. dist/
           cp -r crates/pamoja-dashboard/web/. dist/dashboard/
-          cargo run -p pamoja-dashboard --example snapshot -- dist/dashboard
+          cargo run -p pamoja-dashboard --features mock --example snapshot -- dist/dashboard
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

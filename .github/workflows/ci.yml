@@ -47,6 +47,11 @@ jobs:
       - name: Test
         run: cargo test --workspace
 
+      # The demo fleet is off by default, so its tests, doctests, and examples are gated
+      # behind the `mock` feature; run them (and compile the dev and snapshot examples) here.
+      - name: Dashboard mock tests
+        run: cargo test -p pamoja-dashboard --features mock
+
       # The dashboard's per-locale JSON bundles are the single source of translations;
       # this fails if a locale's keys or placeholders drift from English, if a bundle is
       # missing metadata, or if one grows past its gzipped footprint budget.

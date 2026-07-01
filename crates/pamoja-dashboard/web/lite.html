@@ -15,13 +15,21 @@
       body { margin: 0; padding: 1rem; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
       header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
       h1 { margin: 0; font-size: 1.3rem; letter-spacing: 0.02em; }
-      h2 { margin: 1.25rem 0 0.4rem; font-size: 1.05rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+      h2 { margin: 1.6rem 0 0.5rem; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 0.35rem; }
+      h3 { margin: 0.9rem 0 0.35rem; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
       .status { font-weight: 700; font-size: 1.05rem; }
       .badge { font-size: 0.78rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 999px; border: 1px solid currentColor; }
       .ok { color: var(--ok); } .warn { color: var(--warn); } .alarm { color: var(--alarm); }
       .muted { color: var(--muted); font-size: 0.85rem; margin: 0.1rem 0; }
-      table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+      .count { color: var(--muted); font-size: 0.78rem; font-weight: 400; }
+      .bars { letter-spacing: 0.12em; }
+      .stats { font-size: 0.8rem; margin-top: 0.35rem; }
+      section.group { margin: 0.2rem 0 0.9rem; }
+      table { width: 100%; table-layout: fixed; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
       th, td { text-align: start; padding: 0.55rem 0.7rem; border-bottom: 1px solid var(--line); }
+      th.reading, td.reading, th.state, td.state { text-align: end; }
+      th.reading { width: 34%; } th.state { width: 22%; }
+      .unit { color: var(--muted); }
       thead th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
       tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
       tbody th { font-weight: 600; }
@@ -58,11 +66,23 @@
         }
         // Short, stable English link labels, matching the server-rendered /lite floor.
         var LINKS = { lora: 'LoRa', wifi: 'Wi-Fi', cellular: 'Cellular', nbiot: 'NB-IoT', satellite: 'Satellite', ethernet: 'Ethernet', mesh: 'Mesh' };
+        // Canonical units abbreviated to conventional symbols, so a reading reads like an
+        // instrument; an unmapped unit falls back to its raw name, a non-physical one to none.
+        var UNITS = { celsius: '°C', fahrenheit: '°F', kelvin: 'K', percent: '%', volt: 'V', millivolt: 'mV', ampere: 'A', milliampere: 'mA', watt: 'W', kilowatt: 'kW', watt_hour: 'Wh', kilowatt_hour: 'kWh', hectopascal: 'hPa', pascal: 'Pa', kilopascal: 'kPa', meter: 'm', millimeter: 'mm', centimeter: 'cm', kilometer: 'km', meter_per_second: 'm/s', kilometer_per_hour: 'km/h', liter: 'L', liter_per_minute: 'L/min', liter_per_hour: 'L/h', lux: 'lx', decibel: 'dB', hertz: 'Hz', degree: '°', count: '', record: '', state: '' };
+        function unitSym(u) { return u in UNITS ? UNITS[u] : u; }
         function num(v) { return String(Math.round(v * 100) / 100); }
         function reading(r) {
           if (r.state) { var p = r.state.split('.'); return esc(p[p.length - 1]); }
-          return num(r.value) + (r.unit ? ' ' + esc(r.unit) : '');
+          var u = unitSym(r.unit);
+          return num(r.value) + (u ? ' <span class="unit">' + esc(u) + '</span>' : '');
         }
+        // A signal-strength meter of filled and empty dots, 0..=4: reads without color and
+        // does not look like a sensor count the way a bare "3/4" can.
+        function barsStr(n) { n = Math.max(0, Math.min(4, n | 0)); var s = ''; for (var i = 0; i < 4; i++) s += i < n ? '●' : '○'; return s; }
+        function label(k) { return esc(String(k).replace(/_/g, ' ')); }
+        function statText(r) { if (r.state) { var p = r.state.split('.'); return esc(p[p.length - 1]); } return num(r.value); }
+        function rank(s) { return s === 'alarm' ? 2 : (s === 'warn' ? 1 : 0); }
+        function worst(a, b) { return rank(b) > rank(a) ? b : a; }
 
         function render(s) {
           var o = bits(s.status);
@@ -71,22 +91,37 @@
           var html = '';
           var orgs = s.orgs || [];
           for (var i = 0; i < orgs.length; i++) {
-            var groups = orgs[i].groups || [];
+            var org = orgs[i];
+            var groups = org.groups || [];
+            var os = 'ok';
+            for (var g0 = 0; g0 < groups.length; g0++) os = worst(os, groups[g0].status || 'ok');
+            var ob = bits(os);
+            html += '<section class="org"><h2>' + esc(org.name) + ' <span class="badge ' + ob[2] + '">' + ob[1] + ' ' + ob[0] + '</span> <span class="count">' + groups.length + ' group' + (groups.length === 1 ? '' : 's') + '</span></h2>';
             for (var j = 0; j < groups.length; j++) {
               var g = groups[j];
               var gb = bits(g.status);
-              var link = g.link ? (LINKS[g.link.kind] || esc(g.link.kind)) + ' ' + (g.link.strength || 0) + '/4 ' + (g.link.online ? 'online' : 'offline') : '';
-              html += '<section><h2>' + esc(g.name) + ' <span class="badge ' + gb[2] + '">' + gb[1] + ' ' + gb[0] + '</span></h2>';
-              if (link) html += '<p class="muted">' + link + '</p>';
-              html += '<table><thead><tr><th>Sensor</th><th>Reading</th><th>Status</th></tr></thead><tbody>';
-              var sensors = g.sensors || [];
-              for (var k = 0; k < sensors.length; k++) {
-                var se = sensors[k];
-                var rb = bits(se.reading.status);
-                html += '<tr><th scope="row">' + esc(se.id) + '</th><td>' + reading(se.reading) + '</td><td class="' + rb[2] + '">' + rb[1] + ' ' + rb[0] + '</td></tr>';
+              var all = g.sensors || [];
+              var sensors = all.filter(function (x) { return !(x.reading && x.reading.stat); });
+              var stats = all.filter(function (x) { return x.reading && x.reading.stat; });
+              var kind = g.link ? (LINKS[g.link.kind] || esc(g.link.kind)) : '';
+              var online = g.link && g.link.online ? 'online' : 'offline';
+              html += '<section class="group"><h3>' + esc(g.name) + ' <span class="badge ' + gb[2] + '">' + gb[1] + ' ' + gb[0] + '</span></h3>';
+              html += '<p class="muted">' + kind + ' <span class="bars">' + barsStr(g.link ? g.link.strength : 0) + '</span> · ' + online + ' · ' + sensors.length + ' sensor' + (sensors.length === 1 ? '' : 's') + '</p>';
+              if (sensors.length) {
+                html += '<table><thead><tr><th>Sensor</th><th class="reading">Reading</th><th class="state">Status</th></tr></thead><tbody>';
+                for (var k = 0; k < sensors.length; k++) {
+                  var se = sensors[k];
+                  var rb = bits(se.reading.status);
+                  html += '<tr><th scope="row">' + esc(se.id) + '</th><td class="reading">' + reading(se.reading) + '</td><td class="state ' + rb[2] + '">' + rb[1] + ' ' + rb[0] + '</td></tr>';
+                }
+                html += '</tbody></table>';
               }
-              html += '</tbody></table></section>';
+              if (stats.length) {
+                html += '<p class="muted stats">' + stats.map(function (x) { return label(x.reading.key) + ' ' + statText(x.reading); }).join(' · ') + '</p>';
+              }
+              html += '</section>';
             }
+            html += '</section>';
           }
           root.innerHTML = html || '<p class="muted">No sensors are reporting yet.</p>';
           stamp.textContent = 'Updated ' + new Date().toLocaleTimeString();
@@ -97,36 +132,42 @@
           overall.textContent = '▲ Device unreachable';
         }
 
-        // Probe the device first; on a static host with no device, replay the bundled snapshot.
-        function fallback() {
+        var timer = null;
+        function stop() { if (timer) { clearInterval(timer); timer = null; } }
+        function get(url, ok, fail) {
           var x = new XMLHttpRequest();
-          x.open('GET', './state.normal.json', true);
+          x.open('GET', url, true);
           x.onreadystatechange = function () {
             if (x.readyState !== 4) return;
-            if (x.status >= 200 && x.status < 300) {
-              try { var d = JSON.parse(x.responseText); render(d.length ? d[0] : d); return; } catch (e) {}
-            }
-            unreachable();
+            if (x.status >= 200 && x.status < 300) { try { ok(JSON.parse(x.responseText)); return; } catch (e) {} }
+            fail();
           };
-          x.onerror = unreachable;
-          x.send();
-        }
-        function load() {
-          var x = new XMLHttpRequest();
-          x.open('GET', '/state', true);
-          x.onreadystatechange = function () {
-            if (x.readyState !== 4) return;
-            if (x.status >= 200 && x.status < 300) {
-              try { render(JSON.parse(x.responseText)); return; } catch (e) {}
-            }
-            fallback();
-          };
-          x.onerror = fallback;
+          x.onerror = fail;
           x.send();
         }
 
-        load();
-        setInterval(load, 10000);
+        // A live device: show the snapshot, then poll for fresh readings so the values move.
+        // A transient poll failure keeps the last frame rather than dropping to the fallback.
+        function goLive(first) {
+          stop();
+          render(first);
+          timer = setInterval(function () { get('/state', render, function () {}); }, 3000);
+        }
+
+        // A static host (the showcase) has no device: replay the bundled multi-frame snapshot on
+        // the live cadence, so the floor animates like the device feed instead of freezing.
+        function goStatic() {
+          stop();
+          get('./state.normal.json', function (d) {
+            var frames = d && d.length ? d : [d];
+            var i = 0;
+            render(frames[0]);
+            if (frames.length > 1) timer = setInterval(function () { i = (i + 1) % frames.length; render(frames[i]); }, 2500);
+          }, unreachable);
+        }
+
+        // Probe the device once, then choose the live or static source (as the full app does).
+        get('/state', goLive, goStatic);
       })();
     </script>
   </body>

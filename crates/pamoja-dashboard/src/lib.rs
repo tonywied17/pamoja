@@ -46,18 +46,24 @@
 //!
 //! # Examples
 //!
-//! Render an alarm with no hardware and read it back as the JSON the page would fetch:
+//! A device turns the state it holds into the language-neutral snapshot the page fetches:
 //!
 //! ```
-//! use pamoja_dashboard::{Mock, Scenario, StateSource, Status};
+//! use pamoja_dashboard::{State, Status};
 //!
-//! let mut node = Mock::new(Scenario::Alarm);
-//! let state = node.snapshot();
-//! assert_eq!(state.status, Status::Alarm);
+//! let state = State {
+//!     orgs: Vec::new(),
+//!     status: Status::Alarm,
+//!     uptime_secs: Some(3600),
+//!     demo: false,
+//! };
 //!
 //! let json = state.to_json().expect("serialize");
 //! assert!(json.contains("\"status\":\"alarm\""));
 //! ```
+//!
+//! The hardware-free [`Mock`] fleet (the `mock` feature) implements [`StateSource`] the same
+//! way a real node does, so the whole dashboard runs and is debugged with no hardware.
 
 mod assets;
 mod command;

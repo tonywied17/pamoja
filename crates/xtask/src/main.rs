@@ -331,8 +331,18 @@ fn dashboard(args: &[String]) -> ExitCode {
         .skip_while(|arg| arg.as_str() == "dev")
         .collect();
 
+    // The demo fleet is off by default, so the dev server opts into it explicitly.
     let mut cmd = Command::new("cargo");
-    cmd.args(["run", "-p", "pamoja-dashboard", "--example", "dev", "--"]);
+    cmd.args([
+        "run",
+        "-p",
+        "pamoja-dashboard",
+        "--features",
+        "mock",
+        "--example",
+        "dev",
+        "--",
+    ]);
     cmd.args(&forwarded);
 
     if run(&mut cmd) {
