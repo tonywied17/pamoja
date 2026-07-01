@@ -9,21 +9,48 @@ repository.workspace = true
 authors.workspace = true
 
 [features]
-# `std` brings in the async byte-stream link seam, the in-process SITL, and the
-# `std::error::Error` impl. Turn it off (`default-features = false`) to build the
-# protocol core (framing, CRC, signing, dialect) for a `no_std` target.
+# `std` brings in the async byte-stream link seam, the in-process SITL, the vehicle
+# device model over pamoja-core, the real UDP/TCP drivers, and the `std::error::Error`
+# impl. Turn it off (`default-features = false`) to build the protocol core (framing,
+# CRC, signing, dialect, protocol) for a `no_std` target.
 default = ["std"]
-std = []
+std = ["dep:pamoja-core", "dep:tokio"]
+# `serial` adds the tokio-serial `ByteLink` driver on top of the `std` layer; it pulls
+# in a serial-port dependency, so it is opt-in.
+serial = ["std", "dep:tokio-serial"]
 
 [dependencies]
 # SHA-256 is the one primitive MAVLink 2 signing is built on; the 48-bit signature
 # and timestamp handling are implemented on top of it here, so this is the only
-# dependency, mirroring how pamoja-session uses it.
+# dependency of the `no_std` core, mirroring how pamoja-session uses it.
 sha2 = { version = "0.10", default-features = false }
+# The `std` device model maps a vehicle onto the core device traits; pulled in only
+# with `std`, so the `no_std` core stays sha2-only.
+pamoja-core = { workspace = true, optional = true }
+# The async runtime the vehicle model and the real UDP/TCP drivers run on. The wire
+# core and the sans-IO protocol machines need no runtime; this is `std`-only.
+tokio = { version = "1", features = [
+    "rt",
+    "sync",
+    "time",
+    "net",
+    "io-util",
+    "macros",
+], optional = true }
+# The serial-port backend behind the `serial` feature's `ByteLink` driver.
+tokio-serial = { version = "5", optional = true }
 
 [dev-dependencies]
-# Drives the async link-seam and SITL tests; the crate itself needs no runtime.
-tokio = { version = "1", features = ["rt", "macros"] }
+# Drives the async link-seam, vehicle, and driver tests; multi-thread for the
+# in-process SITL that runs a vehicle and an autopilot on one runtime.
+tokio = { version = "1", features = [
+    "rt",
+    "rt-multi-thread",
+    "macros",
+    "time",
+    "net",
+    "io-util",
+] }
 
 [lints]
 workspace = true

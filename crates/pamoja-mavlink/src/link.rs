@@ -16,12 +16,13 @@
 //! This layer is available with the default `std` feature; the protocol core below it is
 //! `no_std`.
 
-use std::collections::VecDeque;
-use std::sync::{Arc, Mutex};
-
-use crate::dialect::{self, CommandAck, CommandLong, Heartbeat, Message};
+use crate::dialect::{
+    self, CommandAck, CommandLong, Heartbeat, Message, MissionCount, MissionItemInt,
+    MissionRequest, MissionRequestInt, MissionRequestList,
+};
 use crate::error::{MavlinkError, Result};
 use crate::frame::{Frame, Header};
+use crate::protocol::mission::{MissionReceiver, MissionSender, ReceiverAction};
 use crate::signing::{Signer, Verifier};
 
 // Resolves a message id to its CRC_EXTRA through the common-dialect registry, so the
@@ -215,19 +216,15 @@ impl<L: ByteLink> Connection<L> {
     }
 }
 
-// The two byte queues shared by a linked pair of endpoints.
-type Pipe = Arc<Mutex<VecDeque<u8>>>;
-
 /// An in-process byte link: one end of a bidirectional pipe between two connections.
 ///
-/// [`pair`](MemoryLink::pair) makes two ends whose writes appear as the other's reads, so
-/// two [`Connection`]s exchange frames with no socket and no hardware. Reads return
-/// whatever is buffered and never block, which suits deterministic tests that write before
-/// they read.
-#[derive(Clone)]
+/// [`pair`](MemoryLink::pair) makes two ends whose writes appear as the other's reads, so two
+/// [`Connection`]s (or a [`Vehicle`](crate::vehicle::Vehicle) and a [`SitlAutopilot`]) exchange
+/// frames with no socket and no hardware. A read awaits until bytes are available and reports
+/// end of input once the other end is dropped, so the two ends can run as concurrent tasks the
+/// way a real link's peers do.
 pub struct MemoryLink {
-    inbound: Pipe,
-    outbound: Pipe,
+    stream: tokio::io::DuplexStream,
 }
 
 impl MemoryLink {
@@ -237,46 +234,42 @@ impl MemoryLink {
     ///
     /// Two ends; bytes written to one are read from the other.
     pub fn pair() -> (MemoryLink, MemoryLink) {
-        let a: Pipe = Arc::new(Mutex::new(VecDeque::new()));
-        let b: Pipe = Arc::new(Mutex::new(VecDeque::new()));
-        (
-            MemoryLink {
-                inbound: a.clone(),
-                outbound: b.clone(),
-            },
-            MemoryLink {
-                inbound: b,
-                outbound: a,
-            },
-        )
+        // A generous buffer so a burst of frames never blocks the writer in a test.
+        let (a, b) = tokio::io::duplex(64 * 1024);
+        (MemoryLink { stream: a }, MemoryLink { stream: b })
     }
 }
 
 impl ByteLink for MemoryLink {
     async fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
-        let mut queue = self.inbound.lock().expect("pipe mutex poisoned");
-        let n = queue.len().min(buf.len());
-        for slot in buf.iter_mut().take(n) {
-            *slot = queue.pop_front().expect("length was just checked");
-        }
-        Ok(n)
+        use tokio::io::AsyncReadExt;
+        self.stream
+            .read(buf)
+            .await
+            .map_err(|_| MavlinkError::Closed)
     }
 
     async fn write_all(&mut self, data: &[u8]) -> Result<()> {
-        let mut queue = self.outbound.lock().expect("pipe mutex poisoned");
-        queue.extend(data.iter().copied());
-        Ok(())
+        use tokio::io::AsyncWriteExt;
+        self.stream
+            .write_all(data)
+            .await
+            .map_err(|_| MavlinkError::Closed)
     }
 }
 
 /// A hardware-free autopilot stand-in for software-in-the-loop testing.
 ///
 /// It behaves like the parts of an autopilot a ground station first talks to: it emits a
-/// [`Heartbeat`] on demand and answers a [`CommandLong`] with a [`CommandAck`]. Wire it to
-/// one end of a [`MemoryLink::pair`] and drive a ground-station [`Connection`] on the
-/// other to exercise the full connect, command, and telemetry path in a test.
+/// [`Heartbeat`] on demand, answers a [`CommandLong`] with a [`CommandAck`], and speaks both
+/// sides of the mission protocol, receiving an uploaded plan and serving it back on download.
+/// Wire it to one end of a [`MemoryLink::pair`] and drive a ground-station [`Connection`] or a
+/// [`Vehicle`](crate::vehicle::Vehicle) on the other to exercise the full connect, command,
+/// mission, and telemetry path in a test.
 pub struct SitlAutopilot {
     connection: Connection<MemoryLink>,
+    mission: Vec<MissionItemInt>,
+    receiving: Option<(MissionReceiver, Vec<MissionItemInt>)>,
 }
 
 impl SitlAutopilot {
@@ -294,7 +287,18 @@ impl SitlAutopilot {
     pub fn new(link: MemoryLink, system_id: u8, component_id: u8) -> Self {
         SitlAutopilot {
             connection: Connection::new(link, system_id, component_id),
+            mission: Vec::new(),
+            receiving: None,
         }
+    }
+
+    /// Preloads the plan the autopilot serves on a mission download.
+    ///
+    /// # Arguments
+    ///
+    /// * `items` - the mission items to store.
+    pub fn load_mission(&mut self, items: &[MissionItemInt]) {
+        self.mission = items.to_vec();
     }
 
     /// Signs the autopilot's outgoing frames and verifies incoming ones with the same key.
@@ -333,7 +337,11 @@ impl SitlAutopilot {
         self.connection.send(&heartbeat).await
     }
 
-    /// Reads one frame and, if it is a command, acknowledges it as accepted.
+    /// Reads one frame and answers it the way an autopilot would.
+    ///
+    /// A command is acknowledged as accepted; a mission upload is received and stored; a
+    /// mission download is served from the stored plan. Any other frame is read and left
+    /// unanswered. Call it in a loop to keep the autopilot responsive.
     ///
     /// # Returns
     ///
@@ -344,19 +352,90 @@ impl SitlAutopilot {
     /// Returns the same errors as [`Connection::recv`] and [`Connection::send`].
     pub async fn serve_once(&mut self) -> Result<Frame> {
         let frame = self.connection.recv().await?;
-        if frame.message_id() == CommandLong::ID {
-            let command = CommandLong::decode(frame.payload())?;
-            let ack = CommandAck {
-                command: command.command,
-                result: dialect::mav_result::ACCEPTED,
-                progress: 0,
-                result_param2: 0,
-                target_system: frame.system_id(),
-                target_component: frame.component_id(),
-            };
-            self.connection.send(&ack).await?;
+        let (sys, comp) = (frame.system_id(), frame.component_id());
+        match frame.message_id() {
+            CommandLong::ID => {
+                let command = CommandLong::decode(frame.payload())?;
+                let ack = CommandAck {
+                    command: command.command,
+                    result: dialect::mav_result::ACCEPTED,
+                    progress: 0,
+                    result_param2: 0,
+                    target_system: sys,
+                    target_component: comp,
+                };
+                self.connection.send(&ack).await?;
+            }
+            MissionCount::ID => {
+                let count = MissionCount::decode(frame.payload())?.count;
+                let mut receiver =
+                    MissionReceiver::new(sys, comp, dialect::mav_mission_type::MISSION);
+                let buffer = Vec::with_capacity(count as usize);
+                self.step_receive(receiver.on_count(count), receiver, buffer)
+                    .await?;
+            }
+            MissionItemInt::ID => {
+                if let Some((mut receiver, mut buffer)) = self.receiving.take() {
+                    let item = MissionItemInt::decode(frame.payload())?;
+                    let (accepted, action) = receiver.on_item(&item);
+                    if let Some(item) = accepted {
+                        buffer.push(item);
+                    }
+                    self.step_receive(action, receiver, buffer).await?;
+                }
+            }
+            MissionRequestList::ID => {
+                let count = MissionSender::new(
+                    &self.mission,
+                    sys,
+                    comp,
+                    dialect::mav_mission_type::MISSION,
+                )
+                .count();
+                self.connection.send(&count).await?;
+            }
+            MissionRequestInt::ID => {
+                let seq = MissionRequestInt::decode(frame.payload())?.seq;
+                self.serve_item(sys, comp, seq).await?;
+            }
+            MissionRequest::ID => {
+                let seq = MissionRequest::decode(frame.payload())?.seq;
+                self.serve_item(sys, comp, seq).await?;
+            }
+            _ => {}
         }
         Ok(frame)
+    }
+
+    // Applies one mission-receiver step: send the next request and keep receiving, or store the
+    // completed plan and send the acknowledgement.
+    async fn step_receive(
+        &mut self,
+        action: ReceiverAction,
+        receiver: MissionReceiver,
+        buffer: Vec<MissionItemInt>,
+    ) -> Result<()> {
+        match action {
+            ReceiverAction::Request(request) => {
+                self.connection.send(&request).await?;
+                self.receiving = Some((receiver, buffer));
+            }
+            ReceiverAction::Ack(ack) => {
+                self.mission = buffer;
+                self.connection.send(&ack).await?;
+            }
+        }
+        Ok(())
+    }
+
+    // Answers a request for one stored mission item.
+    async fn serve_item(&mut self, sys: u8, comp: u8, seq: u16) -> Result<()> {
+        let item = MissionSender::new(&self.mission, sys, comp, dialect::mav_mission_type::MISSION)
+            .item(seq);
+        if let Some(item) = item {
+            self.connection.send(&item).await?;
+        }
+        Ok(())
     }
 }
 

@@ -70,6 +70,9 @@ pub mod signing;
 #[cfg(feature = "std")]
 pub mod link;
 
+#[cfg(feature = "std")]
+pub mod vehicle;
+
 pub use crc::{accumulate, checksum, crc16_mcrf4xx, message_crc_extra};
 pub use error::{MavlinkError, Result};
 pub use frame::{
@@ -77,3 +80,6 @@ pub use frame::{
 };
 pub use parser::Parser;
 pub use signing::{Signer, Verifier};
+
+#[cfg(feature = "std")]
+pub use vehicle::{Report, Setpoint, Vehicle};
