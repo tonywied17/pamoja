@@ -29,7 +29,8 @@ The whole dashboard talks to one seam, the `StateSource` trait:
 Anything that implements `StateSource` can drive the dashboard. Two do:
 
 - **`Mock`** - a hardware-free demo fleet for development and the hosted showcase. Behind the
-  `mock` feature (on by default).
+  `mock` feature, off by default (turn it on with `--features mock`), so a default build carries
+  no demo scaffolding.
 - **`Fleet`** - the real source a project fills. This is what you use on a real device.
 
 ## How it reaches a phone over a radio mesh
