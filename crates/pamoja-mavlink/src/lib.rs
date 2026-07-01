@@ -27,10 +27,11 @@
 //!   messages into a real conversation with an autopilot, with no IO of their own.
 //!
 //! The protocol core is `no_std` and allocation-free, so the same framing runs on a
-//! microcontroller flight controller. The optional `std` feature adds a byte-stream link
-//! seam and an in-process software-in-the-loop autopilot ([`link`]) so the whole path can
-//! be exercised with no hardware. Driving a real serial port or UDP socket plugs into that
-//! same seam and arrives with the hardware-I/O layer.
+//! microcontroller flight controller. The default `std` feature adds the async layer: the
+//! byte-stream link seam and an in-process software-in-the-loop autopilot ([`link`]), the
+//! [`vehicle`] device model that presents an autopilot as a pamoja `Device`, and the real
+//! [`drivers`] (UDP, TCP, and serial behind the `serial` feature) that carry MAVLink to a real
+//! or simulated autopilot.
 //!
 //! # Examples
 //!
@@ -73,6 +74,9 @@ pub mod link;
 #[cfg(feature = "std")]
 pub mod vehicle;
 
+#[cfg(feature = "std")]
+pub mod drivers;
+
 pub use crc::{accumulate, checksum, crc16_mcrf4xx, message_crc_extra};
 pub use error::{MavlinkError, Result};
 pub use frame::{
@@ -83,3 +87,9 @@ pub use signing::{Signer, Verifier};
 
 #[cfg(feature = "std")]
 pub use vehicle::{Report, Setpoint, Vehicle};
+
+#[cfg(feature = "std")]
+pub use drivers::{TcpLink, UdpLink};
+
+#[cfg(feature = "serial")]
+pub use drivers::SerialLink;
