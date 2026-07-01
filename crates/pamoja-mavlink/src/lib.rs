@@ -22,6 +22,9 @@
 //! - [`dialect`] - a broad, typed slice of the common dialect (HEARTBEAT, the command,
 //!   parameter, and mission protocols, and core telemetry), plus a registry and a raw
 //!   escape hatch so any message id can still be carried and checked.
+//! - [`protocol`] - the mission, command, and offboard exchanges as pure, allocation-free
+//!   state machines: the rules of order, matching, and retransmission that turn single
+//!   messages into a real conversation with an autopilot, with no IO of their own.
 //!
 //! The protocol core is `no_std` and allocation-free, so the same framing runs on a
 //! microcontroller flight controller. The optional `std` feature adds a byte-stream link
@@ -61,6 +64,7 @@ pub mod dialect;
 mod error;
 mod frame;
 mod parser;
+pub mod protocol;
 pub mod signing;
 
 #[cfg(feature = "std")]
