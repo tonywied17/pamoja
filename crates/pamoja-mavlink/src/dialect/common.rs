@@ -95,9 +95,20 @@ message! {
 
 message! {
     /// `COMMAND_ACK`: the vehicle's acknowledgement of a command, carrying the result.
+    ///
+    /// The extension fields report progress for a long-running command
+    /// ([`mav_result::IN_PROGRESS`](crate::dialect::mav_result::IN_PROGRESS)), a
+    /// command-specific second result value, and which system and component the
+    /// acknowledgement is addressed to.
     CommandAck = 77, crc = 143, name = "COMMAND_ACK";
     command: u16,
-    result: u8,
+    result: u8;
+    ext {
+        progress: u8,
+        result_param2: i32,
+        target_system: u8,
+        target_component: u8,
+    }
 }
 
 message! {
@@ -280,19 +291,42 @@ message! {
 }
 
 message! {
-    /// `MISSION_COUNT`: announces how many items a mission transfer will contain.
-    MissionCount = 44, crc = 221, name = "MISSION_COUNT";
-    count: u16,
+    /// `MISSION_REQUEST_LIST`: asks the vehicle to begin downloading a plan by reporting its
+    /// [`MissionCount`].
+    MissionRequestList = 43, crc = 132, name = "MISSION_REQUEST_LIST";
     target_system: u8,
-    target_component: u8,
+    target_component: u8;
+    ext { mission_type: u8 }
 }
 
 message! {
-    /// `MISSION_REQUEST_INT`: requests one mission item by sequence number.
+    /// `MISSION_COUNT`: announces how many items a mission transfer will contain, and which
+    /// plan (mission, geofence, or rally) the transfer carries.
+    MissionCount = 44, crc = 221, name = "MISSION_COUNT";
+    count: u16,
+    target_system: u8,
+    target_component: u8;
+    ext { mission_type: u8, opaque_id: u32 }
+}
+
+message! {
+    /// `MISSION_REQUEST_INT`: requests one mission item by sequence number, with position
+    /// returned integer-encoded.
     MissionRequestInt = 51, crc = 196, name = "MISSION_REQUEST_INT";
     seq: u16,
     target_system: u8,
-    target_component: u8,
+    target_component: u8;
+    ext { mission_type: u8 }
+}
+
+message! {
+    /// `MISSION_REQUEST`: requests one mission item by sequence number, the legacy request
+    /// some autopilots still send in place of [`MissionRequestInt`].
+    MissionRequest = 40, crc = 230, name = "MISSION_REQUEST";
+    seq: u16,
+    target_system: u8,
+    target_component: u8;
+    ext { mission_type: u8 }
 }
 
 message! {
@@ -311,7 +345,8 @@ message! {
     target_component: u8,
     frame: u8,
     current: u8,
-    autocontinue: u8,
+    autocontinue: u8;
+    ext { mission_type: u8 }
 }
 
 message! {
@@ -321,11 +356,20 @@ message! {
 }
 
 message! {
+    /// `MISSION_CLEAR_ALL`: asks the vehicle to erase a stored plan.
+    MissionClearAll = 45, crc = 232, name = "MISSION_CLEAR_ALL";
+    target_system: u8,
+    target_component: u8;
+    ext { mission_type: u8 }
+}
+
+message! {
     /// `MISSION_ACK`: acknowledges the end of a mission transfer with a result.
     MissionAck = 47, crc = 153, name = "MISSION_ACK";
     target_system: u8,
     target_component: u8,
-    type_: u8,
+    type_: u8;
+    ext { mission_type: u8, opaque_id: u32 }
 }
 
 message! {
@@ -465,10 +509,13 @@ mod tests {
         verify::<RcChannels>();
         verify::<VfrHud>();
         verify::<BatteryStatus>();
+        verify::<MissionRequestList>();
         verify::<MissionCount>();
         verify::<MissionRequestInt>();
+        verify::<MissionRequest>();
         verify::<MissionItemInt>();
         verify::<MissionCurrent>();
+        verify::<MissionClearAll>();
         verify::<MissionAck>();
         verify::<SetPositionTargetLocalNed>();
         verify::<SetPositionTargetGlobalInt>();
@@ -545,6 +592,50 @@ mod tests {
         let len = command.encode(&mut buf);
         assert_eq!(len, CommandLong::WIRE_LEN);
         assert_eq!(CommandLong::decode(&buf[..len]).unwrap(), command);
+    }
+
+    #[test]
+    fn an_extension_field_round_trips_after_the_base_fields() {
+        // MISSION_COUNT gained the `mission_type` and `opaque_id` extension fields; a full
+        // encode carries them after the base fields and decodes them back.
+        let count = MissionCount {
+            count: 7,
+            target_system: 1,
+            target_component: 1,
+            mission_type: crate::dialect::mav_mission_type::FENCE,
+            opaque_id: 0xDEAD_BEEF,
+        };
+        let mut buf = [0u8; 255];
+        let len = count.encode(&mut buf);
+        assert_eq!(len, MissionCount::WIRE_LEN);
+        // Base fields (count, targets) occupy four bytes; the extensions follow.
+        assert_eq!(len, 4 + 1 + 4);
+        assert_eq!(MissionCount::decode(&buf[..len]).unwrap(), count);
+    }
+
+    #[test]
+    fn a_base_only_payload_decodes_extensions_as_zero() {
+        // A peer that sends only the base fields (a MAVLink 1 sender, or truncated MAVLink 2)
+        // still decodes; the extensions read as zero, which is what keeps a message that gains
+        // extensions compatible with one that predates them.
+        let base_only = [7u8, 0, 1, 1]; // count = 7, target_system = 1, target_component = 1
+        let decoded = MissionCount::decode(&base_only).unwrap();
+        assert_eq!(decoded.count, 7);
+        assert_eq!(decoded.mission_type, 0);
+        assert_eq!(decoded.opaque_id, 0);
+    }
+
+    #[test]
+    fn command_ack_keeps_its_seed_after_gaining_extensions() {
+        // The extensions are excluded from CRC_EXTRA, so COMMAND_ACK's seed is still the
+        // pre-extension value a peer that only knows the base fields computes.
+        assert_eq!(
+            message_crc_extra("COMMAND_ACK", CommandAck::BASE_FIELDS),
+            CommandAck::CRC_EXTRA
+        );
+        assert_eq!(CommandAck::CRC_EXTRA, 143);
+        // The base fields drive the seed; the extensions are not among them.
+        assert_eq!(CommandAck::BASE_FIELDS.len(), 2);
     }
 
     #[test]

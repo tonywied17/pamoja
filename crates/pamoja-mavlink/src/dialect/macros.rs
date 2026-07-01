@@ -202,24 +202,33 @@ macro_rules! mav_decode_field {
 /// Declares a typed MAVLink message from its name, id, `CRC_EXTRA`, and wire-ordered base
 /// fields, generating the struct, its serialization, and its [`Message`](crate::dialect::Message)
 /// implementation.
+///
+/// An optional `; ext { .. }` group after the base fields declares MAVLink 2 extension
+/// fields. Extensions are appended after the base fields, in the order written (they are not
+/// size-reordered), and are excluded from [`CRC_EXTRA`](crate::dialect::Message::CRC_EXTRA), so
+/// adding them to a message never changes its seed. A frame that carries only the base fields
+/// still decodes, with the extensions read as zero.
 macro_rules! message {
     (
         $(#[$meta:meta])*
         $struct:ident = $id:literal, crc = $crc:literal, name = $wire:literal;
         $( $field:ident : $fty:tt ),+ $(,)?
+        $( ; ext { $( $efield:ident : $efty:tt ),+ $(,)? } )?
     ) => {
         $(#[$meta])*
         #[derive(Clone, Copy, Debug, PartialEq)]
         #[allow(missing_docs)]
         pub struct $struct {
             $( pub $field: mav_field_ty!($fty), )+
+            $( $( pub $efield: mav_field_ty!($efty), )+ )?
         }
 
         impl $crate::dialect::Message for $struct {
             const ID: u32 = $id;
             const NAME: &'static str = $wire;
             const CRC_EXTRA: u8 = $crc;
-            const WIRE_LEN: usize = 0 $( + mav_field_size!($fty) )+;
+            const WIRE_LEN: usize =
+                0 $( + mav_field_size!($fty) )+ $( $( + mav_field_size!($efty) )+ )?;
             const BASE_FIELDS: &'static [(&'static str, &'static str, u8)] = &[
                 $(
                     (
@@ -233,6 +242,7 @@ macro_rules! message {
             fn encode(&self, out: &mut [u8]) -> usize {
                 let mut off = 0usize;
                 $( mav_encode_field!(out, off, self.$field, $fty); )+
+                $( $( mav_encode_field!(out, off, self.$efield, $efty); )+ )?
                 off
             }
 
@@ -242,8 +252,9 @@ macro_rules! message {
                 buf[..n].copy_from_slice(&payload[..n]);
                 let mut off = 0usize;
                 $( let $field = mav_decode_field!(buf, off, $fty); )+
+                $( $( let $efield = mav_decode_field!(buf, off, $efty); )+ )?
                 let _ = off;
-                Ok($struct { $( $field, )+ })
+                Ok($struct { $( $field, )+ $( $( $efield, )+ )? })
             }
         }
     };

@@ -349,6 +349,10 @@ impl SitlAutopilot {
             let ack = CommandAck {
                 command: command.command,
                 result: dialect::mav_result::ACCEPTED,
+                progress: 0,
+                result_param2: 0,
+                target_system: frame.system_id(),
+                target_component: frame.component_id(),
             };
             self.connection.send(&ack).await?;
         }

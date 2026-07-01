@@ -67,7 +67,9 @@ pub mod mav_cmd {
     pub const DO_SET_MODE: u16 = 176;
     pub const DO_SET_HOME: u16 = 179;
     pub const DO_SET_SERVO: u16 = 183;
+    pub const MISSION_START: u16 = 300;
     pub const COMPONENT_ARM_DISARM: u16 = 400;
+    pub const SET_MESSAGE_INTERVAL: u16 = 511;
     pub const REQUEST_MESSAGE: u16 = 512;
 }
 
@@ -100,4 +102,35 @@ pub mod mav_frame {
     pub const GLOBAL_RELATIVE_ALT: u8 = 3;
     pub const GLOBAL_INT: u8 = 5;
     pub const GLOBAL_RELATIVE_ALT_INT: u8 = 6;
+}
+
+/// `MAV_MISSION_TYPE`: which plan a mission transfer carries, in the `mission_type` field of
+/// the MISSION_* messages.
+pub mod mav_mission_type {
+    pub const MISSION: u8 = 0;
+    pub const FENCE: u8 = 1;
+    pub const RALLY: u8 = 2;
+    pub const ALL: u8 = 255;
+}
+
+/// `POSITION_TARGET_TYPEMASK`: the bits of the `type_mask` field of
+/// [`SetPositionTargetLocalNed`](super::SetPositionTargetLocalNed) and
+/// [`SetPositionTargetGlobalInt`](super::SetPositionTargetGlobalInt).
+///
+/// A set bit tells the vehicle to ignore that dimension of the setpoint, so a position-only
+/// setpoint sets the velocity, acceleration, yaw, and yaw-rate ignore bits. `FORCE_SET`
+/// reinterprets the acceleration fields as a force setpoint.
+pub mod position_target_typemask {
+    pub const X_IGNORE: u16 = 1;
+    pub const Y_IGNORE: u16 = 2;
+    pub const Z_IGNORE: u16 = 4;
+    pub const VX_IGNORE: u16 = 8;
+    pub const VY_IGNORE: u16 = 16;
+    pub const VZ_IGNORE: u16 = 32;
+    pub const AX_IGNORE: u16 = 64;
+    pub const AY_IGNORE: u16 = 128;
+    pub const AZ_IGNORE: u16 = 256;
+    pub const FORCE_SET: u16 = 512;
+    pub const YAW_IGNORE: u16 = 1024;
+    pub const YAW_RATE_IGNORE: u16 = 2048;
 }
