@@ -79,6 +79,7 @@ const RELEASE_ORDER: &[&str] = &[
     "pamoja-modbus",
     "pamoja-mesh",
     "pamoja-lorawan",
+    "pamoja-mavlink",
     "pamoja-routing",
     "pamoja-can",
     "pamoja-serial",

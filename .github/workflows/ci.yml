@@ -37,7 +37,7 @@ jobs:
       # `no_std` (only `core` and `alloc`) and never silently regains a `std`
       # dependency that would break the microcontroller target.
       - name: no_std build
-        run: cargo build --no-default-features -p pamoja-core -p pamoja-codec -p pamoja-security -p pamoja-audit -p pamoja-zenoh -p pamoja-ros2
+        run: cargo build --no-default-features -p pamoja-core -p pamoja-codec -p pamoja-security -p pamoja-audit -p pamoja-zenoh -p pamoja-ros2 -p pamoja-mavlink
 
       # The robotics helpers are opt-in but must also stay `no_std`, so build them
       # explicitly with their feature on (and `geo`, which the waypoint guidance needs).

@@ -49,6 +49,10 @@ path = "conformance.rs"
 name = "robot_waypoint"
 path = "robot_waypoint.rs"
 
+[[example]]
+name = "mavlink_sitl"
+path = "mavlink_sitl.rs"
+
 [[test]]
 name = "conformance"
 path = "tests/conformance.rs"
@@ -71,6 +75,7 @@ pamoja-security = { path = "../crates/pamoja-security" }
 pamoja-audit = { path = "../crates/pamoja-audit" }
 pamoja-telemetry = { path = "../crates/pamoja-telemetry" }
 pamoja-lora = { path = "../crates/pamoja-lora" }
+pamoja-mavlink = { path = "../crates/pamoja-mavlink" }
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["rt", "macros"] }
 

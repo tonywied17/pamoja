@@ -296,6 +296,14 @@ export const CRATES = [
     blurb:
       'A ROS 2 bridge - topics, services, and actions - that makes a robot appear as an ordinary pamoja device on the bus. Names, type hashes, and CDR messages follow the ROS 2 spec, and it interoperates with rmw_zenoh over plain Zenoh, routerless.',
   },
+  {
+    id: 'pamoja-mavlink',
+    name: 'pamoja-mavlink',
+    role: 'drones',
+    color: 'coral',
+    blurb:
+      'MAVLink v1 and v2 framing with the CRC-16/MCRF4XX checksum, per-message CRC_EXTRA, and MAVLink 2 SHA-256 signing, hand-written against the mavlink.io spec and its reference vectors. A broad typed slice of the common dialect and a byte-stream link seam, exercised against an in-process SITL, toward MAVSDK, PX4, and ArduPilot.',
+  },
 ];
 
 export const PLANNED_CRATES = [
@@ -338,14 +346,6 @@ export const PLANNED_CRATES = [
     planned: true,
     blurb:
       'Signed over-the-air updates with verified rollback, so a fleet scattered across a region can be fixed and trusted without a truck roll, and a bad update can never brick a node.',
-  },
-  {
-    id: 'pamoja-mavlink',
-    name: 'pamoja-mavlink',
-    role: 'drones · planned',
-    planned: true,
-    blurb:
-      'MAVLink for drones - mission, telemetry, and offboard control - modelled as an ordinary pamoja device and interoperable with PX4 and ArduPilot, so a survey flight is driven from the same API as any sensor.',
   },
   {
     id: 'pamoja-sema',

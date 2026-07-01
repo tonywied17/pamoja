@@ -1,0 +1,29 @@
+[package]
+name = "pamoja-mavlink"
+description = "MAVLink wire protocol for pamoja: build, parse, and sign MAVLink v1 and v2 frames with the CRC-16/MCRF4XX checksum, per-message CRC_EXTRA, and MAVLink 2 SHA-256 message signing, plus a broad typed slice of the common dialect and a byte-stream link seam exercised against an in-process SITL. Hand-written from the mavlink.io spec, no_std and allocation-free at the core, toward MAVSDK/PX4/ArduPilot interop."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[features]
+# `std` brings in the async byte-stream link seam, the in-process SITL, and the
+# `std::error::Error` impl. Turn it off (`default-features = false`) to build the
+# protocol core (framing, CRC, signing, dialect) for a `no_std` target.
+default = ["std"]
+std = []
+
+[dependencies]
+# SHA-256 is the one primitive MAVLink 2 signing is built on; the 48-bit signature
+# and timestamp handling are implemented on top of it here, so this is the only
+# dependency, mirroring how pamoja-session uses it.
+sha2 = { version = "0.10", default-features = false }
+
+[dev-dependencies]
+# Drives the async link-seam and SITL tests; the crate itself needs no runtime.
+tokio = { version = "1", features = ["rt", "macros"] }
+
+[lints]
+workspace = true
