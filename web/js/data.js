@@ -641,7 +641,7 @@ export const TRACKS = [
     tags: [
       { t: 'motion / kinematics', on: true }, { t: 'odometry', on: true }, { t: 'waypoint nav', on: true },
       { t: 'safety (e-stop / watchdog)', on: true }, { t: 'arm FK / IK', on: true }, { t: 'ROS 2 bridge', on: true },
-      { t: 'Zenoh transport', on: true }, { t: 'robot sim', on: true }, { t: 'MAVLink', on: false },
+      { t: 'Zenoh transport', on: true }, { t: 'robot sim', on: true }, { t: 'MAVLink', on: true },
     ],
   },
   {
