@@ -12,10 +12,12 @@ cd /px4
 HEADLESS=1 make px4_sitl jmavsim </dev/null >/tmp/px4.log 2>&1 &
 PX4_PID=$!
 
+# Kill the SITL process tree on exit, matching patterns specific enough not to match this
+# script itself (its path contains "px4"), so cleanup never SIGTERMs the run.
 cleanup() {
     kill "${PX4_PID}" 2>/dev/null || true
-    pkill -f px4 2>/dev/null || true
-    pkill -f jmavsim 2>/dev/null || true
+    pkill -f 'px4_sitl_default/bin/px4' 2>/dev/null || true
+    pkill -f 'jmavsim_run.jar' 2>/dev/null || true
 }
 trap cleanup EXIT
 
@@ -30,3 +32,5 @@ fi
 cd /work
 export PAMOJA_SITL_UDP=0.0.0.0:14550
 cargo test -p pamoja-mavlink --test sitl -- --ignored --nocapture
+STATUS=$?
+exit $STATUS
