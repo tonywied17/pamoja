@@ -2,7 +2,7 @@
 
 # pamoja-mavlink
 
-MAVLink wire protocol for pamoja: build, parse, and sign MAVLink v1 and v2 frames with the CRC-16/MCRF4XX checksum, per-message CRC_EXTRA, and MAVLink 2 SHA-256 message signing, plus a broad typed slice of the common dialect and a byte-stream link seam exercised against an in-process SITL. Hand-written from the mavlink.io spec, no_std and allocation-free at the core, toward MAVSDK/PX4/ArduPilot interop.
+MAVLink for pamoja: build, parse, and sign v1/v2 frames (CRC-16/MCRF4XX, per-message CRC_EXTRA, MAVLink 2 SHA-256 signing), a typed common dialect with MAVLink 2 extension fields, the mission, command, and offboard protocols as sans-IO state machines, and a vehicle modelled as a pamoja Device driven over real serial, UDP, and TCP links. Hand-written from the mavlink.io spec, no_std and allocation-free at the core, and exercised against ArduPilot and PX4 SITL.
 
 <a href="https://crates.io/crates/pamoja-mavlink"><img height="28" alt="crates.io" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-cratesio.svg"></a>
 <a href="https://docs.rs/pamoja-mavlink"><img height="28" alt="docs.rs" src="https://raw.githubusercontent.com/molexxxx/pamoja/main/.github/badges/btn-docsrs.svg"></a>
@@ -29,12 +29,16 @@ its reference values rather than guessed from memory:
 - [`dialect`] - a broad, typed slice of the common dialect (HEARTBEAT, the command,
   parameter, and mission protocols, and core telemetry), plus a registry and a raw
   escape hatch so any message id can still be carried and checked.
+- [`protocol`] - the mission, command, and offboard exchanges as pure, allocation-free
+  state machines: the rules of order, matching, and retransmission that turn single
+  messages into a real conversation with an autopilot, with no IO of their own.
 
 The protocol core is `no_std` and allocation-free, so the same framing runs on a
-microcontroller flight controller. The optional `std` feature adds a byte-stream link
-seam and an in-process software-in-the-loop autopilot ([`link`]) so the whole path can
-be exercised with no hardware. Driving a real serial port or UDP socket plugs into that
-same seam and arrives with the hardware-I/O layer.
+microcontroller flight controller. The default `std` feature adds the async layer: the
+byte-stream link seam and an in-process software-in-the-loop autopilot ([`link`]), the
+[`vehicle`] device model that presents an autopilot as a pamoja `Device`, and the real
+[`drivers`] (UDP, TCP, and serial behind the `serial` feature) that carry MAVLink to a real
+or simulated autopilot.
 
 **Examples**
 
