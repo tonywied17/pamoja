@@ -88,10 +88,20 @@ pub mod mav_result {
 pub mod mav_mission_result {
     pub const ACCEPTED: u8 = 0;
     pub const ERROR: u8 = 1;
+    pub const UNSUPPORTED_FRAME: u8 = 2;
     pub const UNSUPPORTED: u8 = 3;
+    pub const NO_SPACE: u8 = 4;
     pub const INVALID: u8 = 5;
-    pub const INVALID_SEQUENCE: u8 = 12;
-    pub const CANCELLED: u8 = 13;
+    pub const INVALID_PARAM1: u8 = 6;
+    pub const INVALID_PARAM2: u8 = 7;
+    pub const INVALID_PARAM3: u8 = 8;
+    pub const INVALID_PARAM4: u8 = 9;
+    pub const INVALID_PARAM5_X: u8 = 10;
+    pub const INVALID_PARAM6_Y: u8 = 11;
+    pub const INVALID_PARAM7: u8 = 12;
+    pub const INVALID_SEQUENCE: u8 = 13;
+    pub const DENIED: u8 = 14;
+    pub const OPERATION_CANCELLED: u8 = 15;
 }
 
 /// `MAV_FRAME`: the coordinate frame of a mission item or position target.
