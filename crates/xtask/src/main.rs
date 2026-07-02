@@ -6,6 +6,7 @@
 //! new-crate rate limit so a first-time publish of the whole workspace completes
 //! in a single run.
 
+use std::path::Path;
 use std::process::{Command, ExitCode};
 use std::thread::sleep;
 use std::time::Duration;
@@ -36,6 +37,10 @@ const TASKS: &[(&str, &str)] = &[
     (
         "ros",
         "build the ROS 2 + Zenoh dev container and run the bridge tests inside it",
+    ),
+    (
+        "sitl",
+        "build an autopilot SITL image and run the MAVLink interop test (sitl [ardupilot|px4|all])",
     ),
     (
         "dashboard",
@@ -110,6 +115,10 @@ fn main() -> ExitCode {
 
     if task == "ros" {
         return ros(&args.collect::<Vec<_>>());
+    }
+
+    if task == "sitl" {
+        return sitl(&args.collect::<Vec<_>>());
     }
 
     if task == "dashboard" {
@@ -306,6 +315,86 @@ fn ros(args: &[String]) -> ExitCode {
         eprintln!("xtask ros: tests failed");
         ExitCode::FAILURE
     }
+}
+
+/// The autopilots `sitl` can build and test against, each with a `sitl/<target>.Dockerfile` and
+/// a `sitl/run-<target>.sh`.
+const SITL_TARGETS: &[&str] = &["ardupilot", "px4"];
+
+/// Build an autopilot SITL image and run the MAVLink interop test inside it. The host has no
+/// autopilot, so this is how `pamoja-mavlink` is proven against a real ArduPilot or PX4 flight
+/// stack, mirroring the ROS 2 dev-container pattern. `sitl ardupilot`, `sitl px4`, or `sitl all`
+/// select the target(s); the default is ArduPilot. Requires Docker Desktop.
+fn sitl(args: &[String]) -> ExitCode {
+    let which = args.first().map(String::as_str).unwrap_or("ardupilot");
+    let targets: Vec<&str> = match which {
+        "all" => SITL_TARGETS.to_vec(),
+        "ardupilot" => vec!["ardupilot"],
+        "px4" => vec!["px4"],
+        other => {
+            eprintln!("xtask sitl: unknown target {other}; use ardupilot, px4, or all");
+            return ExitCode::FAILURE;
+        }
+    };
+
+    if !run(Command::new("docker").arg("--version")) {
+        eprintln!("xtask sitl: Docker is required (Docker Desktop); install it and retry.");
+        return ExitCode::FAILURE;
+    }
+
+    let repo = match std::env::current_dir() {
+        Ok(dir) => dir,
+        Err(err) => {
+            eprintln!("xtask sitl: cannot determine the working directory: {err}");
+            return ExitCode::FAILURE;
+        }
+    };
+
+    for target in targets {
+        if !run_sitl(&repo, target) {
+            return ExitCode::FAILURE;
+        }
+    }
+    ExitCode::SUCCESS
+}
+
+/// Build one autopilot's SITL image and run the interop test inside it. Persistent volumes cache
+/// the cargo registry and the Linux build so repeat runs are fast and the container's artifacts
+/// never collide with the Windows `target/`.
+fn run_sitl(repo: &Path, target: &str) -> bool {
+    let image = format!("pamoja-sitl-{target}");
+    let dockerfile = format!("sitl/{target}.Dockerfile");
+
+    println!("xtask sitl: building the {image} image\n");
+    if !run(Command::new("docker").args(["build", "-t", &image, "-f", &dockerfile, "sitl"])) {
+        eprintln!("xtask sitl: building {image} failed");
+        return false;
+    }
+
+    let mount = format!("{}:/work", repo.display());
+    let script = format!("sitl/run-{target}.sh");
+    println!("\nxtask sitl: launching {target} SITL and running the interop test\n");
+    let passed = run(Command::new("docker").args([
+        "run",
+        "--rm",
+        "-v",
+        &mount,
+        "-v",
+        "pamoja-cargo-registry:/usr/local/cargo/registry",
+        "-v",
+        "pamoja-cargo-git:/usr/local/cargo/git",
+        "-v",
+        "pamoja-sitl-target:/tmp/target",
+        "-w",
+        "/work",
+        &image,
+        "bash",
+        &script,
+    ]));
+    if !passed {
+        eprintln!("xtask sitl: the {target} interop test failed");
+    }
+    passed
 }
 
 /// Run a `dashboard` subcommand: `i18n` validates the locale bundles, `footprint` checks

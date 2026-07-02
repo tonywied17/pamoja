@@ -115,3 +115,25 @@ jobs:
           source /opt/ros/jazzy/setup.bash
           cargo test -p pamoja-zenoh --features runtime
           cargo test -p pamoja-ros2 --features bridge
+
+  sitl:
+    name: mavlink SITL interop (${{ matrix.autopilot }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        autopilot: [ardupilot, px4]
+    steps:
+      - uses: actions/checkout@v6
+
+      # Each autopilot builds from a pinned source release into a self-contained image that also
+      # carries the Rust toolchain, so the interop test runs against a real flight stack. The
+      # image build is the slow step; the run then launches SITL and runs the ignored test.
+      - name: Build the ${{ matrix.autopilot }} SITL image
+        run: docker build -t pamoja-sitl-${{ matrix.autopilot }} -f sitl/${{ matrix.autopilot }}.Dockerfile sitl
+
+      - name: Run the interop test against ${{ matrix.autopilot }} SITL
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/work" -w /work \
+            pamoja-sitl-${{ matrix.autopilot }} \
+            bash sitl/run-${{ matrix.autopilot }}.sh
